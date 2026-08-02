@@ -94,7 +94,6 @@
 				label,
 				updatedAt: Date.now()
 			});
-			// Fire-and-forget cloud sync if session exists
 			pushProgress(book.id).catch(() => {});
 		}, 400);
 	}
@@ -160,17 +159,24 @@
 	<title>{book ? `${book.title} · Lumen` : 'Reading · Lumen'}</title>
 </svelte:head>
 
-<div class="relative h-[100dvh] overflow-hidden {stageClass}" style="background: var(--stage-bg); color: var(--stage-fg);">
+<div
+	class="relative h-[100dvh] overflow-hidden {stageClass}"
+	style="background: var(--stage-bg); color: var(--stage-fg);"
+>
 	<!-- progress edge -->
 	<div
-		class="pointer-events-none absolute inset-x-0 top-0 z-50 h-0.5 bg-black/10"
+		class="pointer-events-none absolute inset-x-0 top-0 z-50 h-[2px]"
+		style="background: color-mix(in srgb, var(--stage-fg) 10%, transparent)"
 		role="progressbar"
 		aria-valuenow={Math.round(fraction * 100)}
 		aria-valuemin={0}
 		aria-valuemax={100}
 		aria-label="Reading progress"
 	>
-		<div class="h-full bg-star transition-[width] duration-300" style="width: {fraction * 100}%"></div>
+		<div
+			class="h-full transition-[width] duration-300 ease-[var(--ease-atelier)]"
+			style="width: {fraction * 100}%; background: var(--stage-progress)"
+		></div>
 	</div>
 
 	{#if loading}
@@ -180,35 +186,41 @@
 	{:else if error}
 		<div class="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
 			<p class="text-sm" style="color: var(--stage-muted)">{error}</p>
-			<a href="/" class="rounded-full bg-star px-5 py-2.5 text-sm font-medium text-void no-underline"
+			<a
+				href="/"
+				class="rounded-full bg-seal px-5 py-2.5 text-sm font-medium text-white no-underline shadow-[0_6px_16px_rgba(224,60,43,0.25)]"
 				>Back to library</a
 			>
 		</div>
 	{:else if book && prefs}
-		<!-- chrome top -->
 		<header
-			class="absolute inset-x-0 top-0 z-40 flex items-center justify-between gap-3 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] transition-all duration-300 ease-[var(--ease-out-expo)] {chromeVisible &&
+			class="absolute inset-x-0 top-0 z-40 flex items-center justify-between gap-3 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] transition-all duration-300 ease-[var(--ease-atelier)] {chromeVisible &&
 			!focusMode
 				? 'translate-y-0 opacity-100'
 				: 'pointer-events-none -translate-y-2 opacity-0'}"
 		>
 			<div
-				class="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-void-panel/95 px-2 py-1.5 ring-1 ring-hairline backdrop-blur-md"
+				class="flex min-w-0 flex-1 items-center gap-1.5 rounded-full px-1.5 py-1.5 shadow-[var(--shadow-island)] ring-1 backdrop-blur-xl"
+				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); --tw-ring-color: color-mix(in srgb, var(--stage-fg) 8%, transparent)"
 			>
 				<a
 					href="/"
-					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-dim no-underline hover:bg-void-elevated hover:text-ink"
+					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full no-underline transition-colors hover:bg-black/5"
+					style="color: var(--stage-chrome-mute)"
 					aria-label="Back to library"
 				>
 					<ArrowLeft size={18} weight="light" />
 				</a>
-				<div class="min-w-0 flex-1">
-					<p class="truncate font-ui text-sm font-medium tracking-tight text-ink">{book.title}</p>
-					<p class="truncate text-xs text-ink-dim">{book.author}</p>
+				<div class="min-w-0 flex-1 px-1">
+					<p class="truncate font-ui text-sm font-medium tracking-tight" style="color: var(--stage-chrome-fg)">
+						{book.title}
+					</p>
+					<p class="truncate text-xs" style="color: var(--stage-chrome-mute)">{book.author}</p>
 				</div>
 				<button
 					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-dim hover:bg-void-elevated hover:text-ink"
+					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/5"
+					style="color: var(--stage-chrome-mute)"
 					aria-label="Table of contents"
 					onclick={() => {
 						tocOpen = !tocOpen;
@@ -219,7 +231,8 @@
 				</button>
 				<button
 					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-dim hover:bg-void-elevated hover:text-ink"
+					class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/5"
+					style="color: var(--stage-chrome-mute)"
 					aria-label="Typography and theme"
 					onclick={() => {
 						typeOpen = !typeOpen;
@@ -231,7 +244,6 @@
 			</div>
 		</header>
 
-		<!-- reader body -->
 		<div class="h-full w-full">
 			{#if book.format === 'epub'}
 				<EpubReader
@@ -253,18 +265,18 @@
 			{/if}
 		</div>
 
-		<!-- type panel -->
 		{#if typeOpen}
 			<div
-				class="absolute bottom-4 left-1/2 z-40 w-[min(100%-1.5rem,22rem)] -translate-x-1/2 rounded-[var(--radius-lg)] bg-void-panel/95 p-4 text-ink ring-1 ring-hairline backdrop-blur-md"
+				class="absolute bottom-4 left-1/2 z-40 w-[min(100%-1.5rem,22rem)] -translate-x-1/2 rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-plate-hover)] ring-1 backdrop-blur-xl"
+				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); --tw-ring-color: color-mix(in srgb, var(--stage-fg) 8%, transparent)"
 				role="dialog"
 				aria-label="Reading settings"
 			>
 				<div class="mb-3 flex items-center justify-between">
-					<p class="text-sm font-medium">Type & theme</p>
+					<p class="text-sm font-semibold tracking-tight">Type & theme</p>
 					<button
 						type="button"
-						class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-void-elevated"
+						class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-black/5"
 						aria-label="Close"
 						onclick={() => (typeOpen = false)}
 					>
@@ -275,16 +287,18 @@
 					{#each themes as t (t.id)}
 						<button
 							type="button"
-							class="rounded-full px-3 py-1.5 text-xs ring-1 transition-colors {prefs.theme === t.id
-								? 'bg-star text-void ring-star'
-								: 'bg-void-elevated text-ink-dim ring-hairline hover:text-ink'}"
+							class="rounded-full px-3 py-1.5 text-xs font-medium transition-colors {prefs.theme ===
+							t.id
+								? 'bg-indigo text-white'
+								: 'bg-black/5 hover:bg-black/10'}"
+							style={prefs.theme === t.id ? '' : 'color: var(--stage-chrome-mute)'}
 							onclick={() => updatePrefs({ theme: t.id })}
 						>
 							{t.label}
 						</button>
 					{/each}
 				</div>
-				<label class="mb-3 block text-xs text-ink-dim">
+				<label class="mb-3 block text-xs" style="color: var(--stage-chrome-mute)">
 					Size · {prefs.fontSize}px
 					<input
 						type="range"
@@ -292,11 +306,12 @@
 						max="32"
 						step="1"
 						value={prefs.fontSize}
-						class="mt-1 w-full accent-star"
-						oninput={(e) => updatePrefs({ fontSize: Number((e.currentTarget as HTMLInputElement).value) })}
+						class="mt-1.5 w-full accent-indigo"
+						oninput={(e) =>
+							updatePrefs({ fontSize: Number((e.currentTarget as HTMLInputElement).value) })}
 					/>
 				</label>
-				<label class="mb-3 block text-xs text-ink-dim">
+				<label class="mb-3 block text-xs" style="color: var(--stage-chrome-mute)">
 					Line height · {prefs.lineHeight.toFixed(2)}
 					<input
 						type="range"
@@ -304,12 +319,12 @@
 						max="2.2"
 						step="0.05"
 						value={prefs.lineHeight}
-						class="mt-1 w-full accent-star"
+						class="mt-1.5 w-full accent-indigo"
 						oninput={(e) =>
 							updatePrefs({ lineHeight: Number((e.currentTarget as HTMLInputElement).value) })}
 					/>
 				</label>
-				<label class="block text-xs text-ink-dim">
+				<label class="block text-xs" style="color: var(--stage-chrome-mute)">
 					Measure · {prefs.measure}ch
 					<input
 						type="range"
@@ -317,29 +332,33 @@
 						max="90"
 						step="1"
 						value={prefs.measure}
-						class="mt-1 w-full accent-star"
-						oninput={(e) => updatePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
+						class="mt-1.5 w-full accent-indigo"
+						oninput={(e) =>
+							updatePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
 					/>
 				</label>
-				<p class="mt-3 text-xs text-ink-faint">
+				<p class="mt-3 text-[11px]" style="color: var(--stage-chrome-mute)">
 					F focus · T contents · +/− size · Esc library
 				</p>
 			</div>
 		{/if}
 
-		<!-- toc -->
 		{#if tocOpen}
 			<div
-				class="absolute bottom-0 right-0 top-0 z-40 flex w-[min(100%,20rem)] flex-col bg-void-panel/98 text-ink ring-1 ring-hairline backdrop-blur-md"
+				class="absolute bottom-0 right-0 top-0 z-40 flex w-[min(100%,20rem)] flex-col shadow-[-12px_0_40px_rgba(0,0,0,0.12)] ring-1 backdrop-blur-xl"
+				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); --tw-ring-color: color-mix(in srgb, var(--stage-fg) 8%, transparent)"
 				role="dialog"
 				aria-modal="true"
 				aria-label="Contents"
 			>
-				<div class="flex items-center justify-between border-b border-hairline px-4 py-3">
-					<p class="text-sm font-medium">Contents</p>
+				<div
+					class="flex items-center justify-between px-4 py-3"
+					style="border-bottom: 1px solid var(--stage-rule)"
+				>
+					<p class="text-sm font-semibold tracking-tight">Contents</p>
 					<button
 						type="button"
-						class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-void-elevated"
+						class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-black/5"
 						aria-label="Close contents"
 						onclick={() => (tocOpen = false)}
 					>
@@ -348,8 +367,10 @@
 				</div>
 				<div class="flex-1 overflow-y-auto p-2">
 					{#if toc.length === 0}
-						<p class="px-2 py-4 text-sm text-ink-dim">
-							{book.format === 'epub' ? 'No table of contents in this file.' : 'Scroll the text document freely.'}
+						<p class="px-2 py-4 text-sm" style="color: var(--stage-chrome-mute)">
+							{book.format === 'epub'
+								? 'No table of contents in this file.'
+								: 'Scroll the text document freely.'}
 						</p>
 					{:else}
 						<ul class="space-y-0.5">
@@ -357,7 +378,8 @@
 								<li>
 									<button
 										type="button"
-										class="w-full rounded-[var(--radius-sm)] px-3 py-2 text-left text-sm text-ink-dim hover:bg-void-elevated hover:text-ink"
+										class="w-full rounded-[var(--radius-sm)] px-3 py-2.5 text-left text-sm transition-colors hover:bg-black/5"
+										style="color: var(--stage-chrome-mute)"
 										onclick={() => {
 											epubRef?.goTo(item.href);
 											tocOpen = false;

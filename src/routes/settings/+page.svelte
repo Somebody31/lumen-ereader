@@ -76,43 +76,48 @@
 	<title>Settings · Lumen</title>
 </svelte:head>
 
-<div class="mx-auto max-w-lg space-y-10">
-	<header>
-		<p class="mb-2 text-xs font-medium tracking-wide text-star-muted">Settings</p>
-		<h1 class="font-ui text-3xl font-semibold tracking-tight">Instrument</h1>
-		<p class="mt-2 text-sm leading-relaxed text-ink-dim">
+<div class="mx-auto max-w-lg space-y-8">
+	<header class="animate-plate-in">
+		<h1 class="font-ui text-[2.35rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink">
+			Settings
+		</h1>
+		<p class="mt-3 text-[15px] leading-relaxed text-ink-soft">
 			Defaults for new reading sessions. Cloud sync is optional and never required to open a book.
 		</p>
 	</header>
 
 	{#if prefs}
-		<section class="space-y-4 rounded-[var(--radius-lg)] bg-void-panel p-5 ring-1 ring-hairline">
-			<h2 class="font-ui text-sm font-semibold tracking-tight">Reading defaults</h2>
+		<section class="plate animate-plate-in stagger-1 space-y-5 p-6">
+			<div>
+				<h2 class="font-ui text-base font-semibold tracking-tight text-ink">Reading defaults</h2>
+				<p class="mt-1 text-sm text-ink-mute">Applied when you open a book.</p>
+			</div>
 			<div class="flex flex-wrap gap-2">
 				{#each themes as t (t.id)}
 					<button
 						type="button"
-						class="rounded-full px-3 py-1.5 text-xs ring-1 transition-colors {prefs.theme === t.id
-							? 'bg-star text-void ring-star'
-							: 'bg-void-elevated text-ink-dim ring-hairline hover:text-ink'}"
+						class="rounded-full px-3.5 py-1.5 text-xs font-medium tracking-tight transition-colors duration-200 ease-[var(--ease-atelier)] {prefs.theme ===
+						t.id
+							? 'bg-indigo text-white'
+							: 'bg-ash text-ink-soft hover:text-ink'}"
 						onclick={() => savePrefs({ theme: t.id })}
 					>
 						{t.label}
 					</button>
 				{/each}
 			</div>
-			<label class="block text-xs text-ink-dim">
+			<label class="block text-xs font-medium text-ink-mute">
 				Font size · {prefs.fontSize}px
 				<input
 					type="range"
 					min="14"
 					max="32"
 					value={prefs.fontSize}
-					class="mt-1 w-full accent-star"
+					class="mt-2 w-full accent-indigo"
 					oninput={(e) => savePrefs({ fontSize: Number((e.currentTarget as HTMLInputElement).value) })}
 				/>
 			</label>
-			<label class="block text-xs text-ink-dim">
+			<label class="block text-xs font-medium text-ink-mute">
 				Line height · {prefs.lineHeight.toFixed(2)}
 				<input
 					type="range"
@@ -120,37 +125,39 @@
 					max="2.2"
 					step="0.05"
 					value={prefs.lineHeight}
-					class="mt-1 w-full accent-star"
+					class="mt-2 w-full accent-indigo"
 					oninput={(e) =>
 						savePrefs({ lineHeight: Number((e.currentTarget as HTMLInputElement).value) })}
 				/>
 			</label>
-			<label class="block text-xs text-ink-dim">
+			<label class="block text-xs font-medium text-ink-mute">
 				Column measure · {prefs.measure}ch
 				<input
 					type="range"
 					min="45"
 					max="90"
 					value={prefs.measure}
-					class="mt-1 w-full accent-star"
+					class="mt-2 w-full accent-indigo"
 					oninput={(e) => savePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
 				/>
 			</label>
 		</section>
 	{/if}
 
-	<section class="space-y-4 rounded-[var(--radius-lg)] bg-void-panel p-5 ring-1 ring-hairline">
-		<div class="flex items-start gap-3">
-			<span class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-void-elevated ring-1 ring-hairline">
+	<section class="plate animate-plate-in stagger-2 space-y-5 p-6">
+		<div class="flex items-start gap-3.5">
+			<span
+				class="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-ash ring-1 ring-rule/70"
+			>
 				{#if session?.syncAvailable && session.authenticated}
-					<Cloud size={18} weight="light" class="text-star" />
+					<Cloud size={18} weight="light" class="text-indigo" />
 				{:else}
-					<CloudSlash size={18} weight="light" class="text-ink-dim" />
+					<CloudSlash size={18} weight="light" class="text-ink-mute" />
 				{/if}
 			</span>
 			<div>
-				<h2 class="font-ui text-sm font-semibold tracking-tight">Cloud sync</h2>
-				<p class="mt-1 text-sm leading-relaxed text-ink-dim">
+				<h2 class="font-ui text-base font-semibold tracking-tight text-ink">Cloud sync</h2>
+				<p class="mt-1 text-sm leading-relaxed text-ink-soft">
 					{session?.message || 'Checking sync status…'}
 				</p>
 			</div>
@@ -160,8 +167,12 @@
 			{#if session.authenticated}
 				<div class="flex flex-wrap gap-2">
 					<Button type="button" disabled={busy} onclick={handlePush}>Push library</Button>
-					<Button type="button" variant="ghost" disabled={busy} onclick={handlePull}>Pull library</Button>
-					<Button type="button" variant="ghost" disabled={busy} onclick={handleLogout}>Sign out</Button>
+					<Button type="button" variant="ghost" disabled={busy} onclick={handlePull}
+						>Pull library</Button
+					>
+					<Button type="button" variant="ghost" disabled={busy} onclick={handleLogout}
+						>Sign out</Button
+					>
 				</div>
 			{:else}
 				<form
@@ -171,13 +182,13 @@
 						handleLogin();
 					}}
 				>
-					<label class="block text-xs text-ink-dim">
+					<label class="block text-xs font-medium text-ink-mute">
 						Passphrase
 						<input
 							type="password"
 							bind:value={passphrase}
 							autocomplete="current-password"
-							class="mt-1 w-full rounded-[var(--radius-md)] bg-void-elevated px-3 py-2.5 text-sm text-ink ring-1 ring-hairline placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-star"
+							class="mt-1.5 w-full rounded-[var(--radius-md)] bg-ash px-3.5 py-2.5 text-sm text-ink ring-1 ring-rule/80 placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-indigo"
 							placeholder="Deployment passphrase"
 						/>
 					</label>
@@ -185,25 +196,27 @@
 				</form>
 			{/if}
 		{:else}
-			<p class="text-xs leading-relaxed text-ink-faint">
+			<p class="text-xs leading-relaxed text-ink-mute">
 				To enable sync on Cloudflare: create R2 bucket and KV namespace, set secrets
-				<code class="text-ink-dim">SESSION_SECRET</code> and
-				<code class="text-ink-dim">READER_PASSPHRASE</code>, then redeploy. Until then, everything stays local.
+				<code class="rounded bg-ash px-1 py-0.5 text-ink-soft">SESSION_SECRET</code>
+				and
+				<code class="rounded bg-ash px-1 py-0.5 text-ink-soft">READER_PASSPHRASE</code>, then
+				redeploy. Until then, everything stays local.
 			</p>
 		{/if}
 
 		{#if message}
-			<p class="text-sm text-star-soft" role="status">{message}</p>
+			<p class="text-sm font-medium text-indigo" role="status">{message}</p>
 		{/if}
 		{#if error}
 			<p class="text-sm text-danger" role="alert">{error}</p>
 		{/if}
 	</section>
 
-	<section class="text-xs leading-relaxed text-ink-faint">
+	<section class="animate-plate-in stagger-3 text-xs leading-relaxed text-ink-mute">
 		<p>
-			Lumen never requires an account to read. Keyboard in the reader: F focus, T contents, +/− size, arrows or
-			J/K for EPUB pages, Esc back.
+			Lumen never requires an account to read. Keyboard in the reader: F focus, T contents, +/− size,
+			arrows or J/K for EPUB pages, Esc back.
 		</p>
 	</section>
 </div>

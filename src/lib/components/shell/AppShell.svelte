@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import BookOpen from 'phosphor-svelte/lib/BookOpen';
 	import GearSix from 'phosphor-svelte/lib/GearSix';
-	import House from 'phosphor-svelte/lib/House';
+	import Books from 'phosphor-svelte/lib/Books';
 
 	let { children } = $props();
 
@@ -13,51 +12,70 @@
 {#if isReader}
 	{@render children()}
 {:else}
-	<div class="min-h-[100dvh] bg-void text-ink">
-		<header
-			class="sticky top-0 z-40 border-b border-hairline/80 bg-void/90 backdrop-blur-md"
-		>
-			<div class="mx-auto flex h-14 max-w-[1120px] items-center justify-between px-4 sm:px-6">
+	<div class="relative min-h-[100dvh] bg-ash text-ink">
+		<!-- soft atelier light (not a neon mesh orb) -->
+		<div
+			class="pointer-events-none fixed inset-0 z-0"
+			aria-hidden="true"
+			style="background:
+				radial-gradient(ellipse 80% 50% at 15% -10%, rgba(31,58,104,0.07), transparent 55%),
+				radial-gradient(ellipse 50% 40% at 95% 5%, rgba(224,60,43,0.04), transparent 45%);"
+		></div>
+		<!-- subtle ruled desk texture -->
+		<div
+			class="pointer-events-none fixed inset-0 z-0 opacity-[0.28]"
+			aria-hidden="true"
+			style="background-image: linear-gradient(var(--color-rule) 1px, transparent 1px); background-size: 100% 52px; mask-image: linear-gradient(to bottom, black 0%, transparent 68%);"
+		></div>
+
+		<header class="sticky top-0 z-40 px-4 pt-4 sm:px-6 sm:pt-5">
+			<div
+				class="mx-auto flex h-[3.35rem] max-w-[1180px] items-center justify-between rounded-full bg-paper/92 px-2 pl-3 shadow-[var(--shadow-island)] backdrop-blur-xl ring-1 ring-black/[0.045]"
+			>
 				<a href="/" class="group flex items-center gap-2.5 no-underline">
 					<span
-						class="flex h-8 w-8 items-center justify-center rounded-full bg-void-panel ring-1 ring-hairline transition-transform duration-200 ease-[var(--ease-out-expo)] group-active:scale-[0.98]"
+						class="relative flex h-8 w-8 items-center justify-center rounded-[10px] bg-indigo text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_8px_rgba(31,58,104,0.25)] transition-transform duration-200 ease-[var(--ease-atelier)] group-active:scale-95"
 					>
-						<span class="h-1.5 w-1.5 rounded-full bg-star"></span>
+						<span class="font-ui text-[11px] font-semibold tracking-tight">L</span>
+						<span
+							class="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-seal ring-2 ring-paper"
+						></span>
 					</span>
-					<span class="font-ui text-sm font-semibold tracking-tight text-ink">Lumen</span>
+					<span class="font-ui text-[15px] font-semibold tracking-tight text-ink">Lumen</span>
 				</a>
-				<nav class="flex items-center gap-1" aria-label="Primary">
+				<nav class="flex items-center gap-0.5 pr-0.5" aria-label="Primary">
 					<a
 						href="/"
-						class="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-sm transition-colors duration-200 {path ===
+						class="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium tracking-tight transition-all duration-200 ease-[var(--ease-atelier)] {path ===
 						'/'
-							? 'bg-void-panel text-ink'
-							: 'text-ink-dim hover:text-ink'}"
+							? 'bg-indigo text-white shadow-[0_2px_10px_rgba(31,58,104,0.28)]'
+							: 'text-ink-soft hover:bg-ash hover:text-ink'}"
 					>
-						<House size={18} weight="light" />
+						<Books size={17} weight="light" />
 						<span class="hidden sm:inline">Library</span>
 					</a>
 					<a
 						href="/settings"
-						class="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-sm transition-colors duration-200 {path.startsWith(
+						class="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium tracking-tight transition-all duration-200 ease-[var(--ease-atelier)] {path.startsWith(
 							'/settings'
 						)
-							? 'bg-void-panel text-ink'
-							: 'text-ink-dim hover:text-ink'}"
+							? 'bg-indigo text-white shadow-[0_2px_10px_rgba(31,58,104,0.28)]'
+							: 'text-ink-soft hover:bg-ash hover:text-ink'}"
 					>
-						<GearSix size={18} weight="light" />
+						<GearSix size={17} weight="light" />
 						<span class="hidden sm:inline">Settings</span>
 					</a>
 				</nav>
 			</div>
 		</header>
-		<main class="mx-auto max-w-[1120px] px-4 py-8 sm:px-6 sm:py-10">
+
+		<main class="relative z-10 mx-auto max-w-[1180px] px-4 pb-16 pt-8 sm:px-6 sm:pt-10">
 			{@render children()}
 		</main>
-		<footer class="mx-auto max-w-[1120px] px-4 pb-10 pt-4 sm:px-6">
-			<p class="flex items-center gap-2 text-xs text-ink-faint">
-				<BookOpen size={14} weight="light" />
-				Local-first reading. Cloud sync optional.
+
+		<footer class="relative z-10 mx-auto max-w-[1180px] px-4 pb-10 sm:px-6">
+			<p class="text-[12px] leading-relaxed text-ink-mute">
+				Local-first reading · files stay on this device · cloud sync optional
 			</p>
 		</footer>
 	</div>

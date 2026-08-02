@@ -10,7 +10,7 @@
 	<link rel="icon" href={favicon} />
 	<title>Lumen</title>
 	<meta name="description" content="Lumen — local-first e-reader. Import EPUB and text, read offline, sync optionally." />
-	<meta name="theme-color" content="#0B0E14" />
+	<meta name="theme-color" content="#ECEEF1" />
 </svelte:head>
 
 <AppShell>
