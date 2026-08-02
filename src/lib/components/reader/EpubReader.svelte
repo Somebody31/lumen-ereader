@@ -42,43 +42,51 @@
 	let resizeTimer: ReturnType<typeof setTimeout> | null = null;
 	let wheelCleanup: (() => void) | null = null;
 	let prefsApplyTimer: ReturnType<typeof setTimeout> | null = null;
+	/**
+	 * Mutable snapshot always read by content/layout hooks.
+	 * epubjs content hooks close over this ref (not a stale Svelte prop snapshot).
+	 */
+	let activePrefs: ReaderPrefs = prefs;
+	/** True once we wrap layout.format to re-stamp after size() wipes body styles. */
+	let layoutPatched = false;
 
-	const themeStyles = $derived.by(() => {
-		const map: Record<
-			string,
-			{ bg: string; fg: string; mute: string; link: string; rule: string }
-		> = {
-			night: {
-				bg: '#0c0c0c',
-				fg: '#f3f2ed',
-				mute: '#9a9a94',
-				link: '#d0544c',
-				rule: 'rgba(243,242,237,0.14)'
-			},
-			paper: {
-				bg: '#f7f5f0',
-				fg: '#1a1c22',
-				mute: '#5a5a56',
-				link: '#a33a34',
-				rule: 'rgba(26,28,34,0.14)'
-			},
-			sepia: {
-				bg: '#e8dcc8',
-				fg: '#3d3428',
-				mute: '#6b5e4e',
-				link: '#8b3a2a',
-				rule: 'rgba(61,52,40,0.18)'
-			},
-			contrast: {
-				bg: '#000000',
-				fg: '#ffffff',
-				mute: '#c0c0c0',
-				link: '#ff8a80',
-				rule: 'rgba(255,255,255,0.2)'
-			}
-		};
-		return map[prefs.theme] || map.night;
-	});
+	const THEME_MAP: Record<
+		string,
+		{ bg: string; fg: string; mute: string; link: string; rule: string }
+	> = {
+		night: {
+			bg: '#0c0c0c',
+			fg: '#f3f2ed',
+			mute: '#9a9a94',
+			link: '#d0544c',
+			rule: 'rgba(243,242,237,0.14)'
+		},
+		paper: {
+			bg: '#f7f5f0',
+			fg: '#1a1c22',
+			mute: '#5a5a56',
+			link: '#a33a34',
+			rule: 'rgba(26,28,34,0.14)'
+		},
+		sepia: {
+			bg: '#e8dcc8',
+			fg: '#3d3428',
+			mute: '#6b5e4e',
+			link: '#8b3a2a',
+			rule: 'rgba(61,52,40,0.18)'
+		},
+		contrast: {
+			bg: '#000000',
+			fg: '#ffffff',
+			mute: '#c0c0c0',
+			link: '#ff8a80',
+			rule: 'rgba(255,255,255,0.2)'
+		}
+	};
+
+	function themeFor(p: ReaderPrefs) {
+		return THEME_MAP[p.theme] || THEME_MAP.night;
+	}
 
 	/** @font-face for iframe documents — parent-loaded fontsource faces are not inherited. */
 	function buildFontFaceCss(): string {
@@ -130,23 +138,22 @@
 
 	/**
 	 * Serialized CSS with !important so publisher sheets cannot win.
-	 * Matches TextReader: measure (ch) column, margin padding, rail clearance.
-	 * Stage width is the host — never the intrinsic size of the largest image.
+	 * Accepts explicit prefs so parent can apply a snapshot before prop flush.
 	 */
-	function buildThemeCss(): string {
-		const { bg, fg, mute, link, rule } = themeStyles;
-		const align = prefs.textAlign ?? 'left';
-		const tracking = prefs.letterSpacing ?? 0;
-		const para = prefs.paragraphSpacing ?? 1;
-		const hyphens = prefs.hyphenate ? 'auto' : 'manual';
-		const margin = Math.max(0, prefs.margin ?? 24);
-		const measure = Math.max(20, Math.min(120, prefs.measure ?? 68));
+	function buildThemeCss(p: ReaderPrefs = prefs): string {
+		const { bg, fg, mute, link, rule } = themeFor(p);
+		const align = p.textAlign ?? 'left';
+		const tracking = p.letterSpacing ?? 0;
+		const para = p.paragraphSpacing ?? 1;
+		const hyphens = p.hyphenate ? 'auto' : 'manual';
+		const margin = Math.max(0, p.margin ?? 24);
+		const measure = Math.max(20, Math.min(120, p.measure ?? 68));
 		/* Left rail (~3.25rem) must clear chrome; TextReader uses max(margin, 3.75rem) */
 		const leftPad = Math.max(margin, 52);
 		const rightPad = Math.max(margin, 16);
 		const topPad = Math.max(margin, 20);
 		const bottomPad = Math.max(Math.round(margin * 2.2), 48);
-		const family = fontStack(prefs.fontFamily);
+		const family = fontStack(p.fontFamily);
 		const display =
 			'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif';
 
@@ -200,8 +207,8 @@ body {
 	background: ${bg} !important;
 	color: ${fg} !important;
 	font-family: ${family} !important;
-	font-size: ${prefs.fontSize}px !important;
-	line-height: ${prefs.lineHeight} !important;
+	font-size: ${p.fontSize}px !important;
+	line-height: ${p.lineHeight} !important;
 	letter-spacing: ${tracking}em !important;
 	text-align: ${align} !important;
 	hyphens: ${hyphens};
@@ -216,6 +223,17 @@ figure, p, table, ul, ol, li, blockquote, pre,
 h1, h2, h3, h4, h5, h6 {
 	max-width: 100% !important;
 	min-width: 0 !important;
+}
+/*
+ * Publisher sheets often pin font-size/family on p/div — body-only rules never show.
+ * Prose inherits type-panel size/face/leading; heads keep their em scale below.
+ */
+p, li, td, th, dd, dt, blockquote, pre, code, span, a, em, i, strong, b, small, sub, sup {
+	font-family: inherit !important;
+	font-size: inherit !important;
+	line-height: inherit !important;
+	letter-spacing: inherit !important;
+	color: inherit !important;
 }
 img, svg, video, canvas, object, embed, picture, image {
 	max-width: 100% !important;
@@ -338,72 +356,108 @@ pre {
 	}
 
 	/**
-	 * Strip publisher fixed widths / image attrs so the measure column stays stable.
-	 * Do NOT call contentWidth(px) — that forces body to full stage width and kills measure.
+	 * Stamp inline styles on html/body — highest priority, survives publisher CSS.
+	 * Used for real-time type-panel updates (size, measure, margin, face, theme…).
 	 */
-	function clampMediaInContents(contents: {
-		document?: Document;
-		window?: Window;
-		addStylesheetCss?: (css: string, key: string) => void;
-	}) {
+	function stampBodyInline(doc: Document, p: ReaderPrefs) {
+		const { bg, fg } = themeFor(p);
+		const margin = Math.max(0, p.margin ?? 24);
+		const measure = Math.max(20, Math.min(120, p.measure ?? 68));
+		const leftPad = Math.max(margin, 52);
+		const rightPad = Math.max(margin, 16);
+		const topPad = Math.max(margin, 20);
+		const bottomPad = Math.max(Math.round(margin * 2.2), 48);
+		const align = p.textAlign ?? 'left';
+		const tracking = p.letterSpacing ?? 0;
+		const hyphens = p.hyphenate ? 'auto' : 'manual';
+		const family = fontStack(p.fontFamily);
+
+		const root = doc.documentElement;
+		const body = doc.body;
+		if (!body) return;
+
+		root.style.setProperty('background', bg, 'important');
+		root.style.setProperty('max-width', '100%', 'important');
+		root.style.setProperty('overflow-x', 'hidden', 'important');
+		root.style.setProperty('overflow-y', 'visible', 'important');
+
+		// Clear epubjs contentWidth stamps
+		body.style.removeProperty('width');
+		body.style.setProperty('box-sizing', 'border-box', 'important');
+		body.style.setProperty('background', bg, 'important');
+		body.style.setProperty('color', fg, 'important');
+		body.style.setProperty('font-family', family, 'important');
+		body.style.setProperty('font-size', `${p.fontSize}px`, 'important');
+		body.style.setProperty('line-height', String(p.lineHeight), 'important');
+		body.style.setProperty('letter-spacing', `${tracking}em`, 'important');
+		body.style.setProperty('text-align', align, 'important');
+		body.style.setProperty('hyphens', hyphens, 'important');
+		body.style.setProperty('max-width', `${measure}ch`, 'important');
+		body.style.setProperty('width', '100%', 'important');
+		body.style.setProperty('min-width', '0', 'important');
+		body.style.setProperty('margin-left', 'auto', 'important');
+		body.style.setProperty('margin-right', 'auto', 'important');
+		body.style.setProperty('margin-top', `${topPad}px`, 'important');
+		body.style.setProperty('margin-bottom', `${bottomPad}px`, 'important');
+		body.style.setProperty('padding-left', `${leftPad}px`, 'important');
+		body.style.setProperty('padding-right', `${rightPad}px`, 'important');
+		body.style.setProperty('padding-top', '0', 'important');
+		body.style.setProperty('padding-bottom', '0', 'important');
+		body.style.setProperty('overflow-x', 'hidden', 'important');
+		body.style.setProperty('overflow-y', 'visible', 'important');
+
+		// Paragraph spacing + force type inheritance (publisher p { font-size: 14px } etc.)
+		const para = p.paragraphSpacing ?? 1;
+		for (const el of body.querySelectorAll('p, li, td, th, blockquote')) {
+			const node = el as HTMLElement;
+			node.style.setProperty('font-family', 'inherit', 'important');
+			node.style.setProperty('font-size', 'inherit', 'important');
+			node.style.setProperty('line-height', 'inherit', 'important');
+			node.style.setProperty('letter-spacing', 'inherit', 'important');
+			node.style.setProperty('color', 'inherit', 'important');
+			if (el.tagName === 'P') {
+				node.style.setProperty('margin-bottom', `${para}em`, 'important');
+				node.style.setProperty('text-align', align, 'important');
+			}
+		}
+
+		const media = doc.querySelectorAll(
+			'img, svg, video, canvas, object, embed, picture, figure, image'
+		);
+		for (const node of media) {
+			const el = node as HTMLElement;
+			el.style.setProperty('max-width', '100%', 'important');
+			el.style.setProperty('width', 'auto', 'important');
+			el.style.setProperty('height', 'auto', 'important');
+			el.style.setProperty('object-fit', 'contain', 'important');
+			if (el instanceof HTMLImageElement) {
+				el.removeAttribute('width');
+				el.removeAttribute('height');
+			}
+		}
+	}
+
+	function writeStyleTag(doc: Document, css: string, id = 'lumen-theme') {
+		let el = doc.getElementById(id) as HTMLStyleElement | null;
+		if (!el) {
+			el = doc.createElement('style');
+			el.id = id;
+			(doc.head || doc.documentElement).appendChild(el);
+		}
+		el.textContent = css;
+	}
+
+	/**
+	 * Strip publisher fixed widths / image attrs so the measure column stays stable.
+	 */
+	function clampMediaInContents(
+		contents: { document?: Document; window?: Window },
+		p: ReaderPrefs = prefs
+	) {
 		try {
 			const doc = contents.document;
 			if (!doc) return;
-
-			const measure = Math.max(20, Math.min(120, prefs.measure ?? 68));
-			const margin = Math.max(0, prefs.margin ?? 24);
-			const leftPad = Math.max(margin, 52);
-			const rightPad = Math.max(margin, 16);
-			const topPad = Math.max(margin, 20);
-			const bottomPad = Math.max(Math.round(margin * 2.2), 48);
-
-			const root = doc.documentElement;
-			const body = doc.body;
-			// Clear any inline width epubjs may have stamped (kills measure)
-			body?.style.removeProperty('width');
-			root?.style.setProperty('max-width', '100%', 'important');
-			root?.style.setProperty('min-width', '0', 'important');
-			root?.style.setProperty('overflow-x', 'hidden', 'important');
-			// Mirror theme column — inline !important beats late publisher rules
-			body?.style.setProperty('max-width', `${measure}ch`, 'important');
-			body?.style.setProperty('width', '100%', 'important');
-			body?.style.setProperty('min-width', '0', 'important');
-			body?.style.setProperty('margin-left', 'auto', 'important');
-			body?.style.setProperty('margin-right', 'auto', 'important');
-			body?.style.setProperty('margin-top', `${topPad}px`, 'important');
-			body?.style.setProperty('margin-bottom', `${bottomPad}px`, 'important');
-			body?.style.setProperty('padding-left', `${leftPad}px`, 'important');
-			body?.style.setProperty('padding-right', `${rightPad}px`, 'important');
-			body?.style.setProperty('overflow-x', 'hidden', 'important');
-			body?.style.setProperty('box-sizing', 'border-box', 'important');
-
-			const media = doc.querySelectorAll(
-				'img, svg, video, canvas, object, embed, picture, figure, image'
-			);
-			for (const node of media) {
-				const el = node as HTMLElement;
-				el.style.setProperty('max-width', '100%', 'important');
-				el.style.setProperty('width', 'auto', 'important');
-				el.style.setProperty('height', 'auto', 'important');
-				el.style.setProperty('object-fit', 'contain', 'important');
-				if (el instanceof HTMLImageElement) {
-					el.removeAttribute('width');
-					el.removeAttribute('height');
-				}
-			}
-
-			// Publisher fixed-px wrappers (common on cover XHTML)
-			const wide = doc.querySelectorAll('[style*="width"], [width]');
-			for (const node of wide) {
-				const el = node as HTMLElement;
-				if (el.tagName === 'BODY' || el.tagName === 'HTML') continue;
-				el.removeAttribute('width');
-				const sw = el.style?.width;
-				if (sw && /px$/i.test(sw)) {
-					el.style.setProperty('max-width', '100%', 'important');
-					el.style.setProperty('width', '100%', 'important');
-				}
-			}
+			stampBodyInline(doc, p);
 		} catch {
 			/* */
 		}
@@ -438,59 +492,162 @@ pre {
 		}
 	}
 
-	/** Write theme CSS into every open iframe (and seed epubjs themes for new sections). */
-	function injectThemeIntoContents() {
-		if (!rendition) return;
-		const css = buildThemeCss();
+	/** Collect every reachable content document (epubjs + raw iframes). */
+	function eachContentDoc(fn: (doc: Document, contents?: { document?: Document; addStylesheetCss?: (css: string, key: string) => void }) => void) {
+		const seen = new Set<Document>();
 		try {
-			if (typeof rendition.themes?.registerCss === 'function') {
+			const contents = rendition?.getContents?.() || [];
+			for (const c of contents) {
+				const doc = c.document as Document | undefined;
+				if (doc && !seen.has(doc)) {
+					seen.add(doc);
+					fn(doc, c);
+				}
+			}
+		} catch {
+			/* */
+		}
+		// Fallback: continuous views may not all be in getContents during transitions
+		try {
+			const iframes = host?.querySelectorAll('iframe') || [];
+			for (const iframe of iframes) {
+				try {
+					const doc = (iframe as HTMLIFrameElement).contentDocument;
+					if (doc && !seen.has(doc)) {
+						seen.add(doc);
+						fn(doc);
+					}
+				} catch {
+					/* cross-origin */
+				}
+			}
+		} catch {
+			/* */
+		}
+	}
+
+	/** Write theme CSS + inline prefs into every open iframe. */
+	function injectThemeIntoContents(p: ReaderPrefs = activePrefs) {
+		const css = buildThemeCss(p);
+		try {
+			if (rendition && typeof rendition.themes?.registerCss === 'function') {
 				rendition.themes.registerCss('default', css);
 			}
 		} catch {
 			/* */
 		}
+		// epubjs native overrides (re-applied on new sections via themes.overrides hook)
 		try {
-			const contents = rendition.getContents?.() || [];
-			for (const c of contents) {
-				// Prefer epubjs API; also stamp style#lumen-theme so updates always stick
-				c.addStylesheetCss?.(css, 'lumen-theme');
-				try {
-					const doc = c.document as Document | undefined;
-					if (doc?.head) {
-						let el = doc.getElementById('lumen-theme') as HTMLStyleElement | null;
-						if (!el) {
-							el = doc.createElement('style');
-							el.id = 'lumen-theme';
-							doc.head.appendChild(el);
-						}
-						if (el.textContent !== css) {
-							el.textContent = css;
-						}
-					}
-				} catch {
-					/* */
-				}
-				clampMediaInContents(c);
+			const t = rendition?.themes;
+			if (t && typeof t.override === 'function') {
+				const { bg, fg } = themeFor(p);
+				t.override('font-size', `${p.fontSize}px`, true);
+				t.override('font-family', fontStack(p.fontFamily), true);
+				t.override('line-height', String(p.lineHeight), true);
+				t.override('color', fg, true);
+				t.override('background', bg, true);
+				t.override('background-color', bg, true);
+				t.override('letter-spacing', `${p.letterSpacing ?? 0}em`, true);
+				t.override('text-align', p.textAlign ?? 'left', true);
 			}
 		} catch {
 			/* */
 		}
+		eachContentDoc((doc, contents) => {
+			try {
+				contents?.addStylesheetCss?.(css, 'lumen-theme');
+			} catch {
+				/* */
+			}
+			try {
+				writeStyleTag(doc, css, 'lumen-theme');
+				// Also under epubjs key so registerCss path stays consistent
+				writeStyleTag(doc, css, 'epubjs-inserted-css-lumen-theme');
+				writeStyleTag(doc, css, 'epubjs-inserted-css-default');
+				stampBodyInline(doc, p);
+			} catch {
+				/* */
+			}
+		});
 		lockStageWidth();
 	}
 
-	/** Apply type panel prefs immediately (theme, size, measure, margin, …). */
-	function applyLivePrefs() {
-		if (!rendition || !displayReady) return;
-		injectThemeIntoContents();
-		// Debounce expand slightly so range sliders stay smooth while still live
+	/**
+	 * epubjs layout.format → contents.size() assigns body width/margin/padding without
+	 * !important and *replaces* any prior style.setProperty(..., 'important') via CSSOM.
+	 * That runs on every expand/resize (font-size changes trigger resize listeners).
+	 * Patch format so we always re-stamp measure/margin/type after size() runs.
+	 */
+	function patchLayoutFormat() {
+		if (!rendition?.layout || layoutPatched) return;
+		const layout = rendition.layout;
+		const original = layout.format?.bind(layout);
+		if (typeof original !== 'function') return;
+		layout.format = (contents: { document?: Document; addStylesheetCss?: (css: string, key: string) => void }, section?: unknown, axis?: unknown) => {
+			const result = original(contents, section, axis);
+			try {
+				const p = activePrefs;
+				const css = buildThemeCss(p);
+				const doc = contents?.document;
+				if (doc) {
+					contents.addStylesheetCss?.(css, 'lumen-theme');
+					writeStyleTag(doc, css, 'lumen-theme');
+					writeStyleTag(doc, css, 'epubjs-inserted-css-lumen-theme');
+					writeStyleTag(doc, css, 'epubjs-inserted-css-default');
+					stampBodyInline(doc, p);
+				}
+			} catch {
+				/* */
+			}
+			return result;
+		};
+		layoutPatched = true;
+	}
+
+	/** Re-stamp after expand/format settles (double rAF matches epubjs reframe timing). */
+	function restampAfterLayout() {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (!rendition && !host) return;
+				injectThemeIntoContents(activePrefs);
+				lockStageWidth();
+			});
+		});
+	}
+
+	/**
+	 * Apply type-panel prefs immediately.
+	 * Exported so the read page can call this on every slider tick (not rely on $effect alone).
+	 */
+	export function applyPrefs(next?: ReaderPrefs) {
+		const p = next ?? prefs;
+		activePrefs = p;
+		if (!rendition && !host) return;
+		injectThemeIntoContents(p);
+		// Debounce expand so range sliders stay smooth; always re-stamp after expand
+		// because format() wipes body styles when font metrics change.
 		if (prefsApplyTimer) clearTimeout(prefsApplyTimer);
 		prefsApplyTimer = setTimeout(() => {
 			prefsApplyTimer = null;
-			if (!rendition || !displayReady) return;
+			if (!rendition) {
+				injectThemeIntoContents(activePrefs);
+				return;
+			}
 			reexpandViews();
 			lockStageWidth();
-			void fillContinuous();
-		}, 40);
+			// Immediate re-stamp (format may already have run inside expand)
+			injectThemeIntoContents(activePrefs);
+			restampAfterLayout();
+			void fillContinuous().then(() => {
+				injectThemeIntoContents(activePrefs);
+				lockStageWidth();
+			});
+		}, 32);
+	}
+
+	/** Internal alias — tests and older call sites. */
+	function applyLivePrefs(p?: ReaderPrefs) {
+		applyPrefs(p);
 	}
 
 	function resizeToHost(force = false) {
@@ -820,24 +977,68 @@ pre {
 					allowScriptedContent: false
 				});
 
+				// layout.format → size() wipes body styles after expand/resize — always re-stamp.
+				patchLayoutFormat();
+
 				// Theme + clamp media before expand measures textHeight/width.
 				// Large cover images must not become the column width.
+				// Always read activePrefs (not a stale prop closed over at open time).
 				rendition.hooks.content.register((contents: {
 					addStylesheetCss?: (css: string, key: string) => void;
 					document?: Document;
 					window?: Window;
-					contentWidth?: (w?: number) => number;
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					on?: (event: string, fn: (...args: any[]) => void) => void;
 				}) => {
-					contents.addStylesheetCss?.(buildThemeCss(), 'lumen-theme');
-					clampMediaInContents(contents);
-					// After late image decode, clamp again so expand keeps stage width
+					const p = activePrefs;
+					const css = buildThemeCss(p);
+					contents.addStylesheetCss?.(css, 'lumen-theme');
+					try {
+						if (contents.document) {
+							writeStyleTag(contents.document, css, 'lumen-theme');
+							writeStyleTag(contents.document, css, 'epubjs-inserted-css-default');
+							stampBodyInline(contents.document, p);
+						}
+					} catch {
+						/* */
+					}
+					// After size() on expand/resize, re-stamp measure/margin/type
+					const restamp = () => {
+						try {
+							const cur = activePrefs;
+							const doc = contents.document;
+							if (!doc) return;
+							const nextCss = buildThemeCss(cur);
+							contents.addStylesheetCss?.(nextCss, 'lumen-theme');
+							writeStyleTag(doc, nextCss, 'lumen-theme');
+							writeStyleTag(doc, nextCss, 'epubjs-inserted-css-default');
+							stampBodyInline(doc, cur);
+						} catch {
+							/* */
+						}
+					};
+					try {
+						// iframe view runs format() inside these handlers — restamp after
+						contents.on?.('expand', () => {
+							queueMicrotask(restamp);
+							requestAnimationFrame(restamp);
+						});
+						contents.on?.('resize', () => {
+							queueMicrotask(restamp);
+							requestAnimationFrame(restamp);
+						});
+					} catch {
+						/* */
+					}
+					// After late image decode, re-stamp so expand keeps stage width
 					try {
 						const imgs = contents.document?.images;
 						if (imgs) {
 							for (const img of Array.from(imgs)) {
 								const run = () => {
-									clampMediaInContents(contents);
+									restamp();
 									reexpandViews();
+									restampAfterLayout();
 								};
 								if (!img.complete) {
 									img.addEventListener('load', run, { once: true });
@@ -851,7 +1052,7 @@ pre {
 
 				// Seed default theme for first paint
 				if (typeof rendition.themes?.registerCss === 'function') {
-					rendition.themes.registerCss('default', buildThemeCss());
+					rendition.themes.registerCss('default', buildThemeCss(activePrefs));
 				}
 
 				const start = initialLocation?.trim() || undefined;
@@ -867,10 +1068,12 @@ pre {
 				// Cover art often loads late — re-apply measure/margin, re-expand, fill.
 				await waitForIframeImages();
 				if (cancelled || !host) return;
-				injectThemeIntoContents();
+				injectThemeIntoContents(activePrefs);
 				reexpandViews();
+				injectThemeIntoContents(activePrefs);
 				await fillContinuous();
 				resizeToHost(true);
+				injectThemeIntoContents(activePrefs);
 				lockStageWidth();
 
 				// If still empty after restore + resize, force first spine item.
@@ -952,29 +1155,29 @@ pre {
 	});
 
 	/**
-	 * Live type-panel prefs. Dependencies MUST be read before any early return —
-	 * otherwise Svelte never subscribes and sliders appear broken.
+	 * Backup reactive path. Primary path is parent calling applyPrefs() on every
+	 * slider tick — that does not depend on Svelte effect timing.
+	 * Always track every visual field before any early return so Svelte re-runs.
 	 */
 	$effect(() => {
-		// Track every visual preference (do not early-return before these reads)
-		const snapshot = {
+		const snapshot: ReaderPrefs = {
 			theme: prefs.theme,
 			fontFamily: prefs.fontFamily,
 			fontSize: prefs.fontSize,
 			lineHeight: prefs.lineHeight,
-			letterSpacing: prefs.letterSpacing,
-			paragraphSpacing: prefs.paragraphSpacing,
+			letterSpacing: prefs.letterSpacing ?? 0,
+			paragraphSpacing: prefs.paragraphSpacing ?? 1,
 			measure: prefs.measure,
 			margin: prefs.margin,
-			textAlign: prefs.textAlign,
-			hyphenate: prefs.hyphenate
+			textAlign: prefs.textAlign ?? 'left',
+			hyphenate: !!prefs.hyphenate,
+			brightness: prefs.brightness ?? 1,
+			keepAwake: !!prefs.keepAwake
 		};
+		activePrefs = snapshot;
 		const ready = displayReady;
-		// Keep snapshot referenced so nothing strips the reads
-		void snapshot;
-
-		if (!ready || !rendition) return;
-		applyLivePrefs();
+		if (!ready) return;
+		applyPrefs(snapshot);
 	});
 
 	onDestroy(() => {

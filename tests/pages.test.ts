@@ -157,7 +157,7 @@ describe('book rendering surfaces', () => {
 		// Serialized CSS with !important so publisher styles cannot shove layout
 		expect(src).toContain('buildThemeCss');
 		expect(src).toContain('registerCss');
-		expect(src).toContain('fontStack(prefs.fontFamily)');
+		expect(src).toMatch(/fontStack\((?:p|prefs)\.fontFamily\)/);
 		expect(src).toContain('blockquote');
 		expect(src).toContain('letter-spacing');
 		expect(src).toContain('hyphens');
@@ -178,9 +178,13 @@ describe('book rendering surfaces', () => {
 		expect(src).toMatch(/padding:\s*0 \$\{rightPad\}px 0 \$\{leftPad\}px/);
 		expect(src).toMatch(/img[\s\S]*?max-width:\s*100%/);
 		expect(src).not.toContain('contentWidth(frameW)');
-		// Live type panel: displayReady is $state; prefs read before early return
+		// Live type panel: displayReady is $state; activePrefs + format patch after size() wipe
 		expect(src).toContain('let displayReady = $state(false)');
 		expect(src).toContain('applyLivePrefs');
+		expect(src).toContain('applyPrefs');
+		expect(src).toContain('stampBodyInline');
+		expect(src).toContain('activePrefs');
+		expect(src).toContain('patchLayoutFormat');
 		expect(src).toContain('buildFontFaceCss');
 		// Drop caps float-none — floats break reflow
 		expect(src).toMatch(/p::first-letter[\s\S]*?float:\s*none/);

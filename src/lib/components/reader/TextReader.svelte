@@ -64,7 +64,9 @@
 
 <div
 	bind:this={scroller}
-	class="reader-scroll h-full overflow-y-auto pb-28 pl-[max(var(--reader-margin,1.5rem),3.75rem)] pr-[max(var(--reader-margin,1.5rem),1rem)] pt-[max(1.75rem,calc(env(safe-area-inset-top)+1.25rem))] sm:pb-32 sm:pt-10"
+	class="reader-scroll h-full overflow-y-auto pb-28 pt-[max(1.75rem,calc(env(safe-area-inset-top)+1.25rem))] sm:pb-32 sm:pt-10"
+	style:padding-left="max({prefs.margin}px, 3.75rem)"
+	style:padding-right="max({prefs.margin}px, 1rem)"
 	style:--reader-font={fontStack(prefs.fontFamily)}
 	style:--reader-size="{prefs.fontSize}px"
 	style:--reader-lh={prefs.lineHeight}
@@ -81,7 +83,17 @@
 			<p class="type-body" style="color: var(--stage-muted)">Preparing text…</p>
 		</div>
 	{:else}
-		<article class="reader-prose relative z-[1]" lang="en">
+		<article
+			class="reader-prose relative z-[1]"
+			lang="en"
+			style:font-family={fontStack(prefs.fontFamily)}
+			style:font-size="{prefs.fontSize}px"
+			style:line-height={prefs.lineHeight}
+			style:letter-spacing="{(prefs.letterSpacing ?? 0)}em"
+			style:max-width="{prefs.measure}ch"
+			style:text-align={prefs.textAlign ?? 'left'}
+			style:hyphens={prefs.hyphenate ? 'auto' : 'manual'}
+		>
 			{@html html}
 			<!-- book end breathing room — three-beat asterism -->
 			<div class="reader-end-mark" aria-hidden="true">

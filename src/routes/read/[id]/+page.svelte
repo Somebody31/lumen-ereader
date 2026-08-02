@@ -50,7 +50,12 @@
 	let bookmarks = $state<BookmarkRecord[]>([]);
 	let fraction = $state(0);
 	let progressLabel = $state('');
-	let epubRef: EpubReader | undefined = $state();
+	let epubRef: {
+		next: () => Promise<void>;
+		prev: () => Promise<void>;
+		goTo: (href: string) => Promise<void>;
+		applyPrefs: (next?: ReaderPrefs) => void;
+	} | undefined = $state();
 	let bookmarkFlash = $state('');
 
 	let hideTimer: ReturnType<typeof setTimeout> | undefined;
@@ -185,15 +190,21 @@
 	let prefsSaveTimer: ReturnType<typeof setTimeout> | undefined;
 	function updatePrefs(partial: Partial<ReaderPrefs>) {
 		if (!prefs) return;
-		// New object so child props / $effect always see a change
-		prefs = { ...prefs, ...partial };
+		// New object every tick so children + effects always see a change
+		const next: ReaderPrefs = { ...prefs, ...partial };
+		prefs = next;
+		// Imperative path — do not wait on $effect; stamp EPUB iframes now
+		try {
+			epubRef?.applyPrefs?.(next);
+		} catch {
+			/* reader not ready */
+		}
 		clearTimeout(prefsSaveTimer);
-		const toSave = prefs;
 		prefsSaveTimer = setTimeout(() => {
-			putPrefs(toSave).catch(() => {});
+			putPrefs(next).catch(() => {});
 		}, 180);
 		if ('keepAwake' in partial) {
-			applyWakeLock(!!prefs.keepAwake);
+			applyWakeLock(!!next.keepAwake);
 		}
 	}
 
