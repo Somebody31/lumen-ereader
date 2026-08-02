@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { flattenToc, resolveTocTarget } from '$lib/client/epubNav';
+	import { buildReaderToc, resolveTocTarget } from '$lib/client/epubNav';
 	import { fontStack, type ReaderPrefs } from '$lib/client/types';
 	/* Absolute URLs so @font-face works inside epubjs iframes (parent page fonts do not) */
 	import literataWoff2 from '@fontsource-variable/literata/files/literata-latin-opsz-normal.woff2?url';
@@ -43,6 +43,8 @@
 	let resizeTimer: ReturnType<typeof setTimeout> | null = null;
 	let wheelCleanup: (() => void) | null = null;
 	let prefsApplyTimer: ReturnType<typeof setTimeout> | null = null;
+	let restampTimer: ReturnType<typeof setTimeout> | null = null;
+	let expandTimer: ReturnType<typeof setTimeout> | null = null;
 	/**
 	 * Mutable snapshot always read by content/layout hooks.
 	 * epubjs content hooks close over this ref (not a stale Svelte prop snapshot).
@@ -50,6 +52,16 @@
 	let activePrefs: ReaderPrefs = prefs;
 	/** True once we wrap layout.format to re-stamp after size() wipes body styles. */
 	let layoutPatched = false;
+	/** Skip redundant inject/expand work that causes continuous-mode flicker. */
+	let lastThemeCss = '';
+	let lastLayoutKey = '';
+	let lastAppliedKey = '';
+	let lastLockedW = 0;
+	let themeBusy = false;
+	/** Ignore ResizeObserver callbacks we caused ourselves via lockStageWidth. */
+	let ignoreResizeUntil = 0;
+	/** False after onMount cleanup — ignore late async TOC/theme work. */
+	let sessionAlive = false;
 
 	const THEME_MAP: Record<
 		string,
@@ -474,7 +486,11 @@ pre {
 			el = doc.createElement('style');
 			el.id = id;
 			(doc.head || doc.documentElement).appendChild(el);
+			el.textContent = css;
+			return;
 		}
+		// Avoid style recalc/flicker when CSS is identical
+		if (el.textContent === css) return;
 		el.textContent = css;
 	}
 
@@ -494,27 +510,59 @@ pre {
 		}
 	}
 
+	function layoutKeyOf(p: ReaderPrefs): string {
+		return [
+			p.fontFamily,
+			p.fontSize,
+			p.lineHeight,
+			p.letterSpacing ?? 0,
+			p.paragraphSpacing ?? 1,
+			p.measure,
+			p.margin,
+			p.textAlign ?? 'left',
+			p.hyphenate ? 1 : 0
+		].join('|');
+	}
+
+	function prefsKeyOf(p: ReaderPrefs): string {
+		return [
+			p.theme,
+			layoutKeyOf(p),
+			p.brightness ?? 1,
+			p.keepAwake ? 1 : 0
+		].join('|');
+	}
+
 	/** Keep every continuous view/iframe at host width — never image scrollWidth. */
 	function lockStageWidth() {
 		if (!host) return;
 		const w = host.clientWidth;
 		if (w < 8) return;
+		// Avoid style writes that re-trigger ResizeObserver when nothing changed
+		if (lastLockedW === w) {
+			const sample = host.querySelector('.epub-view') as HTMLElement | null;
+			if (sample && sample.style.width === `${w}px`) return;
+		}
+		lastLockedW = w;
+		ignoreResizeUntil = performance.now() + 120;
 		try {
 			const views = host.querySelectorAll('.epub-view');
 			for (const view of views) {
 				const el = view as HTMLElement;
-				el.style.setProperty('width', `${w}px`, 'important');
-				el.style.setProperty('max-width', '100%', 'important');
-				el.style.setProperty('min-width', '0', 'important');
+				if (el.style.width !== `${w}px`) {
+					el.style.setProperty('width', `${w}px`, 'important');
+					el.style.setProperty('max-width', '100%', 'important');
+					el.style.setProperty('min-width', '0', 'important');
+				}
 				const iframe = el.querySelector('iframe') as HTMLIFrameElement | null;
-				if (iframe) {
+				if (iframe && iframe.style.width !== `${w}px`) {
 					iframe.style.setProperty('width', `${w}px`, 'important');
 					iframe.style.setProperty('max-width', '100%', 'important');
 					iframe.style.setProperty('min-width', '0', 'important');
 				}
 			}
 			const container = host.querySelector('.epub-container') as HTMLElement | null;
-			if (container) {
+			if (container && container.style.width !== `${w}px`) {
 				container.style.setProperty('width', `${w}px`, 'important');
 				container.style.setProperty('max-width', '100%', 'important');
 			}
@@ -557,50 +605,71 @@ pre {
 		}
 	}
 
-	/** Write theme CSS + inline prefs into every open iframe. */
-	function injectThemeIntoContents(p: ReaderPrefs = activePrefs) {
-		const css = buildThemeCss(p);
+	/**
+	 * Write theme CSS + inline prefs into every open iframe.
+	 * Soft mode skips stylesheet rewrites when CSS is unchanged (still re-stamps body
+	 * after format wipe). Never nested: concurrent injects re-enter and thrash continuous.
+	 */
+	function injectThemeIntoContents(p: ReaderPrefs = activePrefs, soft = false) {
+		if (themeBusy) return;
+		themeBusy = true;
 		try {
-			if (rendition && typeof rendition.themes?.registerCss === 'function') {
-				rendition.themes.registerCss('default', css);
+			const css = buildThemeCss(p);
+			const cssChanged = css !== lastThemeCss;
+			if (cssChanged || !soft) {
+				try {
+					if (rendition && typeof rendition.themes?.registerCss === 'function') {
+						rendition.themes.registerCss('default', css);
+					}
+				} catch {
+					/* */
+				}
+				try {
+					const t = rendition?.themes;
+					if (t && typeof t.override === 'function') {
+						const { bg, fg } = themeFor(p);
+						t.override('font-size', `${p.fontSize}px`, true);
+						t.override('font-family', fontStack(p.fontFamily), true);
+						t.override('line-height', String(p.lineHeight), true);
+						t.override('color', fg, true);
+						t.override('background', bg, true);
+						t.override('background-color', bg, true);
+						t.override('letter-spacing', `${p.letterSpacing ?? 0}em`, true);
+						t.override('text-align', p.textAlign ?? 'left', true);
+					}
+				} catch {
+					/* */
+				}
 			}
-		} catch {
-			/* */
+			eachContentDoc((doc, contents) => {
+				try {
+					if (cssChanged || !soft) {
+						contents?.addStylesheetCss?.(css, 'lumen-theme');
+						writeStyleTag(doc, css, 'lumen-theme');
+						writeStyleTag(doc, css, 'epubjs-inserted-css-lumen-theme');
+						writeStyleTag(doc, css, 'epubjs-inserted-css-default');
+					}
+					// Always stamp body: layout.format → size() wipes measure/margin
+					stampBodyInline(doc, p);
+				} catch {
+					/* */
+				}
+			});
+			lastThemeCss = css;
+			lockStageWidth();
+		} finally {
+			themeBusy = false;
 		}
-		// epubjs native overrides (re-applied on new sections via themes.overrides hook)
-		try {
-			const t = rendition?.themes;
-			if (t && typeof t.override === 'function') {
-				const { bg, fg } = themeFor(p);
-				t.override('font-size', `${p.fontSize}px`, true);
-				t.override('font-family', fontStack(p.fontFamily), true);
-				t.override('line-height', String(p.lineHeight), true);
-				t.override('color', fg, true);
-				t.override('background', bg, true);
-				t.override('background-color', bg, true);
-				t.override('letter-spacing', `${p.letterSpacing ?? 0}em`, true);
-				t.override('text-align', p.textAlign ?? 'left', true);
-			}
-		} catch {
-			/* */
-		}
-		eachContentDoc((doc, contents) => {
-			try {
-				contents?.addStylesheetCss?.(css, 'lumen-theme');
-			} catch {
-				/* */
-			}
-			try {
-				writeStyleTag(doc, css, 'lumen-theme');
-				// Also under epubjs key so registerCss path stays consistent
-				writeStyleTag(doc, css, 'epubjs-inserted-css-lumen-theme');
-				writeStyleTag(doc, css, 'epubjs-inserted-css-default');
-				stampBodyInline(doc, p);
-			} catch {
-				/* */
-			}
-		});
-		lockStageWidth();
+	}
+
+	/** Debounced body re-stamp after epubjs expand/format — coalesces storms. */
+	function scheduleRestamp(ms = 64) {
+		if (restampTimer) clearTimeout(restampTimer);
+		restampTimer = setTimeout(() => {
+			restampTimer = null;
+			if (!rendition && !host) return;
+			injectThemeIntoContents(activePrefs, true);
+		}, ms);
 	}
 
 	/**
@@ -616,15 +685,11 @@ pre {
 		if (typeof original !== 'function') return;
 		layout.format = (contents: { document?: Document; addStylesheetCss?: (css: string, key: string) => void }, section?: unknown, axis?: unknown) => {
 			const result = original(contents, section, axis);
+			// Only re-stamp this document — full inject on every format() flickers continuous
 			try {
 				const p = activePrefs;
-				const css = buildThemeCss(p);
 				const doc = contents?.document;
 				if (doc) {
-					contents.addStylesheetCss?.(css, 'lumen-theme');
-					writeStyleTag(doc, css, 'lumen-theme');
-					writeStyleTag(doc, css, 'epubjs-inserted-css-lumen-theme');
-					writeStyleTag(doc, css, 'epubjs-inserted-css-default');
 					stampBodyInline(doc, p);
 				}
 			} catch {
@@ -635,15 +700,9 @@ pre {
 		layoutPatched = true;
 	}
 
-	/** Re-stamp after expand/format settles (double rAF matches epubjs reframe timing). */
+	/** One soft restamp after layout settles (no multi-rAF inject storm). */
 	function restampAfterLayout() {
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => {
-				if (!rendition && !host) return;
-				injectThemeIntoContents(activePrefs);
-				lockStageWidth();
-			});
-		});
+		scheduleRestamp(48);
 	}
 
 	/**
@@ -654,26 +713,30 @@ pre {
 		const p = next ?? prefs;
 		activePrefs = p;
 		if (!rendition && !host) return;
-		injectThemeIntoContents(p);
-		// Debounce expand so range sliders stay smooth; always re-stamp after expand
-		// because format() wipes body styles when font metrics change.
+		const key = prefsKeyOf(p);
+		const layoutChanged = layoutKeyOf(p) !== lastLayoutKey;
+		// Paint type/colors now (soft when only re-entering with same CSS)
+		injectThemeIntoContents(p, key === lastAppliedKey);
+		lastAppliedKey = key;
+		// Expand only when metrics that change iframe height change — not every color tick
+		if (!layoutChanged && displayReady) return;
 		if (prefsApplyTimer) clearTimeout(prefsApplyTimer);
 		prefsApplyTimer = setTimeout(() => {
 			prefsApplyTimer = null;
 			if (!rendition) {
-				injectThemeIntoContents(activePrefs);
+				injectThemeIntoContents(activePrefs, true);
 				return;
 			}
+			lastLayoutKey = layoutKeyOf(activePrefs);
 			reexpandViews();
-			lockStageWidth();
-			// Immediate re-stamp (format may already have run inside expand)
-			injectThemeIntoContents(activePrefs);
-			restampAfterLayout();
-			void fillContinuous().then(() => {
-				injectThemeIntoContents(activePrefs);
-				lockStageWidth();
-			});
-		}, 32);
+			injectThemeIntoContents(activePrefs, true);
+			// fillContinuous only on real layout changes (measure/size) — not every restamp
+			if (layoutChanged) {
+				void fillContinuous().then(() => {
+					injectThemeIntoContents(activePrefs, true);
+				});
+			}
+		}, 80);
 	}
 
 	/** Internal alias — tests and older call sites. */
@@ -702,11 +765,13 @@ pre {
 	}
 
 	function scheduleResize() {
+		if (performance.now() < ignoreResizeUntil) return;
 		if (resizeTimer) clearTimeout(resizeTimer);
 		resizeTimer = setTimeout(() => {
 			resizeTimer = null;
+			if (performance.now() < ignoreResizeUntil) return;
 			resizeToHost();
-		}, 80);
+		}, 120);
 	}
 
 	/** Force iframe expand after CSS/theme so continuous keeps non-zero view heights. */
@@ -935,6 +1000,44 @@ pre {
 		onerror?.(message);
 	}
 
+	/** Push nav (or spine fallback) into the parent contents drawer. */
+	async function emitToc(b: { loaded?: { navigation?: Promise<{ toc?: unknown[] }> }; navigation?: { toc?: unknown[] }; spine?: { spineItems?: unknown[] } } | null) {
+		if (!b || !ontoc) return;
+		try {
+			let navToc: unknown[] | undefined;
+			try {
+				const nav = (await b.loaded?.navigation) || b.navigation;
+				navToc = (nav as { toc?: unknown[] } | undefined)?.toc;
+			} catch {
+				navToc = undefined;
+			}
+			const spineItems =
+				(b.spine as { spineItems?: Array<{ href?: string; linear?: string | boolean }> } | undefined)
+					?.spineItems || [];
+			const items = buildReaderToc(
+				navToc as Parameters<typeof buildReaderToc>[0],
+				spineItems
+			).map(({ label, href, depth }) => ({ label, href, depth }));
+			if (sessionAlive) ontoc(items);
+		} catch (e) {
+			console.warn('[EpubReader] toc emit failed', e);
+			// Last resort: spine-only list so the drawer is never blank for multi-section books
+			try {
+				const spineItems =
+					(b.spine as { spineItems?: Array<{ href?: string; linear?: string | boolean }> } | undefined)
+						?.spineItems || [];
+				const items = buildReaderToc(null, spineItems).map(({ label, href, depth }) => ({
+					label,
+					href,
+					depth
+				}));
+				if (sessionAlive) ontoc(items);
+			} catch {
+				/* */
+			}
+		}
+	}
+
 	export async function next() {
 		await rendition?.next();
 	}
@@ -1064,7 +1167,7 @@ pre {
 		requestAnimationFrame(() => {
 			reexpandViews();
 			resizeToHost();
-			injectThemeIntoContents(activePrefs);
+			injectThemeIntoContents(activePrefs, true);
 			forceScrollToResolved({
 				target: used,
 				href: resolved?.href,
@@ -1075,6 +1178,7 @@ pre {
 
 	onMount(() => {
 		let cancelled = false;
+		sessionAlive = true;
 
 		(async () => {
 			try {
@@ -1107,6 +1211,10 @@ pre {
 				await book.ready;
 				if (cancelled || !host) return;
 
+				// Emit TOC as soon as the package is ready — do not wait for first paint
+				// (heavy continuous fill used to race past this and leave the drawer empty).
+				void emitToc(book);
+
 				const w = host.clientWidth;
 				const h = host.clientHeight;
 				lastResizeW = w;
@@ -1128,15 +1236,13 @@ pre {
 				// layout.format → size() wipes body styles after expand/resize — always re-stamp.
 				patchLayoutFormat();
 
-				// Theme + clamp media before expand measures textHeight/width.
-				// Large cover images must not become the column width.
-				// Always read activePrefs (not a stale prop closed over at open time).
+				// Theme once per section load. format() re-stamps body via patchLayoutFormat.
+				// Do NOT attach expand/resize restamp listeners — they re-enter continuous
+				// measure → format → restamp → expand and flicker the whole stage.
 				rendition.hooks.content.register((contents: {
 					addStylesheetCss?: (css: string, key: string) => void;
 					document?: Document;
 					window?: Window;
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					on?: (event: string, fn: (...args: any[]) => void) => void;
 				}) => {
 					const p = activePrefs;
 					const css = buildThemeCss(p);
@@ -1146,50 +1252,29 @@ pre {
 							writeStyleTag(contents.document, css, 'lumen-theme');
 							writeStyleTag(contents.document, css, 'epubjs-inserted-css-default');
 							stampBodyInline(contents.document, p);
+							clampMediaInContents(contents, p);
 						}
 					} catch {
 						/* */
 					}
-					// After size() on expand/resize, re-stamp measure/margin/type
-					const restamp = () => {
-						try {
-							const cur = activePrefs;
-							const doc = contents.document;
-							if (!doc) return;
-							const nextCss = buildThemeCss(cur);
-							contents.addStylesheetCss?.(nextCss, 'lumen-theme');
-							writeStyleTag(doc, nextCss, 'lumen-theme');
-							writeStyleTag(doc, nextCss, 'epubjs-inserted-css-default');
-							stampBodyInline(doc, cur);
-						} catch {
-							/* */
-						}
-					};
-					try {
-						// iframe view runs format() inside these handlers — restamp after
-						contents.on?.('expand', () => {
-							queueMicrotask(restamp);
-							requestAnimationFrame(restamp);
-						});
-						contents.on?.('resize', () => {
-							queueMicrotask(restamp);
-							requestAnimationFrame(restamp);
-						});
-					} catch {
-						/* */
-					}
-					// After late image decode, re-stamp so expand keeps stage width
+					// Single debounced remeasure after late image decode (not per-image expand)
 					try {
 						const imgs = contents.document?.images;
 						if (imgs) {
 							for (const img of Array.from(imgs)) {
-								const run = () => {
-									restamp();
-									reexpandViews();
-									restampAfterLayout();
-								};
 								if (!img.complete) {
-									img.addEventListener('load', run, { once: true });
+									img.addEventListener(
+										'load',
+										() => {
+											scheduleRestamp(80);
+											if (expandTimer) clearTimeout(expandTimer);
+											expandTimer = setTimeout(() => {
+												expandTimer = null;
+												reexpandViews();
+											}, 120);
+										},
+										{ once: true }
+									);
 								}
 							}
 						}
@@ -1207,30 +1292,27 @@ pre {
 				await safeDisplay(start);
 				if (cancelled) return;
 
-				// Two frames: let iframe expand after CSS injection, then remeasure + fill.
+				// One settle pass: expand → fill → soft theme. Avoid multi-inject thrash.
 				await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 				if (cancelled || !host) return;
 				reexpandViews();
 				await fillContinuous();
-
-				// Cover art often loads late — re-apply measure/margin, re-expand, fill.
-				await waitForIframeImages();
-				if (cancelled || !host) return;
-				injectThemeIntoContents(activePrefs);
-				reexpandViews();
-				injectThemeIntoContents(activePrefs);
-				await fillContinuous();
-				resizeToHost(true);
-				injectThemeIntoContents(activePrefs);
+				injectThemeIntoContents(activePrefs, true);
 				lockStageWidth();
+
+				await waitForIframeImages(1800);
+				if (cancelled || !host) return;
+				// Late cover decode: one remeasure, not inject×3
+				reexpandViews();
+				injectThemeIntoContents(activePrefs, true);
 
 				// If still empty after restore + resize, force first spine item.
 				if (!hasDisplayedContent()) {
 					await rendition.display();
 					await fillContinuous();
-					await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+					await new Promise((r) => requestAnimationFrame(() => r(undefined)));
 					reexpandViews();
-					resizeToHost(true);
+					injectThemeIntoContents(activePrefs, true);
 				}
 
 				// Fresh open landed on a cover plate only: step into the first prose section.
@@ -1246,39 +1328,38 @@ pre {
 						}
 					}
 					reexpandViews();
+					injectThemeIntoContents(activePrefs, true);
 				}
 
+				// TOC again in case navigation resolved late
+				void emitToc(book);
+
+				lastLayoutKey = layoutKeyOf(activePrefs);
+				lastAppliedKey = prefsKeyOf(activePrefs);
 				displayReady = true;
 				attachWheelChain();
 
+				// Debounce progress so continuous scroll doesn't thrash parent state every frame
+				let relocateTimer: ReturnType<typeof setTimeout> | null = null;
 				rendition.on(
 					'relocated',
 					(location: { start: { cfi: string; percentage?: number }; atEnd?: boolean }) => {
 						const fraction = location.start.percentage ?? (location.atEnd ? 1 : 0);
-						onprogress(fraction, location.start.cfi);
+						const cfi = location.start.cfi;
+						if (relocateTimer) clearTimeout(relocateTimer);
+						relocateTimer = setTimeout(() => {
+							relocateTimer = null;
+							onprogress(fraction, cfi);
+						}, 120);
 					}
 				);
 
 				// Keep stage size in sync (rail chrome, window resize, mobile keyboard).
-				// Debounced — continuous destroys zero-height views if resize storms.
 				resizeObserver = new ResizeObserver(() => {
 					if (!displayReady || cancelled) return;
 					scheduleResize();
 				});
 				resizeObserver.observe(host);
-
-				try {
-					const nav = await book.loaded.navigation;
-					// Flatten nested nav/NCX trees so every chapter is clickable
-					const toc = flattenToc(nav.toc || []).map(({ label, href, depth }) => ({
-						label,
-						href,
-						depth
-					}));
-					ontoc?.(toc);
-				} catch {
-					/* no toc */
-				}
 			} catch (e) {
 				if (cancelled) return;
 				const msg =
@@ -1292,6 +1373,7 @@ pre {
 
 		return () => {
 			cancelled = true;
+			sessionAlive = false;
 			displayReady = false;
 			wheelCleanup?.();
 			wheelCleanup = null;
@@ -1299,6 +1381,10 @@ pre {
 			resizeTimer = null;
 			if (prefsApplyTimer) clearTimeout(prefsApplyTimer);
 			prefsApplyTimer = null;
+			if (restampTimer) clearTimeout(restampTimer);
+			restampTimer = null;
+			if (expandTimer) clearTimeout(expandTimer);
+			expandTimer = null;
 			resizeObserver?.disconnect();
 			resizeObserver = null;
 		};
@@ -1327,16 +1413,22 @@ pre {
 		activePrefs = snapshot;
 		const ready = displayReady;
 		if (!ready) return;
+		// Skip no-op re-applies — parent re-renders on progress ticks must not re-expand
+		const key = prefsKeyOf(snapshot);
+		if (key === lastAppliedKey) return;
 		applyPrefs(snapshot);
 	});
 
 	onDestroy(() => {
+		sessionAlive = false;
 		displayReady = false;
 		wheelCleanup?.();
 		wheelCleanup = null;
 		if (resizeTimer) clearTimeout(resizeTimer);
 		resizeTimer = null;
 		if (prefsApplyTimer) clearTimeout(prefsApplyTimer);
+		if (restampTimer) clearTimeout(restampTimer);
+		if (expandTimer) clearTimeout(expandTimer);
 		prefsApplyTimer = null;
 		resizeObserver?.disconnect();
 		resizeObserver = null;

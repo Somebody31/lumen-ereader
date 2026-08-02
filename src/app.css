@@ -947,6 +947,11 @@
 	min-width: 0;
 	line-height: 1.35;
 	overflow-wrap: anywhere;
+	/* Fallback so entries stay visible if hierarchy classes miss */
+	font-family: var(--font-display);
+	font-size: 0.95rem;
+	font-weight: 500;
+	color: var(--stage-chrome-fg, #f3f2ed);
 }
 /* Top chapters: display face, ink — read as section heads */
 .reader-toc-item-top .reader-toc-label {
@@ -956,7 +961,7 @@
 	letter-spacing: -0.02em;
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 28;
-	color: var(--stage-chrome-fg);
+	color: var(--stage-chrome-fg, #f3f2ed);
 }
 /* Nested: quieter UI face, indented + lead hairline */
 .reader-toc-item-nested .reader-toc-label {
@@ -964,7 +969,7 @@
 	font-size: 0.8125rem;
 	font-weight: 400;
 	letter-spacing: -0.005em;
-	color: var(--stage-chrome-mute);
+	color: var(--stage-chrome-mute, #9a9a94);
 }
 .reader-toc-item-nested .reader-toc-row:hover .reader-toc-label,
 .reader-toc-item-nested .reader-toc-row:focus-visible .reader-toc-label {

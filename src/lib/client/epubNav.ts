@@ -18,19 +18,84 @@ export type FlatTocItem = {
 	depth: number;
 };
 
-/** Flatten nested nav.toc / NCX trees into a clickable list. */
+/** Humanize a spine href into a short chapter label. */
+export function labelFromHref(href: string): string {
+	const base = basename(href).replace(/\.(x?html?|xml|htm)$/i, '');
+	const decoded = (() => {
+		try {
+			return decodeURIComponent(base);
+		} catch {
+			return base;
+		}
+	})();
+	const cleaned = decoded
+		.replace(/[_-]+/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+	if (!cleaned) return 'Section';
+	// Title-case short filenames; leave longer mixed-case alone
+	if (cleaned === cleaned.toLowerCase() || cleaned === cleaned.toUpperCase()) {
+		return cleaned
+			.toLowerCase()
+			.replace(/\b\w/g, (c) => c.toUpperCase());
+	}
+	return cleaned;
+}
+
+/**
+ * Flatten nested nav.toc / NCX trees into a clickable list.
+ * Defensive: epubjs items may omit fields; some packages put children under `children`.
+ */
 export function flattenToc(items: TocItem[] | undefined | null, depth = 0): FlatTocItem[] {
-	if (!items?.length) return [];
+	if (!items || !Array.isArray(items) || items.length === 0) return [];
 	const out: FlatTocItem[] = [];
-	for (const item of items) {
-		const label = (item.label || '').replace(/\s+/g, ' ').trim();
-		const href = (item.href || '').trim();
+	for (const raw of items) {
+		if (!raw || typeof raw !== 'object') continue;
+		const item = raw as TocItem & { title?: string; children?: TocItem[]; src?: string };
+		const label = String(item.label || item.title || '')
+			.replace(/\s+/g, ' ')
+			.trim();
+		const href = String(item.href || item.src || '').trim();
 		if (label || href) {
-			out.push({ label: label || href || 'Untitled', href, depth });
+			out.push({
+				label: label || labelFromHref(href) || 'Untitled',
+				href,
+				depth
+			});
 		}
-		if (item.subitems?.length) {
-			out.push(...flattenToc(item.subitems, depth + 1));
+		const kids = item.subitems || item.children;
+		if (kids && Array.isArray(kids) && kids.length) {
+			out.push(...flattenToc(kids, depth + 1));
 		}
+	}
+	return out;
+}
+
+/**
+ * Build a reader TOC from navigation, falling back to linear spine items
+ * when the package has no nav/NCX (or nav failed to parse).
+ */
+export function buildReaderToc(
+	navToc: TocItem[] | undefined | null,
+	spineItems?: Array<{ href?: string; linear?: string | boolean; index?: number }> | null
+): FlatTocItem[] {
+	const fromNav = flattenToc(navToc);
+	if (fromNav.length > 0) return fromNav;
+
+	if (!spineItems?.length) return [];
+	const out: FlatTocItem[] = [];
+	for (let i = 0; i < spineItems.length; i++) {
+		const s = spineItems[i];
+		const href = (s?.href || '').trim();
+		if (!href) continue;
+		// Skip non-linear (cover spreads etc.) when flagged
+		const linear = s.linear;
+		if (linear === 'no' || linear === false) continue;
+		out.push({
+			label: labelFromHref(href),
+			href,
+			depth: 0
+		});
 	}
 	return out;
 }

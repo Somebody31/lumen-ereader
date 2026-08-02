@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import {
 	basename,
+	buildReaderToc,
 	flattenToc,
 	fragmentOf,
 	hrefCandidates,
+	labelFromHref,
 	matchSpineHref,
 	pathOnly,
 	resolveTocTarget,
@@ -35,6 +37,42 @@ describe('flattenToc', () => {
 		]);
 		expect(flat).toHaveLength(1);
 		expect(flat[0].href).toBe('orphan.xhtml');
+	});
+
+	test('accepts children alias and title alias', () => {
+		const flat = flattenToc([
+			// @ts-expect-error intentional alternate shape from some packages
+			{ title: 'Intro', href: 'i.xhtml', children: [{ label: 'A', href: 'a.xhtml' }] }
+		]);
+		expect(flat.map((t) => t.label)).toEqual(['Intro', 'A']);
+	});
+});
+
+describe('buildReaderToc', () => {
+	test('prefers nav over spine', () => {
+		const toc = buildReaderToc(
+			[{ label: 'Chapter 1', href: 'c1.xhtml' }],
+			[{ href: 'spine-only.xhtml', linear: 'yes' }]
+		);
+		expect(toc).toHaveLength(1);
+		expect(toc[0].label).toBe('Chapter 1');
+	});
+
+	test('falls back to linear spine when nav empty', () => {
+		const toc = buildReaderToc([], [
+			{ href: 'cover.xhtml', linear: 'no' },
+			{ href: 'Text/chapter_01.xhtml', linear: 'yes' },
+			{ href: 'Text/chapter_02.xhtml', linear: 'yes' }
+		]);
+		expect(toc.map((t) => t.href)).toEqual([
+			'Text/chapter_01.xhtml',
+			'Text/chapter_02.xhtml'
+		]);
+		expect(toc[0].label.length).toBeGreaterThan(0);
+	});
+
+	test('labelFromHref humanizes filenames', () => {
+		expect(labelFromHref('Text/chapter_01.xhtml')).toMatch(/Chapter/i);
 	});
 });
 

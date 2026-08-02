@@ -196,9 +196,13 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('applyPrefs');
 		// Contents-tab chapter nav: resolve nav↔spine paths + force scroll in continuous
 		expect(src).toContain('resolveTocTarget');
-		expect(src).toContain('flattenToc');
+		expect(src).toContain('buildReaderToc');
+		expect(src).toContain('emitToc');
 		expect(src).toContain('forceScrollToResolved');
 		expect(src).toContain('export async function goTo');
+		// Flicker guard: no expand/resize restamp storm
+		expect(src).not.toContain("contents.on?.('expand'");
+		expect(src).toContain('themeBusy');
 		expect(src).toContain('stampBodyInline');
 		expect(src).toContain('activePrefs');
 		expect(src).toContain('patchLayoutFormat');
