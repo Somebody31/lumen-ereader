@@ -61,12 +61,17 @@ describe('natural e-reader IA (shipped routes)', () => {
 		const css = read('src/app.css');
 		expect(css).toContain('.welcome-hero');
 		expect(css).toContain('.welcome-stage-reader');
-		// Authored welcome motion (not generic section plate-in)
+		// Authored welcome motion (load focal + scroll reveals)
 		expect(css).toContain('welcome-title-unmask');
 		expect(css).toContain('welcome-stage-seat');
 		expect(css).toContain('welcome-progress-draw');
 		expect(css).toContain('welcome-path-step-in');
+		expect(css).toContain('welcome-scroll');
+		expect(css).toContain('data-welcome-scroll');
+		expect(css).toContain('is-in-view');
 		expect(src).toContain('welcome-hero-kicker');
+		expect(src).toContain('data-welcome-scroll');
+		expect(src).toContain('IntersectionObserver');
 		expect(src).not.toContain('animate-plate-in');
 	});
 

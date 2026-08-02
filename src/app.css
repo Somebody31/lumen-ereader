@@ -1831,10 +1831,10 @@ button:hover .cta-chevron {
 }
 
 /* ——— Welcome motion: broadsheet page open (Persuade) ———
-   Focal: reading stage seats; title unmasks; crimson rule + progress draw.
-   Continuity: same ease-editorial / clip / scaleX language as library.
-   Supporting: hero copy cadence, path list stagger, chip/swatch settle.
-   Not: identical plate-in on every scrolled section. */
+   Load focal: reading stage seats; title unmasks; crimson rule + progress draw.
+   Scroll: section heads, features, path steps, specimen, close — once via IO.
+   Continuity: same ease-editorial language as library.
+   Gate: .welcome-scroll only added when JS + motion allowed (content visible without JS). */
 
 @keyframes welcome-kicker-in {
 	from {
@@ -2059,10 +2059,112 @@ button:hover .cta-chevron {
 	animation-delay: 560ms;
 }
 
-/* Path — sequence is the meaning; short list stagger (capped) */
-.welcome-path-step {
-	animation: welcome-path-step-in 500ms var(--ease-editorial) both;
-	animation-delay: calc(80ms + min(var(--i, 0), 4) * 70ms);
+/* ——— Scroll reveals (IntersectionObserver + .welcome-scroll) ——— */
+@keyframes welcome-scroll-in {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes welcome-scroll-plate {
+	from {
+		opacity: 0;
+		transform: translateY(14px) scale(0.985);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes welcome-scroll-rule {
+	from {
+		transform: scaleX(0);
+		opacity: 0;
+	}
+	to {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+}
+
+@keyframes welcome-scroll-close {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Pre-hide only after JS opts in — never hides content without script */
+.welcome.welcome-scroll [data-welcome-scroll]:not(.is-in-view) {
+	opacity: 0;
+	transform: translateY(16px);
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='rule']:not(.is-in-view) {
+	transform: scaleX(0);
+	transform-origin: left center;
+	opacity: 0;
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='plate']:not(.is-in-view) {
+	transform: translateY(14px) scale(0.985);
+}
+
+.welcome.welcome-scroll [data-welcome-scroll].is-in-view {
+	animation: welcome-scroll-in 560ms var(--ease-editorial) both;
+	animation-delay: calc(min(var(--i, 0), 4) * 55ms);
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='head'].is-in-view {
+	animation-name: welcome-copy-in;
+	animation-duration: 520ms;
+	animation-delay: 0ms;
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='feature'].is-in-view {
+	animation-name: welcome-scroll-in;
+	animation-duration: 580ms;
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='path'].is-in-view {
+	animation-name: welcome-path-step-in;
+	animation-duration: 500ms;
+	animation-delay: calc(min(var(--i, 0), 4) * 70ms);
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='plate'].is-in-view {
+	animation-name: welcome-scroll-plate;
+	animation-duration: 640ms;
+	animation-delay: 0ms;
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='face'].is-in-view {
+	animation-name: welcome-stage-line-in;
+	animation-duration: 480ms;
+	animation-delay: calc(80ms + min(var(--i, 0), 3) * 75ms);
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='rule'].is-in-view {
+	transform-origin: left center;
+	animation-name: welcome-scroll-rule;
+	animation-duration: 420ms;
+	animation-delay: calc(120ms + min(var(--i, 0), 3) * 75ms);
+}
+
+.welcome.welcome-scroll [data-welcome-scroll='close'].is-in-view {
+	animation-name: welcome-scroll-close;
+	animation-duration: 560ms;
+	animation-delay: 0ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2093,7 +2195,8 @@ button:hover .cta-chevron {
 	.welcome-stage-body,
 	.welcome-stage-pct,
 	.welcome-stage-caption,
-	.welcome-path-step {
+	.welcome.welcome-scroll [data-welcome-scroll],
+	.welcome.welcome-scroll [data-welcome-scroll].is-in-view {
 		animation: none !important;
 		filter: none !important;
 		clip-path: none !important;
