@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "bun test",
     "deploy": "bun run build && wrangler deploy",
     "cf-typegen": "wrangler types"
   },
@@ -19,6 +20,7 @@
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/jszip": "^3.4.1",
+    "playwright": "^1.62.1",
     "svelte": "^5.56.1",
     "svelte-check": "^4.6.0",
     "tailwindcss": "^4.3.3",

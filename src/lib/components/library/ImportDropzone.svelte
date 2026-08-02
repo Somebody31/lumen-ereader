@@ -31,11 +31,9 @@
 <div
 	role="button"
 	tabindex="0"
-	class="relative overflow-hidden rounded-[var(--radius-xl)] transition-all duration-280 ease-[var(--ease-atelier)] outline-none focus-visible:ring-2 focus-visible:ring-indigo focus-visible:ring-offset-2 focus-visible:ring-offset-ash {dragging
-		? 'bg-indigo/[0.06] shadow-[var(--shadow-plate-hover)]'
-		: 'bg-paper shadow-[var(--shadow-plate)] hover:shadow-[var(--shadow-plate-hover)]'} {compact
-		? 'p-7'
-		: 'p-10 sm:p-16'}"
+	class="relative border transition-colors duration-200 ease-[var(--ease-editorial)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink {dragging
+		? 'border-ink bg-surface'
+		: 'border-rule bg-paper hover:border-ink'} {compact ? 'p-6 sm:p-8' : 'p-10 sm:p-14'}"
 	ondragenter={(e) => {
 		e.preventDefault();
 		dragging = true;
@@ -54,12 +52,6 @@
 	}}
 	onclick={() => inputEl?.click()}
 >
-	<!-- registration corner marks -->
-	<span class="pointer-events-none absolute left-4 top-4 h-3 w-3 border-l-2 border-t-2 border-indigo/30" aria-hidden="true"></span>
-	<span class="pointer-events-none absolute right-4 top-4 h-3 w-3 border-r-2 border-t-2 border-indigo/30" aria-hidden="true"></span>
-	<span class="pointer-events-none absolute bottom-4 left-4 h-3 w-3 border-b-2 border-l-2 border-indigo/30" aria-hidden="true"></span>
-	<span class="pointer-events-none absolute bottom-4 right-4 h-3 w-3 border-b-2 border-r-2 border-indigo/30" aria-hidden="true"></span>
-
 	<input
 		bind:this={inputEl}
 		type="file"
@@ -70,20 +62,23 @@
 	/>
 	<div class="pointer-events-none flex flex-col items-center text-center">
 		<span
-			class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-ash shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] ring-1 ring-rule/80"
+			class="mb-4 flex h-11 w-11 items-center justify-center border border-rule bg-newsprint"
 		>
-			<UploadSimple size={24} weight="light" class="text-indigo" />
+			<UploadSimple size={20} weight="light" class="text-ink" />
 		</span>
 		{#if !compact}
-			<p class="mb-2 text-[11px] font-medium uppercase tracking-[0.14em] text-indigo">Import</p>
-			<h2 class="mb-2 font-ui text-2xl font-semibold tracking-tight text-ink sm:text-[1.75rem]">
-				Drop a book on the desk
+			<p class="kicker mb-2">Import</p>
+			<h2
+				class="mb-2 font-display text-[1.65rem] font-semibold tracking-tight text-ink sm:text-3xl"
+				style="font-family: var(--font-display)"
+			>
+				Drop a manuscript
 			</h2>
-			<p class="mb-7 max-w-sm text-[15px] leading-relaxed text-ink-soft">
+			<p class="mb-7 max-w-sm font-ui text-[14px] leading-relaxed text-ink-soft">
 				EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.
 			</p>
 		{:else}
-			<p class="mb-5 text-sm text-ink-soft">Drop EPUB, Markdown, or text — or browse</p>
+			<p class="mb-5 font-ui text-sm text-ink-soft">Drop EPUB, Markdown, or text — or browse</p>
 		{/if}
 		<span class="pointer-events-auto" role="presentation">
 			<Button

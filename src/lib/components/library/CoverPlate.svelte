@@ -11,17 +11,17 @@
 		class?: string;
 	} = $props();
 
-	/** Flat ink plates — print-shop solid grounds, not gradients */
+	/** Monochrome + ink editorial plates */
 	const palette = $derived.by(() => {
 		const palettes = [
-			{ bg: '#1F3A68', fg: '#F4F1EA', seal: '#E03C2B' },
-			{ bg: '#1A1C20', fg: '#EDE6D9', seal: '#E03C2B' },
-			{ bg: '#3A1F2B', fg: '#F6EDE8', seal: '#E8A54B' },
-			{ bg: '#1A3A32', fg: '#E8F2EE', seal: '#E03C2B' },
-			{ bg: '#4A3420', fg: '#F7EFE3', seal: '#E03C2B' },
-			{ bg: '#243044', fg: '#E9EEF5', seal: '#E03C2B' },
-			{ bg: '#2F2640', fg: '#F0EAF5', seal: '#E03C2B' },
-			{ bg: '#1E2A1E', fg: '#EAF0E8', seal: '#C4A35A' }
+			{ bg: '#0B0B0B', fg: '#F3F2ED' },
+			{ bg: '#1A1A18', fg: '#F3F2ED' },
+			{ bg: '#F3F2ED', fg: '#0B0B0B' },
+			{ bg: '#2C2A26', fg: '#F3F2ED' },
+			{ bg: '#EBEAE4', fg: '#0B0B0B' },
+			{ bg: '#7A1C1C', fg: '#F3F2ED' },
+			{ bg: '#3A3A38', fg: '#F3F2ED' },
+			{ bg: '#161412', fg: '#EDE6D9' }
 		];
 		let h = 0;
 		const s = title || 'book';
@@ -40,29 +40,23 @@
 			class="flex h-full w-full flex-col justify-between p-3.5 sm:p-4"
 			style="background: {palette.bg}; color: {palette.fg}"
 		>
-			<div class="flex items-start justify-between">
+			<div class="flex items-start justify-between border-b pb-2" style="border-color: color-mix(in srgb, {palette.fg} 25%, transparent)">
 				<span
-					class="text-[8px] font-semibold uppercase tracking-[0.16em] opacity-55 sm:text-[9px]"
+					class="font-ui text-[8px] font-medium uppercase tracking-[0.18em] opacity-60 sm:text-[9px]"
 					>Lumen</span
 				>
-				<span
-					class="mt-0.5 h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5"
-					style="background: {palette.seal}"
-				></span>
+				<span class="font-ui text-[8px] opacity-45 sm:text-[9px]">Vol.</span>
 			</div>
 			<div class="mt-auto">
 				<p
-					class="font-ui text-[0.88rem] font-semibold leading-snug tracking-tight sm:text-[1.02rem]"
+					class="font-display text-[0.95rem] font-semibold leading-snug tracking-tight sm:text-[1.1rem]"
+					style="font-family: var(--font-display)"
 				>
 					{shortTitle}
 				</p>
 				{#if author}
-					<p class="mt-1.5 text-[10px] opacity-65 sm:text-[11px]">{author}</p>
+					<p class="mt-2 font-ui text-[10px] opacity-65 sm:text-[11px]">{author}</p>
 				{/if}
-				<span
-					class="mt-4 block h-0.5 w-7 rounded-full opacity-40"
-					style="background: {palette.fg}"
-				></span>
 			</div>
 		</div>
 	{/if}

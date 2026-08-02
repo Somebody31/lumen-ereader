@@ -1,7 +1,7 @@
 import { listBooks, putBook } from './idb';
 import type { BookRecord } from './types';
 
-const SAMPLE_FLAG = 'lumen-sample-v2';
+const SAMPLE_FLAG = 'lumen-sample-v3';
 
 /** Import bundled sample once per browser if library is empty; refresh sample cover art when flag advances */
 export async function ensureSampleBook(): Promise<void> {
@@ -52,18 +52,19 @@ export async function ensureSampleBook(): Promise<void> {
 	}
 }
 
-/** Atelier flat-ink plate — indigo ground, cream type, vermillion seal */
+/** Editorial broadsheet plate — newsprint ground, black ink type, crimson kicker */
 function coverSvg(title: string, author: string): string {
 	const t = escapeXml(title.slice(0, 36));
 	const a = escapeXml(author.slice(0, 28));
 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
-  <rect width="400" height="600" fill="#1F3A68"/>
-  <rect x="28" y="28" width="344" height="544" rx="0" fill="none" stroke="#F4F1EA" stroke-opacity="0.18" stroke-width="1"/>
-  <circle cx="340" cy="56" r="10" fill="#E03C2B"/>
-  <text x="44" y="72" fill="#F4F1EA" fill-opacity="0.55" font-family="system-ui,sans-serif" font-size="11" font-weight="500" letter-spacing="2.4">LUMEN</text>
-  <text x="44" y="420" fill="#F4F1EA" font-family="system-ui,sans-serif" font-size="28" font-weight="600">${t}</text>
-  <text x="44" y="458" fill="#F4F1EA" fill-opacity="0.65" font-family="system-ui,sans-serif" font-size="14">${a}</text>
-  <line x1="44" y1="520" x2="100" y2="520" stroke="#F4F1EA" stroke-opacity="0.35" stroke-width="2"/>
+  <rect width="400" height="600" fill="#F3F2ED"/>
+  <rect x="20" y="20" width="360" height="560" fill="none" stroke="#0B0B0B" stroke-width="1"/>
+  <line x1="44" y1="72" x2="356" y2="72" stroke="#0B0B0B" stroke-width="1"/>
+  <text x="44" y="58" fill="#7A1C1C" font-family="Georgia,serif" font-size="11" font-weight="600" letter-spacing="3">LUMEN</text>
+  <text x="44" y="400" fill="#0B0B0B" font-family="Georgia,serif" font-size="30" font-weight="600">${t}</text>
+  <line x1="44" y1="420" x2="120" y2="420" stroke="#0B0B0B" stroke-width="1"/>
+  <text x="44" y="450" fill="#6A6A66" font-family="system-ui,sans-serif" font-size="13" letter-spacing="1">${a}</text>
+  <text x="44" y="540" fill="#6A6A66" font-family="system-ui,sans-serif" font-size="10" letter-spacing="2">SAMPLE · OFFLINE</text>
 </svg>`;
 	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -71,4 +72,3 @@ function coverSvg(title: string, author: string): string {
 function escapeXml(s: string): string {
 	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-

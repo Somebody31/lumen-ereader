@@ -76,48 +76,57 @@
 	<title>Settings · Lumen</title>
 </svelte:head>
 
-<div class="mx-auto max-w-lg space-y-8">
-	<header class="animate-plate-in">
-		<h1 class="font-ui text-[2.35rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink">
+<div class="mx-auto max-w-lg space-y-10">
+	<header class="animate-plate-in border-b border-rule pb-8">
+		<p class="kicker mb-3">Preferences</p>
+		<h1
+			class="font-display text-[2.75rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink"
+			style="font-family: var(--font-display)"
+		>
 			Settings
 		</h1>
-		<p class="mt-3 text-[15px] leading-relaxed text-ink-soft">
+		<p class="mt-4 font-ui text-[15px] leading-relaxed text-ink-soft">
 			Defaults for new reading sessions. Cloud sync is optional and never required to open a book.
 		</p>
 	</header>
 
 	{#if prefs}
-		<section class="plate animate-plate-in stagger-1 space-y-5 p-6">
-			<div>
-				<h2 class="font-ui text-base font-semibold tracking-tight text-ink">Reading defaults</h2>
-				<p class="mt-1 text-sm text-ink-mute">Applied when you open a book.</p>
+		<section class="animate-plate-in stagger-1 space-y-5 border border-rule bg-paper p-6">
+			<div class="border-b border-rule pb-3">
+				<h2
+					class="font-display text-xl font-semibold tracking-tight text-ink"
+					style="font-family: var(--font-display)"
+				>
+					Reading defaults
+				</h2>
+				<p class="mt-1 font-ui text-sm text-ink-mute">Applied when you open a book.</p>
 			</div>
 			<div class="flex flex-wrap gap-2">
 				{#each themes as t (t.id)}
 					<button
 						type="button"
-						class="rounded-full px-3.5 py-1.5 text-xs font-medium tracking-tight transition-colors duration-200 ease-[var(--ease-atelier)] {prefs.theme ===
+						class="border px-3 py-1.5 font-ui text-xs tracking-tight transition-colors duration-200 {prefs.theme ===
 						t.id
-							? 'bg-indigo text-white'
-							: 'bg-ash text-ink-soft hover:text-ink'}"
+							? 'border-ink bg-ink text-paper'
+							: 'border-rule text-ink-soft hover:border-ink hover:text-ink'}"
 						onclick={() => savePrefs({ theme: t.id })}
 					>
 						{t.label}
 					</button>
 				{/each}
 			</div>
-			<label class="block text-xs font-medium text-ink-mute">
+			<label class="block font-ui text-xs text-ink-mute">
 				Font size · {prefs.fontSize}px
 				<input
 					type="range"
 					min="14"
 					max="32"
 					value={prefs.fontSize}
-					class="mt-2 w-full accent-indigo"
+					class="mt-2 w-full accent-ink"
 					oninput={(e) => savePrefs({ fontSize: Number((e.currentTarget as HTMLInputElement).value) })}
 				/>
 			</label>
-			<label class="block text-xs font-medium text-ink-mute">
+			<label class="block font-ui text-xs text-ink-mute">
 				Line height · {prefs.lineHeight.toFixed(2)}
 				<input
 					type="range"
@@ -125,39 +134,42 @@
 					max="2.2"
 					step="0.05"
 					value={prefs.lineHeight}
-					class="mt-2 w-full accent-indigo"
+					class="mt-2 w-full accent-ink"
 					oninput={(e) =>
 						savePrefs({ lineHeight: Number((e.currentTarget as HTMLInputElement).value) })}
 				/>
 			</label>
-			<label class="block text-xs font-medium text-ink-mute">
+			<label class="block font-ui text-xs text-ink-mute">
 				Column measure · {prefs.measure}ch
 				<input
 					type="range"
 					min="45"
 					max="90"
 					value={prefs.measure}
-					class="mt-2 w-full accent-indigo"
+					class="mt-2 w-full accent-ink"
 					oninput={(e) => savePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
 				/>
 			</label>
 		</section>
 	{/if}
 
-	<section class="plate animate-plate-in stagger-2 space-y-5 p-6">
-		<div class="flex items-start gap-3.5">
-			<span
-				class="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-ash ring-1 ring-rule/70"
-			>
+	<section class="animate-plate-in stagger-2 space-y-5 border border-rule bg-paper p-6">
+		<div class="flex items-start gap-3.5 border-b border-rule pb-4">
+			<span class="mt-0.5 flex h-9 w-9 items-center justify-center border border-rule bg-newsprint">
 				{#if session?.syncAvailable && session.authenticated}
-					<Cloud size={18} weight="light" class="text-indigo" />
+					<Cloud size={17} weight="light" class="text-ink" />
 				{:else}
-					<CloudSlash size={18} weight="light" class="text-ink-mute" />
+					<CloudSlash size={17} weight="light" class="text-ink-mute" />
 				{/if}
 			</span>
 			<div>
-				<h2 class="font-ui text-base font-semibold tracking-tight text-ink">Cloud sync</h2>
-				<p class="mt-1 text-sm leading-relaxed text-ink-soft">
+				<h2
+					class="font-display text-xl font-semibold tracking-tight text-ink"
+					style="font-family: var(--font-display)"
+				>
+					Cloud sync
+				</h2>
+				<p class="mt-1 font-ui text-sm leading-relaxed text-ink-soft">
 					{session?.message || 'Checking sync status…'}
 				</p>
 			</div>
@@ -182,13 +194,13 @@
 						handleLogin();
 					}}
 				>
-					<label class="block text-xs font-medium text-ink-mute">
+					<label class="block font-ui text-xs text-ink-mute">
 						Passphrase
 						<input
 							type="password"
 							bind:value={passphrase}
 							autocomplete="current-password"
-							class="mt-1.5 w-full rounded-[var(--radius-md)] bg-ash px-3.5 py-2.5 text-sm text-ink ring-1 ring-rule/80 placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-indigo"
+							class="mt-1.5 w-full border border-rule bg-newsprint px-3 py-2.5 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink focus:outline-none"
 							placeholder="Deployment passphrase"
 						/>
 					</label>
@@ -196,24 +208,25 @@
 				</form>
 			{/if}
 		{:else}
-			<p class="text-xs leading-relaxed text-ink-mute">
+			<p class="font-ui text-xs leading-relaxed text-ink-mute">
 				To enable sync on Cloudflare: create R2 bucket and KV namespace, set secrets
-				<code class="rounded bg-ash px-1 py-0.5 text-ink-soft">SESSION_SECRET</code>
+				<code class="border border-rule bg-newsprint px-1 py-0.5 text-ink-soft">SESSION_SECRET</code>
 				and
-				<code class="rounded bg-ash px-1 py-0.5 text-ink-soft">READER_PASSPHRASE</code>, then
-				redeploy. Until then, everything stays local.
+				<code class="border border-rule bg-newsprint px-1 py-0.5 text-ink-soft"
+					>READER_PASSPHRASE</code
+				>, then redeploy. Until then, everything stays local.
 			</p>
 		{/if}
 
 		{#if message}
-			<p class="text-sm font-medium text-indigo" role="status">{message}</p>
+			<p class="font-ui text-sm text-ink" role="status">{message}</p>
 		{/if}
 		{#if error}
-			<p class="text-sm text-danger" role="alert">{error}</p>
+			<p class="font-ui text-sm text-danger" role="alert">{error}</p>
 		{/if}
 	</section>
 
-	<section class="animate-plate-in stagger-3 text-xs leading-relaxed text-ink-mute">
+	<section class="animate-plate-in stagger-3 font-ui text-xs leading-relaxed text-ink-mute">
 		<p>
 			Lumen never requires an account to read. Keyboard in the reader: F focus, T contents, +/− size,
 			arrows or J/K for EPUB pages, Esc back.

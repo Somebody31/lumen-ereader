@@ -8,7 +8,6 @@
 	import BookCard from '$lib/components/library/BookCard.svelte';
 	import CoverPlate from '$lib/components/library/CoverPlate.svelte';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
-	import ArrowRight from 'phosphor-svelte/lib/ArrowRight';
 
 	let books = $state<BookRecord[]>([]);
 	let progressMap = $state<Record<string, ProgressRecord>>({});
@@ -71,52 +70,54 @@
 	<title>Library · Lumen</title>
 </svelte:head>
 
-<div class="space-y-12">
-	<section class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-		<div class="animate-plate-in max-w-xl">
-			<h1 class="font-ui text-[2.35rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink sm:text-[2.75rem]">
-				Your shelf
-			</h1>
-			<p class="mt-3 max-w-md text-[15px] leading-relaxed text-ink-soft">
-				Books live in this browser first. Open anything you imported — even offline.
-			</p>
+<div class="space-y-12 sm:space-y-16">
+	<!-- Masthead -->
+	<section class="animate-plate-in border-b border-rule pb-8">
+		<div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+			<div class="max-w-2xl">
+				<p class="kicker mb-3">Library</p>
+				<h1
+					class="font-display text-[2.75rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[3.5rem]"
+					style="font-family: var(--font-display)"
+				>
+					Your shelf
+				</h1>
+				<p class="mt-4 max-w-md font-ui text-[15px] leading-relaxed text-ink-soft">
+					Books live in this browser first. Open anything you imported — even offline.
+				</p>
+			</div>
+			{#if books.length > 0}
+				<label class="relative block w-full sm:w-64">
+					<span class="sr-only">Search library</span>
+					<MagnifyingGlass
+						size={15}
+						weight="light"
+						class="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-ink-mute"
+					/>
+					<input
+						type="search"
+						bind:value={query}
+						placeholder="Search titles or authors"
+						class="w-full border-0 border-b border-rule bg-transparent py-2.5 pl-7 pr-2 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink focus:outline-none"
+					/>
+				</label>
+			{/if}
 		</div>
-		{#if books.length > 0}
-			<label class="relative block w-full animate-plate-in stagger-2 sm:w-72">
-				<span class="sr-only">Search library</span>
-				<MagnifyingGlass
-					size={16}
-					weight="light"
-					class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-mute"
-				/>
-				<input
-					type="search"
-					bind:value={query}
-					placeholder="Search titles or authors"
-					class="w-full rounded-full border-0 bg-paper py-3 pl-10 pr-4 text-sm text-ink shadow-[var(--shadow-plate)] ring-1 ring-black/[0.04] placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-indigo"
-				/>
-			</label>
-		{/if}
 	</section>
 
 	{#if error}
-		<div
-			class="rounded-[var(--radius-md)] bg-danger/10 px-4 py-3 text-sm text-danger"
-			role="alert"
-		>
+		<div class="border border-danger/40 bg-danger/5 px-4 py-3 font-ui text-sm text-danger" role="alert">
 			{error}
 		</div>
 	{/if}
 
 	{#if loading}
-		<div class="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+		<div class="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each Array(5) as _, i (i)}
 				<div class="space-y-3">
-					<div class="bezel">
-						<div class="bezel-inner aspect-[2/3] animate-pulse bg-ash-deep"></div>
-					</div>
-					<div class="h-3 w-3/4 animate-pulse rounded bg-ash-deep"></div>
-					<div class="h-2.5 w-1/2 animate-pulse rounded bg-ash-deep"></div>
+					<div class="aspect-[2/3] animate-pulse border border-rule bg-surface"></div>
+					<div class="h-3 w-3/4 animate-pulse bg-surface"></div>
+					<div class="h-2 w-1/2 animate-pulse bg-surface"></div>
 				</div>
 			{/each}
 		</div>
@@ -125,100 +126,73 @@
 			<ImportDropzone onfiles={handleFiles} />
 		</div>
 		{#if importing}
-			<p class="text-center text-sm text-ink-mute">Importing…</p>
+			<p class="text-center font-ui text-sm text-ink-mute">Importing…</p>
 		{/if}
 	{:else}
 		{#if last}
 			{@const p = Math.round((progressMap[last.id]?.fraction || 0) * 100)}
-			<div class="grid animate-plate-in stagger-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
-				<a
-					href="/read/{last.id}"
-					class="group relative flex overflow-hidden rounded-[var(--radius-xl)] bg-paper no-underline shadow-[var(--shadow-plate)] ring-1 ring-black/[0.04] transition-all duration-300 ease-[var(--ease-atelier)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-plate-hover)]"
-				>
-					<div
-						class="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-indigo"
-						aria-hidden="true"
-					></div>
-					<div
-						class="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-indigo/[0.04]"
-						aria-hidden="true"
-					></div>
-					<div class="flex w-full flex-row items-stretch">
-						<div class="shrink-0 p-3.5 sm:p-5">
-							<div class="bezel">
-								<div
-									class="bezel-inner relative h-[7.5rem] w-[5rem] sm:h-[10rem] sm:w-[6.6rem]"
-								>
-									<CoverPlate
-										title={last.title}
-										author={last.author}
-										coverDataUrl={last.coverDataUrl}
-									/>
-								</div>
-							</div>
-						</div>
-						<div class="flex min-w-0 flex-1 flex-col justify-center py-4 pr-4 sm:py-5 sm:pr-7">
-							<div class="flex items-center gap-2">
-								<p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-indigo">
-									Continue reading
-								</p>
-								<span
-									class="rounded-full bg-ash px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] text-ink-mute"
-									>{last.format}</span
-								>
-							</div>
-							<p
-								class="mt-2 line-clamp-2 font-ui text-xl font-semibold tracking-tight text-ink sm:text-[1.7rem] sm:leading-[1.15]"
-							>
-								{last.title}
-							</p>
-							<p class="mt-1.5 truncate text-sm text-ink-soft">{last.author}</p>
-							{#if p > 0}
-								<div class="mt-5 flex max-w-xs items-center gap-2.5">
-									<div class="h-1.5 flex-1 overflow-hidden rounded-full bg-ash-deep">
-										<div
-											class="h-full rounded-full bg-indigo transition-[width] duration-300"
-											style="width: {p}%"
-										></div>
-									</div>
-									<span class="text-xs tabular-nums text-ink-mute">{p}%</span>
-								</div>
-							{/if}
-							<span
-								class="mt-4 inline-flex w-fit items-center gap-2 text-sm font-semibold text-seal transition-transform duration-200 ease-[var(--ease-atelier)] group-hover:translate-x-0.5"
-							>
-								Resume
-								<span
-									class="flex h-7 w-7 items-center justify-center rounded-full bg-seal text-white shadow-[0_4px_14px_rgba(224,60,43,0.32)] transition-transform duration-200 group-hover:scale-105"
-								>
-									<ArrowRight size={14} weight="bold" />
-								</span>
-							</span>
-						</div>
+			<!-- Feature / continue — magazine lead story -->
+			<a
+				href="/read/{last.id}"
+				class="group animate-plate-in stagger-1 grid gap-6 border border-rule bg-paper p-0 no-underline transition-colors duration-200 hover:border-ink sm:grid-cols-[auto_1fr] sm:gap-0"
+			>
+				<div class="border-b border-rule sm:border-b-0 sm:border-r">
+					<div class="relative aspect-[2/3] w-full sm:h-[13.5rem] sm:w-[9rem] sm:aspect-auto">
+						<CoverPlate
+							title={last.title}
+							author={last.author}
+							coverDataUrl={last.coverDataUrl}
+						/>
 					</div>
-				</a>
-				<div class="hidden min-h-[11rem] lg:block">
-					<ImportDropzone onfiles={handleFiles} compact />
 				</div>
-			</div>
+				<div class="flex min-w-0 flex-col justify-center px-5 pb-6 pt-1 sm:px-8 sm:py-7">
+					<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+						<p class="kicker text-crimson" style="color: var(--color-crimson)">Continue reading</p>
+						<span class="font-ui text-[10px] uppercase tracking-[0.12em] text-ink-mute"
+							>{last.format}</span
+						>
+					</div>
+					<p
+						class="mt-2 font-display text-[1.65rem] font-semibold leading-[1.1] tracking-tight text-ink sm:text-[2rem]"
+						style="font-family: var(--font-display)"
+					>
+						{last.title}
+					</p>
+					<p class="mt-2 font-ui text-sm text-ink-soft">{last.author}</p>
+					{#if p > 0}
+						<div class="mt-5 flex max-w-xs items-center gap-3">
+							<div class="h-px flex-1 bg-rule">
+								<div class="h-px bg-ink" style="width: {p}%"></div>
+							</div>
+							<span class="font-ui text-xs tabular-nums text-ink-mute">{p}%</span>
+						</div>
+					{/if}
+					<span
+						class="mt-5 inline-flex w-fit items-center gap-2 border-b border-ink pb-0.5 font-ui text-[13px] font-medium text-ink transition-opacity group-hover:opacity-70"
+					>
+						Resume reading →
+					</span>
+				</div>
+			</a>
 		{/if}
 
-		<div class="animate-plate-in stagger-2 space-y-5">
-			<div class="flex items-end justify-between gap-4">
-				<div>
-					<h2 class="font-ui text-lg font-semibold tracking-tight text-ink">
-						{filtered.length === books.length ? 'All books' : 'Matches'}
-					</h2>
-					<p class="mt-0.5 text-sm text-ink-mute">
-						{filtered.length}
-						{filtered.length === 1 ? 'title' : 'titles'}
-						{#if importing}
-							· importing…
-						{/if}
-					</p>
-				</div>
+		<div class="animate-plate-in stagger-2 space-y-6">
+			<div class="flex items-baseline justify-between gap-4 border-b border-rule pb-3">
+				<h2
+					class="font-display text-2xl font-semibold tracking-tight text-ink"
+					style="font-family: var(--font-display)"
+				>
+					{filtered.length === books.length ? 'All books' : 'Matches'}
+				</h2>
+				<p class="font-ui text-xs uppercase tracking-[0.1em] text-ink-mute">
+					{filtered.length}
+					{filtered.length === 1 ? 'title' : 'titles'}
+					{#if importing}
+						· importing…
+					{/if}
+				</p>
 			</div>
-			<div class="grid grid-cols-2 gap-x-5 gap-y-9 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+			<div class="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 				{#each filtered as book, i (book.id)}
 					<div class="relative">
 						<BookCard {book} progress={progressMap[book.id]} ondelete={handleDelete} index={i} />
@@ -227,16 +201,16 @@
 			</div>
 		</div>
 
-		{#if last}
-			<section class="animate-plate-in stagger-3 pt-2 lg:hidden">
-				<h2 class="mb-4 font-ui text-lg font-semibold tracking-tight text-ink">Add more</h2>
-				<ImportDropzone onfiles={handleFiles} compact />
-			</section>
-		{:else}
-			<section class="animate-plate-in stagger-3 pt-2">
-				<h2 class="mb-4 font-ui text-lg font-semibold tracking-tight text-ink">Add more</h2>
-				<ImportDropzone onfiles={handleFiles} compact />
-			</section>
-		{/if}
+		<section class="animate-plate-in stagger-3 pt-2">
+			<div class="mb-4 border-b border-rule pb-3">
+				<h2
+					class="font-display text-2xl font-semibold tracking-tight text-ink"
+					style="font-family: var(--font-display)"
+				>
+					Add more
+				</h2>
+			</div>
+			<ImportDropzone onfiles={handleFiles} compact />
+		</section>
 	{/if}
 </div>
