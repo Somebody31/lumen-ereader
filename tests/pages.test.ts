@@ -38,18 +38,21 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).toContain('Welcome · Lumen');
 		expect(src).toContain('welcome-hero');
 		expect(src).toContain('welcome-stage-reader');
-		expect(src).toContain('Open your library');
+		expect(src).toContain('Open the library');
 		expect(src).toContain('href="/"');
 		expect(src).toContain('/auth?next=/&intent=sync');
-		// Shows what the product is: one reading stage + real capabilities
+		// External-visitor clarity: what it is, how to start, no internal jargon
 		expect(src).toContain('EPUB');
-		expect(src).toContain('local-first');
-		expect(src).toContain('welcome-stage-reader');
+		expect(src).toContain('No account required');
 		expect(src).toContain('welcome-stage-caption');
 		expect(src).toContain('The Star Room');
 		expect(src).toContain('Literata');
 		expect(src).toContain('Newsreader');
 		expect(src).toContain('welcome-path');
+		expect(src).toContain('Getting started');
+		expect(src).not.toContain('IndexedDB');
+		expect(src).not.toContain('R2');
+		expect(src).not.toContain('deployment');
 		// Not a confusing dual mock (reader + fake shelf column)
 		expect(src).not.toContain('welcome-stage-shelf');
 		expect(src).not.toContain('CoverPlate');

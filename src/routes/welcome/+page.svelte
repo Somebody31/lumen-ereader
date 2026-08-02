@@ -32,41 +32,44 @@
 	<title>Welcome · Lumen</title>
 	<meta
 		name="description"
-		content="Lumen is a private e-reader: import EPUB and text, read offline with beautiful type, resume where you left off. Optional cloud sync."
+		content="Lumen is a private e-reader for your own EPUB, Markdown, and text files. Read offline, pick up where you left off. Account optional."
 	/>
 </svelte:head>
 
 <div class="welcome">
-	<!-- ——— Hero: what it is + product stage ——— -->
+	<!-- ——— Hero ——— -->
 	<section class="welcome-hero animate-plate-in">
 		<div class="welcome-hero-copy">
 			<p class="type-kicker text-crimson">Private e-reader</p>
 			<h1 class="type-masthead welcome-hero-title text-ink">
-				Read your own files offline, beautifully
+				Read your own books offline
 			</h1>
 			<p class="type-body welcome-hero-lede text-ink-soft">
-				Lumen is a local-first reader for EPUB, Markdown, and plain text. Drop a book onto your
-				shelf, open it in a calm stage with Night, Paper, Sepia, or high-contrast themes, and pick
-				up at the same crease tomorrow — even with no network. Cloud sync is optional, not a gate.
+				Lumen is an e-reader for files you already have — EPUB, Markdown, or plain text. Import a
+				book from your device, read in a calm full-page view, and come back later at the same place.
+				Nothing requires an account. Everything works without a network.
 			</p>
 			<div class="welcome-cta-row">
 				<a href="/" class="no-underline" onclick={markOnboarded}>
-					<Button variant="secondary" type="button" class="!px-6 !py-3">Open your library</Button>
+					<Button variant="secondary" type="button" class="!px-6 !py-3">Open the library</Button>
 				</a>
-				<a href="/auth?next=/&intent=sync" class="no-underline" onclick={markOnboarded}>
-					<Button variant="ghost" type="button" class="!px-6 !py-3">
-						{session?.syncAvailable ? 'Sign in to sync' : 'About cloud sync'}
-					</Button>
-				</a>
+				{#if session?.syncAvailable}
+					<a href="/auth?next=/&intent=sync" class="no-underline" onclick={markOnboarded}>
+						<Button variant="ghost" type="button" class="!px-6 !py-3">Sign in to sync</Button>
+					</a>
+				{:else}
+					<a href="/about" class="no-underline" onclick={markOnboarded}>
+						<Button variant="ghost" type="button" class="!px-6 !py-3">How it works</Button>
+					</a>
+				{/if}
 			</div>
 			<ul class="welcome-proof type-meta text-ink-mute" aria-label="At a glance">
 				<li>EPUB · Markdown · TXT</li>
-				<li>Works offline by default</li>
-				<li>No account to open a book</li>
+				<li>Works offline</li>
+				<li>No account required</li>
 			</ul>
 		</div>
 
-		<!-- One product shot: the open reading page (not a second fake shelf) -->
 		<figure class="welcome-stage">
 			<div class="welcome-stage-reader stage-night" aria-hidden="true">
 				<div class="welcome-stage-progress">
@@ -91,19 +94,21 @@
 				<div class="welcome-stage-pct">34%</div>
 			</div>
 			<figcaption class="welcome-stage-caption type-meta text-ink-mute">
-				What a book looks like in Lumen — type, themes, and progress on the page. Your shelf is
-				the home screen after you open the library.
+				Preview of the reading view — your book fills the page, with progress and type you can adjust.
 			</figcaption>
 		</figure>
 	</section>
 
-	<!-- ——— What you actually get ——— -->
+	<!-- ——— What you can do ——— -->
 	<section class="welcome-section animate-plate-in stagger-1" aria-labelledby="welcome-get">
 		<div class="welcome-section-head">
-			<p class="type-kicker text-crimson">Inside the app</p>
+			<p class="type-kicker text-crimson">What it does</p>
 			<h2 id="welcome-get" class="type-section mt-2 text-[1.75rem] text-ink sm:text-[2.1rem]">
-				What Lumen is built for
+				Built for reading your files
 			</h2>
+			<p class="type-body mt-3 max-w-xl text-ink-soft">
+				Not a store, catalog, or social feed. You bring the books; Lumen keeps them ready to open.
+			</p>
 		</div>
 
 		<div class="welcome-features">
@@ -116,9 +121,9 @@
 				<div>
 					<h3 class="type-card-title text-lg text-ink">Import from your device</h3>
 					<p class="type-body mt-2 text-ink-soft">
-						Drag a file onto the shelf or use Import in the bar. Files live in this browser’s storage
-						first — not in a storefront catalog. A sample story seeds an empty library so you can try
-						the reader immediately.
+						Drag a file onto the library, or use Import. Books are stored in this browser so you can
+						open them again anytime. New libraries include a short sample story so you can try the
+						reader before adding your own files.
 					</p>
 				</div>
 			</article>
@@ -136,11 +141,11 @@
 					{/each}
 				</div>
 				<div>
-					<h3 class="type-card-title text-lg text-ink">A quiet reading stage</h3>
+					<h3 class="type-card-title text-lg text-ink">Comfortable for long sessions</h3>
 					<p class="type-body mt-2 text-ink-soft">
-						Night, Paper, Sepia, or high contrast. Choose Literata, Newsreader, Source Sans, or system
-						type; size, measure, spacing, alignment, hyphenation, brightness, and keep-awake. Focus
-						mode hides chrome. Progress, bookmarks, and EPUB contents stay under your hand.
+						Choose Night, Paper, Sepia, or high contrast. Adjust font, size, spacing, and margins.
+						Hide the controls when you want a full page, keep your place with progress and bookmarks,
+						and use the table of contents in EPUBs.
 					</p>
 				</div>
 			</article>
@@ -150,40 +155,39 @@
 					<div class="welcome-local-stack">
 						<div class="welcome-local-layer">
 							<span class="type-micro">This device</span>
-							<span class="type-meta">IndexedDB · source of truth</span>
+							<span class="type-meta">Books stay in your browser</span>
 						</div>
 						<div class="welcome-local-layer welcome-local-cloud">
 							<span class="type-micro">Optional cloud</span>
 							<span class="type-meta">
 								{session?.syncAvailable
-									? 'Push / pull when signed in'
-									: 'Configure R2 + passphrase to enable'}
+									? 'Sync when you sign in'
+									: 'Same library on other devices when enabled'}
 							</span>
 						</div>
 					</div>
 				</div>
 				<div>
-					<h3 class="type-card-title text-lg text-ink">Local-first, sync second</h3>
+					<h3 class="type-card-title text-lg text-ink">Private by default</h3>
 					<p class="type-body mt-2 text-ink-soft">
-						Opening a chapter never waits on an account or the network. When this deployment has
-						cloud storage, sign in with a passphrase to push and pull the same shelf across devices —
-						from Settings or the Sign in page.
+						Reading never depends on a login or a live connection. If cloud sync is available on this
+						site, you can sign in with a passphrase later to copy your library between devices — still
+						optional, never required to open a book.
 					</p>
 				</div>
 			</article>
 		</div>
 	</section>
 
-	<!-- ——— How you move through the app ——— -->
+	<!-- ——— How to start ——— -->
 	<section class="welcome-section animate-plate-in stagger-2" aria-labelledby="welcome-flow">
 		<div class="welcome-section-head">
-			<p class="type-kicker text-crimson">The path</p>
+			<p class="type-kicker text-crimson">Getting started</p>
 			<h2 id="welcome-flow" class="type-section mt-2 text-[1.75rem] text-ink sm:text-[2.1rem]">
-				How a session goes
+				How a typical visit goes
 			</h2>
 			<p class="type-body mt-3 max-w-xl text-ink-soft">
-				Same spine as any serious reader: shelf, book, back to shelf. Marketing and help sit off to
-				the side.
+				Library for your books, full page when you open one, back when you are done.
 			</p>
 		</div>
 
@@ -191,9 +195,9 @@
 			<li class="welcome-path-step">
 				<span class="welcome-path-num type-micro text-crimson" aria-hidden="true">01</span>
 				<div>
-					<p class="type-card-title text-ink">Library</p>
+					<p class="type-card-title text-ink">Open the library</p>
 					<p class="type-meta mt-1 text-ink-soft">
-						Home is your shelf — continue reading, search, import. Not a pitch deck.
+						Your home screen: continue where you left off, search, or import a file.
 					</p>
 				</div>
 			</li>
@@ -202,47 +206,47 @@
 				<div>
 					<p class="type-card-title text-ink">Open a book</p>
 					<p class="type-meta mt-1 text-ink-soft">
-						Immersive page. Chrome fades; Esc returns you to the shelf.
+						The reading page takes over. Esc (or the back control) returns you to the library.
 					</p>
 				</div>
 			</li>
 			<li class="welcome-path-step">
 				<span class="welcome-path-num type-micro text-crimson" aria-hidden="true">03</span>
 				<div>
-					<p class="type-card-title text-ink">Tune type</p>
+					<p class="type-card-title text-ink">Adjust the page</p>
 					<p class="type-meta mt-1 text-ink-soft">
-						Theme and typography from the reader or Settings defaults for new sessions.
+						Theme and type from the reader toolbar, or set defaults in Settings for next time.
 					</p>
 				</div>
 			</li>
 			<li class="welcome-path-step">
 				<span class="welcome-path-num type-micro text-crimson" aria-hidden="true">04</span>
 				<div>
-					<p class="type-card-title text-ink">Sync only if you need it</p>
+					<p class="type-card-title text-ink">Sync only if you want it</p>
 					<p class="type-meta mt-1 text-ink-soft">
-						Passphrase sign-in unlocks push/pull. Never required to read offline.
+						Sign in later to keep the same library on another device. You can ignore this forever.
 					</p>
 				</div>
 			</li>
 		</ol>
 	</section>
 
-	<!-- ——— Type system specimen (shows the craft) ——— -->
+	<!-- ——— Type specimen ——— -->
 	<section class="welcome-specimen animate-plate-in stagger-2" aria-labelledby="welcome-type">
 		<div class="welcome-specimen-grid">
 			<div>
-				<p class="type-kicker text-crimson">Editorial faces</p>
+				<p class="type-kicker text-crimson">Typography</p>
 				<h2 id="welcome-type" class="type-section mt-2 text-[1.75rem] text-ink sm:text-[2rem]">
-					Type built for long sessions
+					Type meant for long reading
 				</h2>
 				<p class="type-body mt-3 text-ink-soft">
-					Newsreader for titles and display, Source Sans 3 for chrome, Literata for the page —
-					optical sizes tuned so a chapter head and a footnote don’t share the same face.
+					Titles use Newsreader, the page uses Literata, and menus use Source Sans — chosen so
+					chapter heads and body text stay comfortable for hours, not just a quick skim.
 				</p>
 			</div>
 			<div class="welcome-specimen-faces">
 				<div class="welcome-specimen-row">
-					<span class="type-micro text-ink-mute">Display</span>
+					<span class="type-micro text-ink-mute">Titles</span>
 					<p class="type-masthead text-[1.85rem] text-ink sm:text-[2.25rem]">The Star Room</p>
 					<span class="type-meta text-ink-mute">Newsreader</span>
 				</div>
@@ -256,7 +260,7 @@
 				</div>
 				<div class="welcome-specimen-rule"></div>
 				<div class="welcome-specimen-row">
-					<span class="type-micro text-ink-mute">UI</span>
+					<span class="type-micro text-ink-mute">Menus</span>
 					<p class="type-nav text-ink">Library · Settings · Import</p>
 					<span class="type-meta text-ink-mute">Source Sans 3</span>
 				</div>
@@ -266,28 +270,28 @@
 
 	<!-- ——— Close ——— -->
 	<section class="welcome-close animate-plate-in stagger-3">
-		<p class="type-eyebrow text-ink-mute">No catalog. No feed. Just the page.</p>
+		<p class="type-eyebrow text-ink-mute">No catalog. No feed. Just your books.</p>
 		<h2 class="type-section mt-3 text-[1.85rem] text-ink sm:text-[2.25rem]">
-			Start on your shelf
+			Ready when you are
 		</h2>
 		<p class="type-body mx-auto mt-3 max-w-md text-ink-soft">
-			Open the library to import a file or read the sample. Sign in only if you want the same books
-			on another device.
+			Open the library to try the sample story or import a file from your computer. You can sign in
+			later if you want the same books on another device.
 		</p>
 		<div class="welcome-cta-row welcome-cta-row-center mt-8">
 			<a href="/" class="no-underline" onclick={markOnboarded}>
-				<Button variant="secondary" type="button" class="!px-7 !py-3">Open library</Button>
+				<Button variant="secondary" type="button" class="!px-7 !py-3">Open the library</Button>
 			</a>
 			<a
 				href="/about"
 				class="type-meta text-ink-soft no-underline underline decoration-rule underline-offset-4 hover:text-ink"
 			>
-				Keyboard shortcuts & about
+				About & keyboard shortcuts
 			</a>
 		</div>
 		{#if session && !session.syncAvailable}
 			<p class="type-meta mx-auto mt-6 max-w-sm text-ink-mute">
-				This deployment has no cloud yet — reading stays fully local.
+				Cloud sync is not enabled on this site — everything stays on your device.
 			</p>
 		{/if}
 	</section>
