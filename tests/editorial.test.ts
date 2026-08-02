@@ -80,6 +80,10 @@ describe('editorial design system', () => {
 		expect(shell).toContain('Lumen');
 		expect(shell).toContain('Import');
 		expect(shell).toContain('importFiles');
+		// Segmented nav chips, not thin underlined text links
+		expect(shell).toContain('aria-current');
+		expect(shell).toContain('font-medium');
+		expect(shell).toContain('bg-paper');
 	});
 
 	test('library page uses editorial masthead composition', () => {

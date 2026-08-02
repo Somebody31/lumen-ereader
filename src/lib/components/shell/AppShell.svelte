@@ -55,32 +55,39 @@
 
 		<header class="sticky top-0 z-40 border-b border-rule bg-newsprint/88 backdrop-blur-md">
 			<div
-				class="mx-auto flex h-13 max-w-[1120px] items-center gap-3 px-4 sm:h-14 sm:gap-4 sm:px-6"
+				class="mx-auto flex h-14 max-w-[1120px] items-center gap-3 px-4 sm:h-[3.75rem] sm:gap-5 sm:px-6"
 			>
-				<a href="/" class="group flex shrink-0 items-baseline gap-2 no-underline">
+				<a href="/" class="group flex shrink-0 items-center no-underline">
 					<span
-						class="display text-[1.35rem] tracking-[-0.03em] sm:text-[1.45rem]"
+						class="display text-[1.4rem] leading-none tracking-[-0.03em] sm:text-[1.5rem]"
 						style="font-variation-settings: 'opsz' 36"
 						>Lumen</span
 					>
 				</a>
-				<nav class="flex min-w-0 items-center gap-0.5" aria-label="Primary">
+
+				<!-- Segmented nav — same optical weight as Import -->
+				<nav
+					class="flex min-w-0 items-center rounded-md border border-rule bg-paper p-0.5"
+					aria-label="Primary"
+				>
 					<a
 						href="/"
-						class="px-2.5 py-1.5 font-ui text-[13px] tracking-tight transition-colors duration-200 sm:px-3 {path ===
+						class="rounded-[calc(var(--radius-md)-2px)] px-3.5 py-2 font-ui text-[13px] font-medium tracking-tight no-underline transition-[color,background-color] duration-200 sm:px-4 {path ===
 						'/'
-							? 'text-ink underline decoration-1 underline-offset-[5px]'
-							: 'text-ink-soft hover:text-ink'}"
+							? 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-rule)]'
+							: 'text-ink-soft hover:bg-surface/60 hover:text-ink'}"
+						aria-current={path === '/' ? 'page' : undefined}
 					>
 						Library
 					</a>
 					<a
 						href="/settings"
-						class="px-2.5 py-1.5 font-ui text-[13px] tracking-tight transition-colors duration-200 sm:px-3 {path.startsWith(
+						class="rounded-[calc(var(--radius-md)-2px)] px-3.5 py-2 font-ui text-[13px] font-medium tracking-tight no-underline transition-[color,background-color] duration-200 sm:px-4 {path.startsWith(
 							'/settings'
 						)
-							? 'text-ink underline decoration-1 underline-offset-[5px]'
-							: 'text-ink-soft hover:text-ink'}"
+							? 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-rule)]'
+							: 'text-ink-soft hover:bg-surface/60 hover:text-ink'}"
+						aria-current={path.startsWith('/settings') ? 'page' : undefined}
 					>
 						Settings
 					</a>
@@ -98,7 +105,7 @@
 					<Button
 						variant="secondary"
 						type="button"
-						class="!px-3.5 !py-2 text-[12px] sm:!px-4"
+						class="!px-4 !py-2 text-[13px] font-medium"
 						disabled={importing}
 						onclick={() => importInput?.click()}
 					>
