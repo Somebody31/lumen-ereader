@@ -9,6 +9,9 @@
 	const path = $derived(page.url.pathname);
 	const isReader = $derived(path.startsWith('/read/'));
 	const isLibrary = $derived(path === '/');
+	const isWelcome = $derived(path === '/welcome' || path.startsWith('/welcome/'));
+	const isAbout = $derived(path === '/about' || path.startsWith('/about/'));
+	const isSettings = $derived(path.startsWith('/settings'));
 
 	let importInput: HTMLInputElement | undefined = $state();
 	let importing = $state(false);
@@ -29,9 +32,7 @@
 						? `Imported large file (${formatBytes(biggest.size)}). Opening uses chunked rendering.`
 						: `Imported ${formatBytes(biggest.size)} file.`;
 			}
-			window.dispatchEvent(
-				new CustomEvent('lumen:books-changed', { detail: { notice } })
-			);
+			window.dispatchEvent(new CustomEvent('lumen:books-changed', { detail: { notice } }));
 		} catch (err) {
 			window.dispatchEvent(
 				new CustomEvent('lumen:books-changed', {
@@ -45,6 +46,14 @@
 			t.value = '';
 		}
 	}
+
+	function navClass(active: boolean) {
+		return `type-nav rounded-[calc(var(--radius-md)-2px)] px-3 py-2 no-underline transition-[color,background-color] duration-200 sm:px-3.5 ${
+			active
+				? 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-rule)]'
+				: 'text-ink-soft hover:bg-surface/60 hover:text-ink'
+		}`;
+	}
 </script>
 
 {#if isReader}
@@ -55,42 +64,29 @@
 
 		<header class="sticky top-0 z-40 border-b border-rule bg-newsprint/88 backdrop-blur-md">
 			<div
-				class="mx-auto flex h-14 max-w-[1120px] items-center gap-3 px-4 sm:h-[3.75rem] sm:gap-5 sm:px-6"
+				class="mx-auto flex h-14 max-w-[1120px] items-center gap-2.5 px-4 sm:h-[3.75rem] sm:gap-4 sm:px-6"
 			>
-				<a href="/" class="group flex shrink-0 items-center no-underline">
-					<span
-						class="display text-[1.4rem] leading-none tracking-[-0.03em] sm:text-[1.5rem]"
-						style="font-variation-settings: 'opsz' 36"
+				<a href="/welcome" class="group flex shrink-0 items-center no-underline" title="Welcome">
+					<span class="type-chrome-title text-[1.35rem] leading-none text-ink sm:text-[1.5rem]"
 						>Lumen</span
 					>
 				</a>
 
-				<!-- Segmented nav — same optical weight as Import -->
 				<nav
-					class="flex min-w-0 items-center rounded-md border border-rule bg-paper p-0.5"
+					class="flex min-w-0 items-center overflow-x-auto rounded-md border border-rule bg-paper p-0.5"
 					aria-label="Primary"
 				>
-					<a
-						href="/"
-						class="rounded-[calc(var(--radius-md)-2px)] px-3.5 py-2 font-ui text-[13px] font-medium tracking-tight no-underline transition-[color,background-color] duration-200 sm:px-4 {path ===
-						'/'
-							? 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-rule)]'
-							: 'text-ink-soft hover:bg-surface/60 hover:text-ink'}"
-						aria-current={path === '/' ? 'page' : undefined}
+					<a href="/" class={navClass(isLibrary)} aria-current={isLibrary ? 'page' : undefined}
+						>Library</a
 					>
-						Library
-					</a>
 					<a
 						href="/settings"
-						class="rounded-[calc(var(--radius-md)-2px)] px-3.5 py-2 font-ui text-[13px] font-medium tracking-tight no-underline transition-[color,background-color] duration-200 sm:px-4 {path.startsWith(
-							'/settings'
-						)
-							? 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-rule)]'
-							: 'text-ink-soft hover:bg-surface/60 hover:text-ink'}"
-						aria-current={path.startsWith('/settings') ? 'page' : undefined}
+						class={navClass(isSettings)}
+						aria-current={isSettings ? 'page' : undefined}>Settings</a
 					>
-						Settings
-					</a>
+					<a href="/about" class={navClass(isAbout)} aria-current={isAbout ? 'page' : undefined}
+						>About</a
+					>
 				</nav>
 
 				<div class="ml-auto flex shrink-0 items-center gap-2">
@@ -102,28 +98,47 @@
 						class="sr-only"
 						onchange={onImportChange}
 					/>
-					<Button
-						variant="secondary"
-						type="button"
-						class="!px-4 !py-2 text-[13px] font-medium"
-						disabled={importing}
-						onclick={() => importInput?.click()}
-					>
-						{importing ? 'Importing…' : 'Import'}
-					</Button>
+					{#if !isWelcome}
+						<Button
+							variant="secondary"
+							type="button"
+							class="!px-4 !py-2 text-[13px] font-medium"
+							disabled={importing}
+							onclick={() => importInput?.click()}
+						>
+							{importing ? 'Importing…' : 'Import'}
+						</Button>
+					{/if}
 				</div>
 			</div>
 		</header>
 
-		<main class="relative z-10 mx-auto max-w-[1120px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12">
+		<main
+			class="relative z-10 mx-auto max-w-[1120px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 {isWelcome
+				? 'sm:pt-10'
+				: ''}"
+		>
 			{@render children()}
 		</main>
 
 		{#if !isLibrary}
 			<footer class="relative z-10 mx-auto max-w-[1120px] border-t border-rule px-4 py-6 sm:px-6">
-				<p class="font-ui text-[10px] uppercase tracking-[0.12em] text-ink-soft">
-					Local-first · offline by default
-				</p>
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<p class="type-micro text-ink-soft">Local-first · offline by default</p>
+					<nav class="flex gap-4" aria-label="Footer">
+						<a
+							href="/welcome"
+							class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+							aria-current={isWelcome ? 'page' : undefined}>Welcome</a
+						>
+						<a href="/about" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+							>About</a
+						>
+						<a href="/settings" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+							>Settings</a
+						>
+					</nav>
+				</div>
 			</footer>
 		{/if}
 	</div>

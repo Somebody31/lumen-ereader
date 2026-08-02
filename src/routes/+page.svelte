@@ -157,14 +157,9 @@
 	<section class="animate-plate-in">
 		<div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
 			<div class="max-w-xl">
-				<p class="kicker text-crimson">Library</p>
-				<h1
-					class="mt-2 font-display text-[2.5rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[3.25rem]"
-					style="font-family: var(--font-display); font-variation-settings: 'opsz' 72"
-				>
-					Your shelf
-				</h1>
-				<p class="mt-3 max-w-md font-ui text-[15px] leading-relaxed text-ink-soft">
+				<p class="type-kicker text-crimson">Library</p>
+				<h1 class="type-masthead mt-2 text-[2.5rem] text-ink sm:text-[3.25rem]">Your shelf</h1>
+				<p class="type-body mt-3 max-w-md text-ink-soft">
 					Books live in this browser first. Open anything you imported — even offline.
 				</p>
 			</div>
@@ -281,7 +276,8 @@
 						<div class="continue-lead-track">
 							<div
 								class="continue-lead-fill"
-								style="width: {Math.max(p, p > 0 ? 1.5 : 0)}%"
+								data-progress={p}
+								style="width: {p > 0 ? Math.max(p, 1.5) : 0}%"
 							></div>
 						</div>
 						<span class="continue-lead-pct">{p}%</span>
@@ -307,10 +303,7 @@
 		{#if shelfBooks.length > 0 || query.trim()}
 			<div class="animate-plate-in stagger-2 space-y-6">
 				<div class="flex items-baseline justify-between gap-4">
-					<h2
-						class="font-display text-2xl font-semibold tracking-tight text-ink sm:text-[1.75rem]"
-						style="font-family: var(--font-display)"
-					>
+					<h2 class="type-section text-2xl text-ink sm:text-[1.75rem]">
 						{query.trim()
 							? 'Matches'
 							: inProgress.length && !sparse
@@ -320,7 +313,7 @@
 									: 'All books'}
 					</h2>
 					{#if !sparse || query.trim()}
-						<p class="font-ui text-xs tabular-nums text-ink-soft">
+						<p class="type-meta tabular-nums text-ink-soft">
 							{query.trim() ? filtered.length : shelfBooks.length}
 							{(query.trim() ? filtered.length : shelfBooks.length) === 1 ? 'title' : 'titles'}
 							{#if importing}
@@ -347,8 +340,11 @@
 		{/if}
 
 		<!-- Quiet drop hint — Import lives in the toolbar -->
-		<p class="animate-plate-in stagger-3 pt-4 text-center font-ui text-[12px] text-ink-mute">
-			Drop a file anywhere to import · or use <span class="text-ink-soft">Import</span> in the bar
+		<p class="type-meta animate-plate-in stagger-3 pt-4 text-center text-ink-mute">
+			Drop a file anywhere to import · or use <span class="text-ink-soft">Import</span> in the bar ·
+			<a href="/welcome" class="text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink"
+				>Welcome</a
+			>
 		</p>
 	{/if}
 </div>

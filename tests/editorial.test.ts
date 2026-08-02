@@ -56,7 +56,7 @@ describe('editorial design system', () => {
 	test('reader chrome uses hairline editorial language, not pill islands', () => {
 		expect(readerPage).toContain('ease-editorial');
 		expect(readerPage).toContain('border-color: var(--stage-rule)');
-		expect(readerPage).toContain('font-display');
+		expect(readerPage).toContain('type-chrome-title');
 		// Stage themes wired via stageClass + theme list
 		expect(readerPage).toContain("stage-${prefs?.theme ?? 'night'}");
 		expect(readerPage).toContain("id: 'night'");
@@ -74,7 +74,7 @@ describe('editorial design system', () => {
 	});
 
 	test('shell is a toolbar stamp + import CTA', () => {
-		expect(shell).toContain('display');
+		expect(shell).toContain('type-chrome-title');
 		expect(shell).toContain('bg-newsprint');
 		expect(shell).toContain('border-rule');
 		expect(shell).toContain('Lumen');
@@ -82,13 +82,15 @@ describe('editorial design system', () => {
 		expect(shell).toContain('importFiles');
 		// Segmented nav chips, not thin underlined text links
 		expect(shell).toContain('aria-current');
-		expect(shell).toContain('font-medium');
+		expect(shell).toContain('type-nav');
 		expect(shell).toContain('bg-paper');
+		expect(shell).toContain('/about');
+		expect(shell).toContain('/welcome');
 	});
 
 	test('library page uses editorial masthead composition', () => {
-		expect(library).toContain('kicker');
-		expect(library).toContain('font-display');
+		expect(library).toContain('type-kicker');
+		expect(library).toContain('type-masthead');
 		expect(library).toContain('ImportDropzone');
 		expect(library).toContain('BookCard');
 		expect(library).toContain('formatDisplayTitle');
@@ -110,6 +112,9 @@ describe('editorial design system', () => {
 		expect(library).not.toMatch(/continue-lead-cta[^>]*bg-crimson/);
 		expect(appCss).toContain('.continue-lead-title');
 		expect(appCss).toContain('.continue-lead-fill');
+		// bead only when progress > 0 (magazine hairline, not always-on crimson)
+		expect(library).toContain('data-progress={p}');
+		expect(appCss).toContain("data-progress='0'");
 		// not a bordered dashboard card
 		expect(library).not.toMatch(/continue-lead[^>]*(border border-rule|bg-paper)/);
 	});

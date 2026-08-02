@@ -51,15 +51,14 @@
 		</div>
 		<div class="mt-3.5 pt-0.5">
 			<h3
-				class="line-clamp-2 font-display text-[15px] font-semibold leading-snug tracking-tight text-ink transition-colors duration-200 group-hover:text-ink-soft"
-				style="font-family: var(--font-display)"
+				class="type-card-title line-clamp-2 text-[15px] text-ink transition-colors duration-200 group-hover:text-ink-soft"
 			>
 				{title}
 			</h3>
-			<p class="mt-1 truncate font-ui text-[12px] italic text-ink-soft">
+			<p class="type-eyebrow mt-1 truncate text-[12px] text-ink-soft">
 				{book.author || 'Unknown author'}
 			</p>
-			<p class="mt-1.5 font-ui text-[11px] text-ink-mute">
+			<p class="type-meta mt-1.5 text-[11px] text-ink-mute">
 				<span class="uppercase tracking-[0.08em]">{book.format}</span>
 				{#if pct > 0}
 					<span class="text-ink-mute"> · </span>

@@ -14,6 +14,7 @@
 	} from '$lib/client/idb';
 	import { pushProgress } from '$lib/client/sync';
 	import { formatBytes, LARGE_SIZE_BYTES, WARN_SIZE_BYTES } from '$lib/client/textRender';
+	import { formatDisplayTitle } from '$lib/client/formatTitle';
 	import {
 		fontStack,
 		READING_FONTS,
@@ -408,15 +409,12 @@
 				</a>
 				<div class="min-w-0 flex-1 px-1">
 					<p
-						class="truncate font-display text-[15px] font-semibold tracking-tight sm:text-base"
-						style="color: var(--stage-chrome-fg); font-family: var(--font-display)"
+						class="type-chrome-title truncate text-[15px] sm:text-base"
+						style="color: var(--stage-chrome-fg)"
 					>
-						{book.title}
+						{formatDisplayTitle(book.title)}
 					</p>
-					<p
-						class="truncate font-ui text-[11px] tracking-wide"
-						style="color: var(--stage-chrome-mute)"
-					>
+					<p class="type-meta truncate text-[11px]" style="color: var(--stage-chrome-mute)">
 						{subline}
 					</p>
 				</div>
@@ -537,8 +535,8 @@
 
 		{#if chromeVisible && !focusMode && !typeOpen && !tocOpen}
 			<div
-				class="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-full border px-3 py-1 font-ui text-[11px] tabular-nums backdrop-blur-md transition-opacity duration-300"
-				style="background: var(--stage-chrome); color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
+				class="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full border px-3.5 py-1.5 font-ui text-[11px] tabular-nums shadow-sm backdrop-blur-md transition-opacity duration-300"
+				style="background: color-mix(in srgb, var(--stage-chrome) 92%, transparent); color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
 			>
 				{pct}%
 			</div>
@@ -567,10 +565,10 @@
 				</div>
 
 				<div
-					class="shrink-0 border-b px-4 py-3"
+					class="shrink-0 border-b px-4 py-3.5"
 					style="border-color: var(--stage-rule); background: color-mix(in srgb, var(--stage-fg) 4%, transparent)"
 				>
-					<p class="font-reading" lang="en" style={sampleStyle(prefs)}>
+					<p class="type-reading" lang="en" style={sampleStyle(prefs)}>
 						{sampleLine}
 					</p>
 				</div>

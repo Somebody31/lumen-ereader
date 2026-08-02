@@ -60,14 +60,11 @@
 				></span>
 			</div>
 			<div class="mt-auto">
-				<p
-					class="font-display text-[0.95rem] font-semibold leading-snug tracking-tight sm:text-[1.1rem]"
-					style="font-family: var(--font-display); font-variation-settings: 'opsz' 36"
-				>
+				<p class="type-card-title text-[0.95rem] sm:text-[1.1rem]">
 					{shortTitle}
 				</p>
 				{#if author}
-					<p class="mt-2 font-ui text-[10px] opacity-75 sm:text-[11px]">{author}</p>
+					<p class="type-meta mt-2 opacity-75 sm:text-[11px]">{author}</p>
 				{/if}
 				<div
 					class="mt-4 h-px w-8"

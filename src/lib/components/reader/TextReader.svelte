@@ -133,7 +133,7 @@
 
 <div
 	bind:this={scroller}
-	class="reader-scroll h-full overflow-y-auto px-[var(--reader-margin,1.5rem)] py-20 sm:py-24"
+	class="reader-scroll h-full overflow-y-auto px-[max(var(--reader-margin,1.5rem),1rem)] pb-36 pt-[max(5.5rem,calc(env(safe-area-inset-top)+4.5rem))] sm:pb-40 sm:pt-28"
 	style:--reader-font={fontStack(prefs.fontFamily)}
 	style:--reader-size="{prefs.fontSize}px"
 	style:--reader-lh={prefs.lineHeight}
@@ -147,7 +147,7 @@
 >
 	{#if !ready}
 		<div class="reader-prose relative z-[1] py-12 text-center" style="color: var(--stage-muted)">
-			<p class="font-ui text-sm">Preparing text… {parsePct}%</p>
+			<p class="type-body" style="color: var(--stage-muted)">Preparing text… {parsePct}%</p>
 		</div>
 	{:else}
 		<article class="reader-prose relative z-[1]" lang="en">
@@ -163,6 +163,10 @@
 			{#if bottomSpacer > 0}
 				<div style="height: {bottomSpacer}px" aria-hidden="true"></div>
 			{/if}
+			<!-- book end breathing room -->
+			<div class="reader-end-mark" aria-hidden="true">
+				<span></span>
+			</div>
 		</article>
 	{/if}
 </div>

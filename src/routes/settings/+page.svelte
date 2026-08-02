@@ -91,13 +91,9 @@
 
 <div class="space-y-10">
 	<header class="animate-plate-in max-w-2xl">
-		<h1
-			class="font-display text-[2.75rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink"
-			style="font-family: var(--font-display); font-variation-settings: 'opsz' 72"
-		>
-			Settings
-		</h1>
-		<p class="mt-4 font-ui text-[15px] leading-relaxed text-ink-soft">
+		<p class="type-kicker text-crimson">Preferences</p>
+		<h1 class="type-masthead mt-2 text-[2.75rem] text-ink">Settings</h1>
+		<p class="type-body mt-4 text-ink-soft">
 			Defaults for new reading sessions. Cloud sync is optional and never required to open a book.
 		</p>
 		<div class="mt-8 h-px bg-rule"></div>
@@ -109,17 +105,12 @@
 		>
 			<div class="space-y-6 p-6 sm:p-8">
 				<div>
-					<h2
-						class="font-display text-xl font-semibold tracking-tight text-ink"
-						style="font-family: var(--font-display)"
-					>
-						Reading defaults
-					</h2>
-					<p class="mt-1 font-ui text-sm text-ink-soft">Applied when you open a book.</p>
+					<h2 class="type-section text-xl text-ink">Reading defaults</h2>
+					<p class="type-meta mt-1 text-ink-soft">Applied when you open a book.</p>
 				</div>
 
 				<div>
-					<p class="mb-2.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-soft">Theme</p>
+					<p class="type-micro mb-2.5 text-ink-soft">Theme</p>
 					<div class="flex flex-wrap gap-2">
 						{#each themes as t (t.id)}
 							<button
@@ -146,9 +137,7 @@
 				</div>
 
 				<div>
-					<p class="mb-2.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-soft">
-						Typeface
-					</p>
+					<p class="type-micro mb-2.5 text-ink-soft">Typeface</p>
 					<div class="flex flex-wrap gap-2">
 						{#each READING_FONTS as f (f.id)}
 							<button
@@ -248,9 +237,7 @@
 				</label>
 
 				<div>
-					<p class="mb-2.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-soft">
-						Composition
-					</p>
+					<p class="type-micro mb-2.5 text-ink-soft">Composition</p>
 					<div class="flex flex-wrap gap-2">
 						<button
 							type="button"
@@ -356,13 +343,8 @@
 				{/if}
 			</span>
 			<div>
-				<h2
-					class="font-display text-xl font-semibold tracking-tight text-ink"
-					style="font-family: var(--font-display)"
-				>
-					Cloud sync
-				</h2>
-				<p class="mt-1 font-ui text-sm leading-relaxed text-ink-soft">
+				<h2 class="type-section text-xl text-ink">Cloud sync</h2>
+				<p class="type-body mt-1 text-ink-soft">
 					{#if session?.syncAvailable}
 						{session.message || 'Cloud is available.'}
 					{:else}
@@ -430,10 +412,13 @@
 		{/if}
 	</section>
 
-	<section class="animate-plate-in stagger-3 font-ui text-xs leading-relaxed text-ink-mute">
+	<section class="animate-plate-in stagger-3 type-meta leading-relaxed text-ink-mute">
 		<p>
-			No account required to read. In the reader: F focus, T contents, B bookmark, Shift+B marks, ,
-			type panel, +/− size, arrows or J/K for EPUB, Esc back.
+			No account required to read. Shortcuts live on the
+			<a href="/about" class="text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink"
+				>About</a
+			>
+			page. In the reader: F focus, T contents, B bookmark, , type panel, Esc library.
 		</p>
 	</section>
 </div>

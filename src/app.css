@@ -198,6 +198,116 @@
 	--stage-vignette: rgba(0, 0, 0, 0.55);
 }
 
+/* ——— Role-based type utilities (mirror TYPE_ROLES in editorial.ts) ——— */
+.type-masthead {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-style: normal;
+	letter-spacing: -0.03em;
+	line-height: 0.98;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 72;
+}
+
+.type-section {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-style: normal;
+	letter-spacing: -0.02em;
+	line-height: 1.15;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 48;
+}
+
+.type-card-title {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-style: normal;
+	letter-spacing: -0.02em;
+	line-height: 1.25;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 36;
+}
+
+.type-eyebrow {
+	font-family: var(--font-display);
+	font-weight: 400;
+	font-style: italic;
+	letter-spacing: 0.01em;
+	line-height: 1.35;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 18;
+}
+
+.type-kicker {
+	font-family: var(--font-ui);
+	font-size: 0.6875rem;
+	font-weight: 500;
+	font-style: normal;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.type-body {
+	font-family: var(--font-ui);
+	font-size: 0.9375rem;
+	font-weight: 400;
+	font-style: normal;
+	line-height: 1.55;
+}
+
+.type-meta {
+	font-family: var(--font-ui);
+	font-size: 0.75rem;
+	font-weight: 400;
+	font-style: normal;
+	line-height: 1.4;
+}
+
+.type-micro {
+	font-family: var(--font-ui);
+	font-size: 0.625rem;
+	font-weight: 500;
+	font-style: normal;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.type-nav {
+	font-family: var(--font-ui);
+	font-size: 13px;
+	font-weight: 500;
+	font-style: normal;
+	letter-spacing: -0.01em;
+}
+
+.type-chrome-title {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-style: normal;
+	letter-spacing: -0.02em;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 36;
+}
+
+.type-reading {
+	font-family: var(--font-reading);
+	font-weight: 400;
+	font-style: normal;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 14;
+}
+
+.type-reading-head {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-style: normal;
+	letter-spacing: -0.02em;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 48;
+}
+
+/* Book body — long-form reading surface */
 .reader-prose {
 	font-family: var(--reader-font, var(--font-reading));
 	color: var(--stage-fg);
@@ -209,71 +319,157 @@
 	text-align: var(--reader-align, left);
 	hyphens: var(--reader-hyphens, manual);
 	-webkit-hyphens: var(--reader-hyphens, manual);
-	font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 0, 'tnum' 1;
+	hanging-punctuation: first allow-end last;
+	orphans: 3;
+	widows: 3;
+	font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 0, 'tnum' 0, 'calt' 1;
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 14;
+	/* Soft ink — slightly less harsh than pure pure white on black */
+	text-rendering: optimizeLegibility;
 }
 
 .reader-prose h1,
 .reader-prose h2,
-.reader-prose h3 {
+.reader-prose h3,
+.reader-prose h4 {
 	font-family: var(--font-display);
 	font-weight: 600;
 	letter-spacing: -0.02em;
-	line-height: 1.2;
-	margin: 1.6em 0 0.55em;
+	line-height: 1.18;
+	margin: 1.75em 0 0.5em;
 	text-align: left;
 	hyphens: none;
 	-webkit-hyphens: none;
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 48;
+	/* Heads break column rhythm deliberately */
+	text-wrap: balance;
 }
 
 .reader-prose h1 {
-	font-size: 1.75em;
+	font-size: 1.72em;
+	margin-top: 0;
+	padding-bottom: 0.35em;
+	border-bottom: 1px solid color-mix(in srgb, var(--stage-fg) 12%, transparent);
 }
 .reader-prose h2 {
-	font-size: 1.4em;
+	font-size: 1.38em;
 }
 .reader-prose h3 {
-	font-size: 1.15em;
+	font-size: 1.18em;
+}
+.reader-prose h4 {
+	font-size: 1.05em;
+	font-weight: 600;
+	letter-spacing: -0.01em;
 }
 
 .reader-prose p {
-	margin: 0 0 var(--reader-para, 1em);
+	margin: 0 0 var(--reader-para, 0.95em);
+	/* Comfortable book measure feel */
+	text-wrap: pretty;
+}
+
+.reader-prose p:last-child {
+	margin-bottom: 0;
+}
+
+/* First paragraph after a heading sits tighter */
+.reader-prose h1 + p,
+.reader-prose h2 + p,
+.reader-prose h3 + p,
+.reader-prose h4 + p {
+	margin-top: 0.15em;
 }
 
 .reader-prose a {
 	color: var(--color-crimson);
-	text-underline-offset: 0.15em;
+	text-underline-offset: 0.18em;
+	text-decoration-thickness: from-font;
 }
 
-.reader-prose blockquote {
-	margin: 1.25em 0;
-	padding-left: 1em;
-	border-left: 1px solid color-mix(in srgb, var(--stage-fg) 28%, transparent);
-	color: var(--stage-muted);
+.reader-prose em,
+.reader-prose i {
 	font-style: italic;
 }
 
+.reader-prose strong,
+.reader-prose b {
+	font-weight: 600;
+}
+
+.reader-prose blockquote {
+	margin: 1.4em 0;
+	padding: 0.15em 0 0.15em 1.05em;
+	border-left: 2px solid color-mix(in srgb, var(--stage-fg) 22%, transparent);
+	color: var(--stage-muted);
+	font-style: italic;
+	font-variation-settings: 'opsz' 14;
+}
+
+.reader-prose blockquote p {
+	margin-bottom: 0.65em;
+}
+
+.reader-prose hr {
+	border: 0;
+	height: 1px;
+	margin: 2em auto;
+	max-width: 4rem;
+	background: color-mix(in srgb, var(--stage-fg) 18%, transparent);
+}
+
+.reader-prose ul,
+.reader-prose ol {
+	margin: 0 0 var(--reader-para, 0.95em);
+	padding-left: 1.35em;
+}
+
+.reader-prose li {
+	margin-bottom: 0.35em;
+	padding-left: 0.15em;
+}
+
+.reader-prose li::marker {
+	color: color-mix(in srgb, var(--stage-fg) 45%, transparent);
+}
+
 .reader-prose code {
-	font-size: 0.9em;
-	padding: 0.1em 0.35em;
-	border-radius: 2px;
+	font-size: 0.88em;
+	padding: 0.12em 0.35em;
+	border-radius: 3px;
 	background: color-mix(in srgb, var(--stage-fg) 8%, transparent);
+	font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
 }
 
 .reader-prose pre {
-	padding: 1rem;
+	padding: 1.05rem 1.15rem;
 	border-radius: var(--radius-md);
 	overflow-x: auto;
 	background: color-mix(in srgb, var(--stage-fg) 6%, transparent);
-	margin: 1.25em 0;
+	margin: 1.35em 0;
+	line-height: 1.45;
+	font-size: 0.9em;
+}
+
+.reader-prose pre code {
+	padding: 0;
+	background: transparent;
+	font-size: inherit;
 }
 
 .reader-prose img {
 	max-width: 100%;
 	height: auto;
+	margin: 1.25em auto;
+	display: block;
+	border-radius: var(--radius-sm);
+}
+
+.reader-prose .text-chunk + .text-chunk {
+	/* seamless virtualization join */
+	margin-top: 0;
 }
 
 /* Soft column set — vignette on sides of stage */
@@ -289,19 +485,51 @@
 	inset: 0;
 	z-index: 5;
 	background: radial-gradient(
-		ellipse 78% 90% at 50% 45%,
-		transparent 42%,
+		ellipse 82% 88% at 50% 42%,
+		transparent 48%,
 		var(--stage-vignette, transparent) 100%
 	);
-	opacity: 0.85;
+	opacity: 0.72;
 }
 
 .reader-stage.is-focus::after {
-	opacity: 1;
+	opacity: 0.92;
 }
 
 .reader-stage.is-focus .reader-prose {
 	max-width: min(var(--reader-measure, 68ch), 74ch);
+}
+
+/* Slight lift so body text clears the floating % chip */
+.reader-stage .reader-prose {
+	padding-bottom: 0.5rem;
+}
+
+/* Scroll pad — room under chrome, book-like end space */
+.reader-scroll {
+	scroll-behavior: smooth;
+	scrollbar-gutter: stable;
+	scrollbar-width: thin;
+	scrollbar-color: color-mix(in srgb, var(--stage-fg) 22%, transparent) transparent;
+}
+.reader-scroll::-webkit-scrollbar {
+	width: 8px;
+}
+.reader-scroll::-webkit-scrollbar-thumb {
+	background: color-mix(in srgb, var(--stage-fg) 18%, transparent);
+	border-radius: 4px;
+}
+
+.reader-end-mark {
+	display: flex;
+	justify-content: center;
+	padding: 2.5rem 0 1rem;
+}
+.reader-end-mark span {
+	display: block;
+	width: 2.5rem;
+	height: 1px;
+	background: color-mix(in srgb, var(--stage-fg) 22%, transparent);
 }
 
 .epub-view {
@@ -503,7 +731,8 @@
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 72;
 	text-wrap: balance;
-	max-width: 14ch;
+	/* Broadsheet measure — long titles stack like the magazine ref */
+	max-width: min(14ch, 100%);
 	transition: color 200ms var(--ease-editorial);
 }
 .group:hover .continue-lead-title {
@@ -532,7 +761,8 @@
 	background: color-mix(in srgb, var(--color-ink-mute) 55%, transparent);
 	transition: width 500ms var(--ease-editorial);
 }
-.continue-lead-fill::after {
+/* Crimson bead only when there is real progress (hide empty 0% marker) */
+.continue-lead-fill[data-progress]:not([data-progress='0'])::after {
 	content: '';
 	position: absolute;
 	right: 0;

@@ -60,14 +60,10 @@
 			aria-describedby="confirm-desc"
 			class="relative z-10 w-full max-w-sm rounded-lg border border-rule bg-paper p-6 shadow-[var(--shadow-plate-hover)]"
 		>
-			<h2
-				id="confirm-title"
-				class="font-display text-xl font-semibold tracking-tight text-ink"
-				style="font-family: var(--font-display)"
-			>
+			<h2 id="confirm-title" class="type-section text-xl text-ink">
 				{title}
 			</h2>
-			<p id="confirm-desc" class="mt-3 font-ui text-[15px] leading-relaxed text-ink-soft">
+			<p id="confirm-desc" class="type-body mt-3 text-ink-soft">
 				{message}
 			</p>
 			<div class="mt-6 flex flex-wrap justify-end gap-2">

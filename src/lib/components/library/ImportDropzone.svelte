@@ -76,27 +76,17 @@
 			<UploadSimple size={20} weight="light" class="text-ink" />
 		</span>
 		{#if featured}
-			<h2
-				class="mb-3 font-display text-[2rem] font-semibold tracking-tight text-ink sm:text-[2.5rem]"
-				style="font-family: var(--font-display); font-variation-settings: 'opsz' 48"
-			>
-				Drop a manuscript
-			</h2>
-			<p class="mb-8 max-w-md font-ui text-[15px] leading-relaxed text-ink-soft">
+			<h2 class="type-section mb-3 text-[2rem] text-ink sm:text-[2.5rem]">Drop a manuscript</h2>
+			<p class="type-body mb-8 max-w-md text-ink-soft">
 				EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.
 			</p>
 		{:else if !compact}
-			<h2
-				class="mb-2 font-display text-[1.65rem] font-semibold tracking-tight text-ink sm:text-3xl"
-				style="font-family: var(--font-display)"
-			>
-				Drop a manuscript
-			</h2>
-			<p class="mb-7 max-w-sm font-ui text-[14px] leading-relaxed text-ink-soft">
+			<h2 class="type-section mb-2 text-[1.65rem] text-ink sm:text-3xl">Drop a manuscript</h2>
+			<p class="type-body mb-7 max-w-sm text-[14px] text-ink-soft">
 				EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.
 			</p>
 		{:else}
-			<p class="mb-5 font-ui text-sm text-ink-soft">
+			<p class="type-body mb-5 text-sm text-ink-soft">
 				{dragging ? 'Release to import' : 'Drop EPUB, Markdown, or text — or browse'}
 			</p>
 		{/if}

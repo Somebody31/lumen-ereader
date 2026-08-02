@@ -24,21 +24,51 @@
 	let objectUrl = '';
 
 	const themeStyles = $derived.by(() => {
-		const map: Record<string, { bg: string; fg: string }> = {
-			night: { bg: '#0c0c0c', fg: '#f3f2ed' },
-			paper: { bg: '#f7f5f0', fg: '#1a1c22' },
-			sepia: { bg: '#e8dcc8', fg: '#3d3428' },
-			contrast: { bg: '#000000', fg: '#ffffff' }
+		const map: Record<
+			string,
+			{ bg: string; fg: string; mute: string; link: string; rule: string }
+		> = {
+			night: {
+				bg: '#0c0c0c',
+				fg: '#f3f2ed',
+				mute: '#9a9a94',
+				link: '#d0544c',
+				rule: 'rgba(243,242,237,0.14)'
+			},
+			paper: {
+				bg: '#f7f5f0',
+				fg: '#1a1c22',
+				mute: '#5a5a56',
+				link: '#a33a34',
+				rule: 'rgba(26,28,34,0.14)'
+			},
+			sepia: {
+				bg: '#e8dcc8',
+				fg: '#3d3428',
+				mute: '#6b5e4e',
+				link: '#8b3a2a',
+				rule: 'rgba(61,52,40,0.18)'
+			},
+			contrast: {
+				bg: '#000000',
+				fg: '#ffffff',
+				mute: '#c0c0c0',
+				link: '#ff8a80',
+				rule: 'rgba(255,255,255,0.2)'
+			}
 		};
 		return map[prefs.theme] || map.night;
 	});
 
+	/** Full theme object shared with CSS prose so EPUB tracks text books */
 	function bodyTheme() {
-		const { bg, fg } = themeStyles;
+		const { bg, fg, mute, link, rule } = themeStyles;
 		const align = prefs.textAlign ?? 'left';
 		const tracking = prefs.letterSpacing ?? 0;
 		const para = prefs.paragraphSpacing ?? 1;
 		const hyphens = prefs.hyphenate ? 'auto' : 'manual';
+		const margin = prefs.margin ?? 24;
+		const topPad = Math.max(margin + 28, 48);
 		return {
 			body: {
 				background: bg,
@@ -49,19 +79,81 @@
 				'letter-spacing': `${tracking}em`,
 				'max-width': `${prefs.measure}ch`,
 				margin: '0 auto',
-				padding: `${prefs.margin}px !important`,
+				padding: `${topPad}px ${margin}px ${margin * 2.2}px !important`,
 				'text-align': align,
 				hyphens,
 				'-webkit-hyphens': hyphens,
-				'font-optical-sizing': 'auto'
+				'font-optical-sizing': 'auto',
+				'font-feature-settings': '"liga" 1, "kern" 1, "calt" 1',
+				'text-rendering': 'optimizeLegibility',
+				'orphans': '3',
+				'widows': '3'
 			},
 			p: {
+				'margin-top': '0',
 				'margin-bottom': `${para}em`,
 				'text-align': align,
 				hyphens,
 				'-webkit-hyphens': hyphens
 			},
-			a: { color: '#7A1C1C' }
+			'h1, h2, h3, h4': {
+				'font-family':
+					'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif',
+				'font-weight': '600',
+				'letter-spacing': '-0.02em',
+				'line-height': '1.18',
+				'text-align': 'left',
+				hyphens: 'none',
+				'margin-top': '1.6em',
+				'margin-bottom': '0.5em',
+				'font-optical-sizing': 'auto'
+			},
+			h1: {
+				'font-size': '1.72em',
+				'margin-top': '0.4em',
+				'padding-bottom': '0.35em',
+				'border-bottom': `1px solid ${rule}`
+			},
+			h2: { 'font-size': '1.38em' },
+			h3: { 'font-size': '1.18em' },
+			h4: { 'font-size': '1.05em' },
+			a: {
+				color: link,
+				'text-underline-offset': '0.18em'
+			},
+			blockquote: {
+				margin: '1.4em 0',
+				padding: '0.15em 0 0.15em 1.05em',
+				'border-left': `2px solid ${rule}`,
+				color: mute,
+				'font-style': 'italic'
+			},
+			hr: {
+				border: '0',
+				height: '1px',
+				margin: '2em auto',
+				'max-width': '4rem',
+				background: rule
+			},
+			'ul, ol': {
+				'margin-bottom': `${para}em`,
+				'padding-left': '1.35em'
+			},
+			li: {
+				'margin-bottom': '0.35em'
+			},
+			img: {
+				'max-width': '100%',
+				height: 'auto',
+				margin: '1.25em auto',
+				display: 'block'
+			},
+			code: {
+				'font-size': '0.88em',
+				padding: '0.12em 0.35em',
+				'border-radius': '3px',
+				background: `color-mix(in srgb, ${fg} 8%, transparent)`
+			}
 		};
 	}
 
@@ -96,13 +188,13 @@
 			const start = initialLocation || undefined;
 			await rendition.display(start);
 
-			rendition.on('relocated', (location: {
-				start: { cfi: string; percentage?: number };
-				atEnd?: boolean;
-			}) => {
-				const fraction = location.start.percentage ?? (location.atEnd ? 1 : 0);
-				onprogress(fraction, location.start.cfi);
-			});
+			rendition.on(
+				'relocated',
+				(location: { start: { cfi: string; percentage?: number }; atEnd?: boolean }) => {
+					const fraction = location.start.percentage ?? (location.atEnd ? 1 : 0);
+					onprogress(fraction, location.start.cfi);
+				}
+			);
 
 			try {
 				const nav = await book.loaded.navigation;
@@ -123,7 +215,6 @@
 
 	$effect(() => {
 		if (!rendition) return;
-		// Re-apply when any visual pref changes
 		void prefs.theme;
 		void prefs.fontFamily;
 		void prefs.fontSize;
