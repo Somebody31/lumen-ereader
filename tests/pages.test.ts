@@ -61,6 +61,13 @@ describe('natural e-reader IA (shipped routes)', () => {
 		const css = read('src/app.css');
 		expect(css).toContain('.welcome-hero');
 		expect(css).toContain('.welcome-stage-reader');
+		// Authored welcome motion (not generic section plate-in)
+		expect(css).toContain('welcome-title-unmask');
+		expect(css).toContain('welcome-stage-seat');
+		expect(css).toContain('welcome-progress-draw');
+		expect(css).toContain('welcome-path-step-in');
+		expect(src).toContain('welcome-hero-kicker');
+		expect(src).not.toContain('animate-plate-in');
 	});
 
 	test('auth page is dedicated sign-in for sync', () => {

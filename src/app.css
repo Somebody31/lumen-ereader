@@ -1495,6 +1495,7 @@ button:hover .cta-chevron {
 .welcome-stage-progress-fill {
 	height: 100%;
 	background: var(--stage-progress, #d4d0c8);
+	transform-origin: left center;
 }
 .welcome-stage-progress-bead {
 	position: absolute;
@@ -1543,6 +1544,7 @@ button:hover .cta-chevron {
 	margin-top: 0.65em;
 	background: var(--color-crimson);
 	border-radius: 1px;
+	transform-origin: left center;
 }
 .welcome-stage-byline {
 	font-family: var(--font-display);
@@ -1671,6 +1673,14 @@ button:hover .cta-chevron {
 	border: 1px solid var(--color-rule);
 	background: var(--color-newsprint);
 	color: var(--color-ink);
+	transition:
+		border-color 200ms var(--ease-editorial),
+		transform 200ms var(--ease-editorial),
+		background-color 200ms var(--ease-editorial);
+}
+.welcome-format-chip:hover {
+	border-color: color-mix(in srgb, var(--color-ink) 28%, var(--color-rule));
+	transform: translateY(-1px);
 }
 
 .welcome-feature-themes {
@@ -1744,6 +1754,10 @@ button:hover .cta-chevron {
 	gap: 0.65rem;
 	padding: 1.25rem 1.15rem 1.35rem;
 	border-bottom: 1px solid var(--color-rule);
+	transition: background-color 200ms var(--ease-editorial);
+}
+.welcome-path-step:hover {
+	background: color-mix(in srgb, var(--color-newsprint) 65%, var(--color-paper));
 }
 @media (min-width: 720px) {
 	.welcome-path-step {
@@ -1816,6 +1830,241 @@ button:hover .cta-chevron {
 	}
 }
 
+/* ——— Welcome motion: broadsheet page open (Persuade) ———
+   Focal: reading stage seats; title unmasks; crimson rule + progress draw.
+   Continuity: same ease-editorial / clip / scaleX language as library.
+   Supporting: hero copy cadence, path list stagger, chip/swatch settle.
+   Not: identical plate-in on every scrolled section. */
+
+@keyframes welcome-kicker-in {
+	from {
+		opacity: 0;
+		letter-spacing: 0.22em;
+	}
+	to {
+		opacity: 1;
+		letter-spacing: 0.12em;
+	}
+}
+
+@keyframes welcome-title-unmask {
+	from {
+		opacity: 0;
+		clip-path: inset(0 0 100% 0);
+		transform: translateY(0.14em);
+	}
+	to {
+		opacity: 1;
+		clip-path: inset(0 0 0 0);
+		transform: translateY(0);
+	}
+}
+
+@keyframes welcome-copy-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes welcome-stage-seat {
+	from {
+		opacity: 0;
+		transform: translateY(18px) scale(0.97);
+		filter: blur(2px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+		filter: blur(0);
+	}
+}
+
+@keyframes welcome-stage-line-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes welcome-rule-draw {
+	from {
+		transform: scaleX(0);
+		opacity: 0;
+	}
+	to {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+}
+
+@keyframes welcome-progress-draw {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+@keyframes welcome-bead-in {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(0.4);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+}
+
+@keyframes welcome-pct-in {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
+	}
+}
+
+@keyframes welcome-drop-settle {
+	from {
+		opacity: 0;
+		transform: translateY(0.08em) scale(0.94);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes welcome-chip-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes welcome-path-step-in {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Hero — pitch lands, then the page proves it */
+.welcome-hero-kicker {
+	animation: welcome-kicker-in 680ms var(--ease-editorial) both;
+}
+.welcome-hero-title {
+	animation: welcome-title-unmask 720ms var(--ease-editorial) both;
+	animation-delay: 70ms;
+}
+.welcome-hero-lede {
+	animation: welcome-copy-in 520ms var(--ease-editorial) both;
+	animation-delay: 200ms;
+}
+.welcome-hero .welcome-cta-row {
+	animation: welcome-copy-in 480ms var(--ease-editorial) both;
+	animation-delay: 300ms;
+}
+.welcome-hero .welcome-proof {
+	animation: welcome-copy-in 480ms var(--ease-editorial) both;
+	animation-delay: 380ms;
+}
+.welcome-hero .welcome-proof li {
+	animation: welcome-chip-in 420ms var(--ease-editorial) both;
+	animation-delay: calc(420ms + (var(--p, 0) * 50ms));
+}
+.welcome-hero .welcome-proof li:nth-child(1) {
+	--p: 0;
+}
+.welcome-hero .welcome-proof li:nth-child(2) {
+	--p: 1;
+}
+.welcome-hero .welcome-proof li:nth-child(3) {
+	--p: 2;
+}
+
+/* Stage — one authored open (the product moment) */
+.welcome-stage-reader {
+	animation: welcome-stage-seat 700ms var(--ease-editorial) both;
+	animation-delay: 100ms;
+	transform-origin: center top;
+}
+.welcome-stage-progress-fill {
+	animation: welcome-progress-draw 900ms var(--ease-editorial) both;
+	animation-delay: 480ms;
+}
+.welcome-stage-progress-bead {
+	animation: welcome-bead-in 420ms var(--ease-editorial) both;
+	animation-delay: 980ms;
+}
+.welcome-stage-kicker {
+	animation: welcome-kicker-in 640ms var(--ease-editorial) both;
+	animation-delay: 320ms;
+}
+.welcome-stage-h1 {
+	animation: welcome-title-unmask 700ms var(--ease-editorial) both;
+	animation-delay: 400ms;
+}
+.welcome-stage-h1::after {
+	animation: welcome-rule-draw 520ms var(--ease-editorial) both;
+	animation-delay: 620ms;
+}
+.welcome-stage-byline {
+	animation: welcome-stage-line-in 480ms var(--ease-editorial) both;
+	animation-delay: 520ms;
+}
+.welcome-stage-h2 {
+	animation: welcome-stage-line-in 460ms var(--ease-editorial) both;
+	animation-delay: 580ms;
+}
+.welcome-stage-drop {
+	animation: welcome-stage-line-in 500ms var(--ease-editorial) both;
+	animation-delay: 640ms;
+}
+.welcome-drop-cap {
+	animation: welcome-drop-settle 560ms var(--ease-editorial) both;
+	animation-delay: 680ms;
+}
+.welcome-stage-body {
+	animation: welcome-stage-line-in 500ms var(--ease-editorial) both;
+	animation-delay: 740ms;
+}
+.welcome-stage-pct {
+	animation: welcome-pct-in 480ms var(--ease-editorial) both;
+	animation-delay: 1040ms;
+}
+.welcome-stage-caption {
+	animation: welcome-copy-in 480ms var(--ease-editorial) both;
+	animation-delay: 560ms;
+}
+
+/* Path — sequence is the meaning; short list stagger (capped) */
+.welcome-path-step {
+	animation: welcome-path-step-in 500ms var(--ease-editorial) both;
+	animation-delay: calc(80ms + min(var(--i, 0), 4) * 70ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.welcome-drop-cap {
 		float: none;
@@ -1823,5 +2072,44 @@ button:hover .cta-chevron {
 		line-height: inherit;
 		padding: 0;
 		font-weight: inherit;
+	}
+
+	.welcome-hero-kicker,
+	.welcome-hero-title,
+	.welcome-hero-lede,
+	.welcome-hero .welcome-cta-row,
+	.welcome-hero .welcome-proof,
+	.welcome-hero .welcome-proof li,
+	.welcome-stage-reader,
+	.welcome-stage-progress-fill,
+	.welcome-stage-progress-bead,
+	.welcome-stage-kicker,
+	.welcome-stage-h1,
+	.welcome-stage-h1::after,
+	.welcome-stage-byline,
+	.welcome-stage-h2,
+	.welcome-stage-drop,
+	.welcome-drop-cap,
+	.welcome-stage-body,
+	.welcome-stage-pct,
+	.welcome-stage-caption,
+	.welcome-path-step {
+		animation: none !important;
+		filter: none !important;
+		clip-path: none !important;
+		opacity: 1 !important;
+		transform: none !important;
+	}
+
+	/* Keep layout transforms that are structural, not entrance-only */
+	.welcome-stage-pct {
+		transform: translateX(-50%) !important;
+	}
+	.welcome-stage-progress-bead {
+		transform: translate(-50%, -50%) !important;
+	}
+
+	.welcome-format-chip:hover {
+		transform: none;
 	}
 }

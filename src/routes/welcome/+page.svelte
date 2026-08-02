@@ -37,10 +37,10 @@
 </svelte:head>
 
 <div class="welcome">
-	<!-- ——— Hero ——— -->
-	<section class="welcome-hero animate-plate-in">
+	<!-- ——— Hero: focal “page opens” sequence ——— -->
+	<section class="welcome-hero">
 		<div class="welcome-hero-copy">
-			<p class="type-kicker text-crimson">Private e-reader</p>
+			<p class="type-kicker text-crimson welcome-hero-kicker">Private e-reader</p>
 			<h1 class="type-masthead welcome-hero-title text-ink">
 				Read your own books offline
 			</h1>
@@ -86,7 +86,7 @@
 						the door. Outside, the lobby still hummed with late visitors asking which constellation
 						was which.
 					</p>
-					<p>
+					<p class="welcome-stage-body">
 						She preferred it that way. Reading weather tables under full house lights felt wrong, as
 						if the sky itself had been asked to wait in a queue.
 					</p>
@@ -100,7 +100,7 @@
 	</section>
 
 	<!-- ——— What you can do ——— -->
-	<section class="welcome-section animate-plate-in stagger-1" aria-labelledby="welcome-get">
+	<section class="welcome-section" aria-labelledby="welcome-get">
 		<div class="welcome-section-head">
 			<p class="type-kicker text-crimson">What it does</p>
 			<h2 id="welcome-get" class="type-section mt-2 text-[1.75rem] text-ink sm:text-[2.1rem]">
@@ -180,7 +180,7 @@
 	</section>
 
 	<!-- ——— How to start ——— -->
-	<section class="welcome-section animate-plate-in stagger-2" aria-labelledby="welcome-flow">
+	<section class="welcome-section" aria-labelledby="welcome-flow">
 		<div class="welcome-section-head">
 			<p class="type-kicker text-crimson">Getting started</p>
 			<h2 id="welcome-flow" class="type-section mt-2 text-[1.75rem] text-ink sm:text-[2.1rem]">
@@ -192,7 +192,7 @@
 		</div>
 
 		<ol class="welcome-path">
-			<li class="welcome-path-step">
+			<li class="welcome-path-step" style="--i: 0">
 				<span class="welcome-path-num type-micro text-crimson" aria-hidden="true">01</span>
 				<div>
 					<p class="type-card-title text-ink">Open the library</p>
@@ -201,7 +201,7 @@
 					</p>
 				</div>
 			</li>
-			<li class="welcome-path-step">
+			<li class="welcome-path-step" style="--i: 1">
 				<span class="welcome-path-num type-micro text-crimson" aria-hidden="true">02</span>
 				<div>
 					<p class="type-card-title text-ink">Open a book</p>
@@ -210,7 +210,7 @@
 					</p>
 				</div>
 			</li>
-			<li class="welcome-path-step">
+			<li class="welcome-path-step" style="--i: 2">
 				<span class="welcome-path-num type-micro text-crimson" aria-hidden="true">03</span>
 				<div>
 					<p class="type-card-title text-ink">Adjust the page</p>
@@ -219,7 +219,7 @@
 					</p>
 				</div>
 			</li>
-			<li class="welcome-path-step">
+			<li class="welcome-path-step" style="--i: 3">
 				<span class="welcome-path-num type-micro text-crimson" aria-hidden="true">04</span>
 				<div>
 					<p class="type-card-title text-ink">Sync only if you want it</p>
@@ -232,7 +232,7 @@
 	</section>
 
 	<!-- ——— Type specimen ——— -->
-	<section class="welcome-specimen animate-plate-in stagger-2" aria-labelledby="welcome-type">
+	<section class="welcome-specimen" aria-labelledby="welcome-type">
 		<div class="welcome-specimen-grid">
 			<div>
 				<p class="type-kicker text-crimson">Typography</p>
@@ -269,7 +269,7 @@
 	</section>
 
 	<!-- ——— Close ——— -->
-	<section class="welcome-close animate-plate-in stagger-3">
+	<section class="welcome-close">
 		<p class="type-eyebrow text-ink-mute">No catalog. No feed. Just your books.</p>
 		<h2 class="type-section mt-3 text-[1.85rem] text-ink sm:text-[2.25rem]">
 			Ready when you are
