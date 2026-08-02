@@ -397,6 +397,15 @@
 				<ArrowLeft size={18} weight="light" />
 			</a>
 
+			<!-- Magazine spine stamp — book title, display face -->
+			<p
+				class="reader-rail-spine"
+				style="color: var(--stage-chrome-fg)"
+				title={formatDisplayTitle(book.title)}
+			>
+				{formatDisplayTitle(book.title)}
+			</p>
+
 			<div class="reader-rail-mid">
 				<button
 					type="button"
@@ -448,12 +457,17 @@
 			</div>
 
 			<div class="reader-rail-foot" aria-hidden="true">
-				<span class="reader-rail-pct" style="color: var(--stage-chrome-mute)">{pct}%</span>
-				<span class="reader-rail-meter" style="background: color-mix(in srgb, var(--stage-fg) 12%, transparent)">
+				<span class="reader-rail-pct">{pct}%</span>
+				<span
+					class="reader-rail-meter"
+					data-progress={pct}
+					style="--rail-progress: {pct > 0 ? Math.max(fraction, 0.04) : 0}"
+				>
 					<span
 						class="reader-rail-meter-fill"
-						style="height: {Math.max(pct, 0)}%; background: var(--color-crimson)"
+						style="background: var(--color-crimson)"
 					></span>
+					<span class="reader-rail-meter-bead"></span>
 				</span>
 			</div>
 		</aside>
@@ -471,7 +485,7 @@
 				{#if !focusMode}
 					<button
 						type="button"
-						class="absolute bottom-16 left-12 top-16 z-20 w-12 opacity-0 transition-opacity duration-200 hover:opacity-100 sm:left-14 sm:w-16"
+						class="absolute bottom-16 left-14 top-16 z-20 w-12 opacity-0 transition-opacity duration-200 hover:opacity-100 sm:left-16 sm:w-16"
 						style="color: var(--stage-muted)"
 						aria-label="Previous page"
 						onclick={(e) => {
@@ -577,10 +591,7 @@
 					</button>
 				</div>
 
-				<div
-					class="shrink-0 border-b px-4 py-3.5"
-					style="border-color: var(--stage-rule); background: color-mix(in srgb, var(--stage-fg) 4%, transparent)"
-				>
+				<div class="reader-type-sample shrink-0">
 					<p class="type-reading" lang="en" style={sampleStyle(prefs)}>
 						{sampleLine}
 					</p>

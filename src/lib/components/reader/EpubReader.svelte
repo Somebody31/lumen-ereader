@@ -148,8 +148,8 @@
 		const hyphens = p.hyphenate ? 'auto' : 'manual';
 		const margin = Math.max(0, p.margin ?? 24);
 		const measure = Math.max(20, Math.min(120, p.measure ?? 68));
-		/* Left rail (~3.25rem) must clear chrome; TextReader uses max(margin, 3.75rem) */
-		const leftPad = Math.max(margin, 52);
+		/* Left rail (~3.5rem) must clear chrome; TextReader uses max(margin, 3.75rem) */
+		const leftPad = Math.max(margin, 56);
 		const rightPad = Math.max(margin, 16);
 		const topPad = Math.max(margin, 20);
 		const bottomPad = Math.max(Math.round(margin * 2.2), 48);
@@ -289,58 +289,88 @@ h1, h2, h3, h4, h5, h6 {
 	color: ${fg} !important;
 	float: none !important;
 }
+/* Title plate — broadsheet display + short crimson rule (matches .reader-prose) */
 h1 {
-	font-size: 2.05em !important;
-	letter-spacing: -0.03em;
-	line-height: 0.98;
-	margin-top: 0.25em !important;
-	padding-bottom: 0.55em !important;
-	border-bottom: 2px solid ${link} !important;
+	font-size: 2.55em !important;
+	letter-spacing: -0.032em;
+	line-height: 0.94;
+	margin-top: 0.35em !important;
+	margin-bottom: 0.45em !important;
+	padding-bottom: 0 !important;
+	max-width: 18ch !important;
+	border-bottom: none !important;
 }
-h2 { font-size: 1.5em !important; margin-top: 2.2em !important; }
-h3 { font-size: 1.28em !important; }
-h4 { font-size: 1.08em !important; }
-p::first-letter,
-h2 + p::first-letter,
-.dropcap, .drop-cap, span.dropcap {
+h1::after {
+	content: '' !important;
+	display: block !important;
+	width: 4.5rem !important;
+	height: 2px !important;
+	margin-top: 0.95em !important;
+	background: ${link} !important;
+	border-radius: 1px !important;
+}
+h2 {
+	font-size: 1.55em !important;
+	letter-spacing: -0.03em;
+	line-height: 1.08;
+	margin-top: 2.85em !important;
+	padding-top: 0.85em !important;
+	border-top: 1px solid ${rule} !important;
+}
+h3 { font-size: 1.32em !important; margin-top: 2.35em !important; }
+h4 { font-size: 1.1em !important; }
+/* Drop cap after chapter — display initial (no float: epubjs continuous height) */
+h2 + p::first-letter {
+	font-family: ${display} !important;
+	font-weight: 600 !important;
+	font-size: 1.65em !important;
+	line-height: 1 !important;
+	color: ${fg} !important;
 	float: none !important;
-	font-size: inherit !important;
-	line-height: inherit !important;
 	padding: 0 !important;
 	margin: 0 !important;
-	width: auto !important;
-	height: auto !important;
+}
+.dropcap, .drop-cap, span.dropcap {
+	float: none !important;
+	font-family: ${display} !important;
+	font-weight: 600 !important;
+	font-size: 1.65em !important;
 }
 h1 + p {
 	font-family: ${display} !important;
 	font-style: italic !important;
-	font-size: 1.02em !important;
+	font-size: 1.08em !important;
 	color: ${mute} !important;
-	margin-bottom: 1.75em !important;
-	padding-bottom: 1.15em !important;
+	margin-top: 0.55em !important;
+	margin-bottom: 2.35em !important;
+	padding-bottom: 1.55em !important;
 	border-bottom: 1px solid ${rule} !important;
+	max-width: 36ch !important;
 }
-a { color: ${link} !important; text-underline-offset: 0.2em; }
+a { color: ${link} !important; text-underline-offset: 0.22em; }
 blockquote {
-	margin: 1.75em 0 !important;
-	padding: 0.35em 0 0.35em 1.15em !important;
+	margin: 2.15em 0 !important;
+	padding: 0.55em 0 0.55em 1.35em !important;
 	border-left: 2px solid ${link} !important;
 	color: ${mute} !important;
+	font-family: ${display} !important;
 	font-style: italic;
-	font-size: 1.04em;
+	font-size: 1.12em;
+	line-height: 1.45;
 }
 hr {
 	border: 0 !important;
 	height: 1px !important;
-	margin: 2.5em auto !important;
-	max-width: 5.5rem !important;
+	margin: 3em auto !important;
+	max-width: 7.5rem !important;
 	background: ${rule} !important;
 }
 ul, ol {
 	margin-bottom: ${para}em !important;
-	padding-left: 1.35em !important;
+	padding-left: 1.4em !important;
 }
-li { margin-bottom: 0.35em; }
+li { margin-bottom: 0.45em; }
+li::marker { color: ${link}; }
 code {
 	font-size: 0.88em;
 	padding: 0.12em 0.35em;
@@ -363,7 +393,7 @@ pre {
 		const { bg, fg } = themeFor(p);
 		const margin = Math.max(0, p.margin ?? 24);
 		const measure = Math.max(20, Math.min(120, p.measure ?? 68));
-		const leftPad = Math.max(margin, 52);
+		const leftPad = Math.max(margin, 56);
 		const rightPad = Math.max(margin, 16);
 		const topPad = Math.max(margin, 20);
 		const bottomPad = Math.max(Math.round(margin * 2.2), 48);

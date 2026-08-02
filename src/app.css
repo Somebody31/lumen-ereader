@@ -348,49 +348,57 @@
 	color: var(--stage-fg);
 }
 
-/* Title plate — display at broadsheet scale, crimson rule (system accent) */
+/*
+ * Title plate — continue-lead display strength on the page.
+ * One decisive masthead: huge Newsreader + short crimson rule (not a full hairline).
+ */
 .reader-prose h1 {
-	font-size: clamp(2.05rem, 5.2vw, 2.85rem);
+	font-size: clamp(2.45rem, 6.2vw, 3.65rem);
 	font-weight: 600;
-	letter-spacing: -0.03em;
-	line-height: 0.98;
-	margin-top: 0.15em;
-	margin-bottom: 0.55em;
+	letter-spacing: -0.032em;
+	line-height: 0.94;
+	margin-top: 0.35em;
+	margin-bottom: 0.45em;
 	padding-bottom: 0;
 	border-bottom: none;
 	font-variation-settings: 'opsz' 72;
+	max-width: 18ch;
 }
 .reader-prose h1::after {
 	content: '';
 	display: block;
-	width: 3.25rem;
+	width: 4.5rem;
 	height: 2px;
-	margin-top: 0.85em;
+	margin-top: 0.95em;
 	background: var(--color-crimson);
 	border-radius: 1px;
 }
 
-/* Chapter heads — clear scale step under the title plate */
+/* Chapter heads — magazine section open: air above, thin rule, display opsz */
 .reader-prose h2 {
-	font-size: clamp(1.45rem, 2.8vw, 1.85rem);
-	letter-spacing: -0.028em;
+	font-size: clamp(1.55rem, 3.2vw, 2.05rem);
+	letter-spacing: -0.03em;
+	line-height: 1.08;
 	font-variation-settings: 'opsz' 48;
-	margin-top: 2.35em;
-	padding-top: 0.15em;
+	margin-top: 2.85em;
+	padding-top: 0.85em;
+	border-top: 1px solid color-mix(in srgb, var(--stage-fg) 14%, transparent);
 }
 .reader-prose h3 {
-	font-size: 1.28em;
+	font-size: 1.32em;
+	letter-spacing: -0.022em;
 	font-variation-settings: 'opsz' 36;
+	margin-top: 2.35em;
 }
 .reader-prose h4 {
-	font-size: 1.08em;
+	font-size: 1.1em;
 	font-weight: 600;
 	letter-spacing: -0.015em;
 	font-variation-settings: 'opsz' 28;
 }
 
 .reader-prose p {
-	margin: 0 0 var(--reader-para, 1.05em);
+	margin: 0 0 var(--reader-para, 1.12em);
 	text-wrap: pretty;
 }
 
@@ -398,49 +406,51 @@
 	margin-bottom: 0;
 }
 
-/* Byline under title — italic display, not body */
+/* Byline under title — italic display plate, not body Literata */
 .reader-prose h1 + p {
 	font-family: var(--font-display);
 	font-style: italic;
-	font-size: 1.02em;
+	font-size: 1.08em;
 	font-weight: 400;
-	line-height: 1.45;
+	line-height: 1.42;
 	color: var(--stage-muted);
-	letter-spacing: 0.005em;
-	margin-top: 0.35em;
-	margin-bottom: 2em;
-	padding-bottom: 1.35em;
-	border-bottom: 1px solid color-mix(in srgb, var(--stage-fg) 14%, transparent);
-	font-variation-settings: 'opsz' 18;
+	letter-spacing: 0.004em;
+	margin-top: 0.55em;
+	margin-bottom: 2.35em;
+	padding-bottom: 1.55em;
+	border-bottom: 1px solid color-mix(in srgb, var(--stage-fg) 16%, transparent);
+	font-variation-settings: 'opsz' 22;
 	font-optical-sizing: auto;
+	max-width: 36ch;
 }
 
 /* First paragraph after a chapter head sits tighter + drop cap */
 .reader-prose h2 + p,
 .reader-prose h3 + p,
 .reader-prose h4 + p {
-	margin-top: 0.2em;
+	margin-top: 0.35em;
 }
 
+/* Drop cap — broadsheet initial, full display opsz */
 .reader-prose h2 + p::first-letter {
 	font-family: var(--font-display);
-	font-weight: 500;
-	font-size: 3.35em;
-	line-height: 0.82;
+	font-weight: 600;
+	font-size: 3.85em;
+	line-height: 0.78;
 	float: left;
-	padding-right: 0.1em;
-	padding-top: 0.06em;
+	padding-right: 0.12em;
+	padding-top: 0.08em;
+	margin-right: 0.02em;
 	color: var(--stage-fg);
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 72;
-	/* Avoid drop-cap when user prefers reduced motion / small measure is ok */
 }
 
 .reader-prose a {
 	color: var(--color-crimson);
-	text-underline-offset: 0.2em;
+	text-underline-offset: 0.22em;
 	text-decoration-thickness: from-font;
-	text-decoration-color: color-mix(in srgb, var(--color-crimson) 55%, transparent);
+	text-decoration-color: color-mix(in srgb, var(--color-crimson) 50%, transparent);
 }
 .reader-prose a:hover {
 	text-decoration-color: var(--color-crimson);
@@ -456,26 +466,30 @@
 	font-weight: 600;
 }
 
+/* Pull-quote rail — crimson system accent at full strength */
 .reader-prose blockquote {
-	margin: 1.75em 0;
-	padding: 0.35em 0 0.35em 1.15em;
+	margin: 2.15em 0;
+	padding: 0.55em 0 0.55em 1.35em;
 	border-left: 2px solid var(--color-crimson);
 	color: var(--stage-muted);
+	font-family: var(--font-display);
 	font-style: italic;
-	font-size: 1.04em;
-	font-variation-settings: 'opsz' 16;
+	font-size: 1.12em;
+	line-height: 1.45;
+	font-variation-settings: 'opsz' 22;
+	font-optical-sizing: auto;
 }
 
 .reader-prose blockquote p {
 	margin-bottom: 0.65em;
 }
 
-/* Section break — short rule with crimson center bead */
+/* Section break — rule with crimson center bead (same language as progress tip) */
 .reader-prose hr {
 	border: 0;
 	height: 0;
-	margin: 2.5em auto;
-	max-width: 5.5rem;
+	margin: 3em auto;
+	max-width: 7.5rem;
 	position: relative;
 	background: transparent;
 }
@@ -483,34 +497,35 @@
 	content: '';
 	display: block;
 	height: 1px;
-	background: color-mix(in srgb, var(--stage-fg) 22%, transparent);
+	background: color-mix(in srgb, var(--stage-fg) 26%, transparent);
 }
 .reader-prose hr::after {
 	content: '';
 	position: absolute;
 	left: 50%;
 	top: 50%;
-	width: 5px;
-	height: 5px;
+	width: 6px;
+	height: 6px;
 	border-radius: 50%;
 	background: var(--color-crimson);
 	transform: translate(-50%, -50%);
-	box-shadow: 0 0 0 3px var(--stage-bg);
+	box-shadow: 0 0 0 4px var(--stage-bg);
 }
 
 .reader-prose ul,
 .reader-prose ol {
-	margin: 0 0 var(--reader-para, 1.05em);
-	padding-left: 1.35em;
+	margin: 0 0 var(--reader-para, 1.12em);
+	padding-left: 1.4em;
 }
 
 .reader-prose li {
-	margin-bottom: 0.4em;
-	padding-left: 0.2em;
+	margin-bottom: 0.45em;
+	padding-left: 0.25em;
 }
 
 .reader-prose li::marker {
-	color: color-mix(in srgb, var(--color-crimson) 55%, var(--stage-fg));
+	color: color-mix(in srgb, var(--color-crimson) 70%, var(--stage-fg));
+	font-weight: 600;
 }
 
 .reader-prose code {
@@ -558,11 +573,11 @@
 	inset: 0;
 	z-index: 5;
 	background: radial-gradient(
-		ellipse 78% 86% at 50% 40%,
-		transparent 42%,
+		ellipse 72% 82% at 50% 38%,
+		transparent 38%,
 		var(--stage-vignette, transparent) 100%
 	);
-	opacity: 0.85;
+	opacity: 0.92;
 }
 
 .reader-stage.is-focus::after {
@@ -573,11 +588,16 @@
 	max-width: min(var(--reader-measure, 68ch), 74ch);
 }
 
+.reader-stage.is-focus .reader-rail {
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
 .reader-stage .reader-prose {
 	padding-bottom: 0.5rem;
 }
 
-/* Top progress — magazine hairline with crimson tip (matches continue-lead) */
+/* Top progress — magazine hairline + crimson tip bead (continue-lead language, full strength) */
 .reader-progress {
 	pointer-events: none;
 	position: absolute;
@@ -585,7 +605,7 @@
 	top: 0;
 	z-index: 50;
 	height: 2px;
-	background: color-mix(in srgb, var(--stage-fg) 10%, transparent);
+	background: color-mix(in srgb, var(--stage-fg) 14%, transparent);
 	--reader-progress: 0;
 }
 .reader-progress-fill {
@@ -595,30 +615,33 @@
 	background: var(--stage-progress);
 	transform: scaleX(var(--reader-progress, 0));
 	transform-origin: left center;
-	transition: transform 320ms var(--ease-editorial);
+	transition: transform 360ms var(--ease-editorial);
 	will-change: transform;
 }
-/* Bead outside the scaled fill so diameter stays 5px */
+/* Bead outside the scaled fill so diameter stays fixed */
 .reader-progress-bead {
 	position: absolute;
 	top: 50%;
 	left: calc(var(--reader-progress, 0) * 100%);
-	width: 5px;
-	height: 5px;
+	width: 7px;
+	height: 7px;
 	border-radius: 50%;
 	background: var(--color-crimson);
 	transform: translate(-50%, -50%);
-	box-shadow: 0 0 0 2px var(--stage-bg);
+	box-shadow: 0 0 0 3px var(--stage-bg);
 	opacity: 0;
 	transition:
-		left 320ms var(--ease-editorial),
-		opacity 200ms ease;
+		left 360ms var(--ease-editorial),
+		opacity 220ms ease;
 }
 .reader-progress[data-progress]:not([data-progress='0']) .reader-progress-bead {
 	opacity: 1;
 }
 
-/* Reader chrome — slim left rail + full-height drawers (not a floating top bar) */
+/*
+ * Reader chrome — left rail as magazine spine (title stamp + meter + tools).
+ * Not a floating SaaS island; hairline plate against the stage.
+ */
 .reader-rail {
 	position: absolute;
 	left: 0;
@@ -626,17 +649,17 @@
 	bottom: 0;
 	z-index: 40;
 	display: flex;
-	width: 3.25rem;
+	width: 3.5rem;
 	flex-direction: column;
 	align-items: center;
-	padding: max(0.55rem, env(safe-area-inset-top)) 0 max(0.75rem, env(safe-area-inset-bottom));
-	background: color-mix(in srgb, var(--stage-chrome) 96%, transparent);
+	padding: max(0.65rem, env(safe-area-inset-top)) 0 max(0.85rem, env(safe-area-inset-bottom));
+	background: color-mix(in srgb, var(--stage-chrome) 97%, transparent);
 	border-right: 1px solid var(--stage-rule);
-	backdrop-filter: blur(14px);
-	-webkit-backdrop-filter: blur(14px);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
 	transition:
-		opacity 280ms var(--ease-editorial),
-		transform 280ms var(--ease-editorial);
+		opacity 300ms var(--ease-editorial),
+		transform 300ms var(--ease-editorial);
 }
 .reader-rail.is-visible {
 	opacity: 1;
@@ -645,8 +668,28 @@
 }
 .reader-rail.is-hidden {
 	opacity: 0;
-	transform: translateX(-0.35rem);
+	transform: translateX(-0.4rem);
 	pointer-events: none;
+}
+/* Vertical book title — spine stamp (Newsreader, system display) */
+.reader-rail-spine {
+	flex: 0 1 auto;
+	max-height: 9.5rem;
+	margin: 0.65rem 0 0.35rem;
+	overflow: hidden;
+	font-family: var(--font-display);
+	font-size: 0.72rem;
+	font-weight: 600;
+	font-style: italic;
+	line-height: 1.15;
+	letter-spacing: 0.06em;
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	opacity: 0.88;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 18;
 }
 .reader-rail-mid {
 	display: flex;
@@ -654,12 +697,13 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0.35rem;
+	gap: 0.4rem;
+	min-height: 0;
 }
 .reader-rail-btn {
 	display: flex;
-	height: 2.5rem;
-	width: 2.5rem;
+	height: 2.55rem;
+	width: 2.55rem;
 	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
@@ -670,47 +714,78 @@
 	transition:
 		background-color 160ms ease,
 		opacity 160ms ease,
-		color 160ms ease;
+		color 160ms ease,
+		box-shadow 160ms ease;
 }
 .reader-rail-btn:hover {
-	opacity: 0.85;
-	background: color-mix(in srgb, var(--stage-fg) 7%, transparent);
+	opacity: 1;
+	background: color-mix(in srgb, var(--stage-fg) 9%, transparent);
 }
 .reader-rail-btn:active {
 	transform: scale(0.96);
 }
 .reader-rail-btn[aria-pressed='true'] {
-	background: color-mix(in srgb, var(--stage-fg) 10%, transparent);
-	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stage-fg) 12%, transparent);
+	color: var(--stage-chrome-fg);
+	background: color-mix(in srgb, var(--stage-fg) 12%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stage-fg) 18%, transparent);
+}
+.reader-rail-btn[aria-pressed='true'] :global(svg) {
+	color: var(--color-crimson);
 }
 .reader-rail-foot {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 0.45rem;
+	gap: 0.55rem;
+	padding-top: 0.35rem;
 }
 .reader-rail-pct {
 	font-family: var(--font-ui);
-	font-size: 0.625rem;
-	font-weight: 500;
+	font-size: 0.7rem;
+	font-weight: 600;
 	font-variant-numeric: tabular-nums;
-	letter-spacing: 0.04em;
+	letter-spacing: 0.06em;
 	writing-mode: horizontal-tb;
+	color: var(--stage-chrome-fg);
+	opacity: 0.92;
 }
+/* Vertical progress — hairline track + crimson fill + tip bead (scaleY, not height thrash) */
 .reader-rail-meter {
 	position: relative;
 	width: 2px;
-	height: 2.75rem;
-	overflow: hidden;
+	height: 3.75rem;
+	overflow: visible;
 	border-radius: 1px;
+	background: color-mix(in srgb, var(--stage-fg) 14%, transparent);
+	--rail-progress: 0;
 }
 .reader-rail-meter-fill {
 	position: absolute;
-	right: 0;
-	bottom: 0;
-	left: 0;
+	inset: 0;
 	border-radius: 1px;
-	transition: height 320ms var(--ease-editorial);
+	transform: scaleY(var(--rail-progress, 0));
+	transform-origin: bottom center;
+	transition: transform 360ms var(--ease-editorial);
+	will-change: transform;
+}
+.reader-rail-meter-bead {
+	position: absolute;
+	left: 50%;
+	bottom: calc(var(--rail-progress, 0) * 100%);
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--color-crimson);
+	transform: translate(-50%, 50%);
+	box-shadow: 0 0 0 2px var(--stage-bg);
+	opacity: 0;
+	transition:
+		bottom 360ms var(--ease-editorial),
+		opacity 200ms ease;
+	pointer-events: none;
+}
+.reader-rail-meter[data-progress]:not([data-progress='0']) .reader-rail-meter-bead {
+	opacity: 1;
 }
 
 .reader-drawer {
@@ -719,25 +794,25 @@
 	bottom: 0;
 	z-index: 45;
 	display: flex;
-	width: min(100%, 22rem);
+	width: min(100%, 23.5rem);
 	flex-direction: column;
 	overflow: hidden;
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
-	animation-duration: 280ms;
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	animation-duration: 300ms;
 	animation-timing-function: var(--ease-editorial);
 	animation-fill-mode: both;
 }
 .reader-drawer-left {
-	left: 3.25rem;
+	left: 3.5rem;
 	border-right: 1px solid var(--stage-rule);
-	box-shadow: 12px 0 40px color-mix(in srgb, var(--stage-bg) 45%, transparent);
+	box-shadow: 16px 0 48px color-mix(in srgb, var(--stage-bg) 50%, transparent);
 	animation-name: reader-drawer-in;
 }
 .reader-drawer-right {
 	right: 0;
 	border-left: 1px solid var(--stage-rule);
-	box-shadow: -12px 0 40px color-mix(in srgb, var(--stage-bg) 45%, transparent);
+	box-shadow: -16px 0 48px color-mix(in srgb, var(--stage-bg) 50%, transparent);
 	animation-name: reader-drawer-in-right;
 }
 .reader-drawer-head {
@@ -746,16 +821,42 @@
 	justify-content: space-between;
 	gap: 0.5rem;
 	border-bottom: 1px solid var(--stage-rule);
-	padding: max(0.85rem, env(safe-area-inset-top)) 0.85rem 0.9rem 1rem;
+	padding: max(1rem, env(safe-area-inset-top)) 1rem 1.05rem 1.15rem;
+}
+.reader-drawer-head .type-chrome-title {
+	font-size: 1.2rem;
+	letter-spacing: -0.025em;
+	line-height: 1.15;
+	font-variation-settings: 'opsz' 36;
+}
+/* Type sample — reading plate, not a grey strip */
+.reader-type-sample {
+	position: relative;
+	border-bottom: 1px solid var(--stage-rule);
+	padding: 1.15rem 1.15rem 1.25rem;
+	background: color-mix(in srgb, var(--stage-fg) 3.5%, transparent);
+}
+.reader-type-sample::before {
+	content: '';
+	display: block;
+	width: 2.25rem;
+	height: 2px;
+	margin-bottom: 0.85rem;
+	background: var(--color-crimson);
+	border-radius: 1px;
+}
+.reader-type-sample p {
+	margin: 0;
+	max-width: 28ch;
 }
 .reader-drawer-scrim {
 	position: absolute;
 	inset: 0;
 	z-index: 42;
 	border: 0;
-	background: color-mix(in srgb, var(--stage-bg) 35%, transparent);
+	background: color-mix(in srgb, var(--stage-bg) 42%, transparent);
 	cursor: default;
-	animation: reader-scrim-in 200ms ease both;
+	animation: reader-scrim-in 220ms ease both;
 }
 @keyframes reader-drawer-in {
 	from {
@@ -788,13 +889,19 @@
 @media (max-width: 640px) {
 	.reader-drawer-left {
 		left: 0;
-		width: min(100%, 22rem);
+		width: min(100%, 100%);
+	}
+	.reader-rail-spine {
+		max-height: 6.5rem;
+		font-size: 0.68rem;
 	}
 }
 @media (prefers-reduced-motion: reduce) {
 	.reader-rail,
-	.reader-rail-meter-fill {
+	.reader-rail-meter-fill,
+	.reader-rail-meter-bead {
 		transition: none;
+		will-change: auto;
 	}
 	.reader-drawer,
 	.reader-drawer-scrim {
@@ -817,25 +924,38 @@
 	border-radius: 4px;
 }
 
-/* End of book — three-beat asterism, center crimson */
+/*
+ * End of book — magazine asterism: flanking rules + three-beat beads, center crimson.
+ * Skeleton still reads “finished” without copy.
+ */
 .reader-end-mark {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	gap: 0.65rem;
-	padding: 3.25rem 0 1.5rem;
+	gap: 0.75rem;
+	padding: 4rem 0 2.25rem;
+	margin-top: 1.5rem;
+}
+.reader-end-mark::before,
+.reader-end-mark::after {
+	content: '';
+	display: block;
+	width: 1.75rem;
+	height: 1px;
+	background: color-mix(in srgb, var(--stage-fg) 22%, transparent);
 }
 .reader-end-mark span {
 	display: block;
 	width: 4px;
 	height: 4px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--stage-fg) 28%, transparent);
+	background: color-mix(in srgb, var(--stage-fg) 32%, transparent);
 }
 .reader-end-mark span:nth-child(2) {
-	width: 5px;
-	height: 5px;
+	width: 6px;
+	height: 6px;
 	background: var(--color-crimson);
+	box-shadow: 0 0 0 3px var(--stage-bg);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -844,9 +964,11 @@
 		font-size: inherit;
 		line-height: inherit;
 		padding: 0;
+		margin: 0;
 		font-weight: inherit;
 	}
-	.reader-progress-fill {
+	.reader-progress-fill,
+	.reader-progress-bead {
 		transition: none;
 		will-change: auto;
 	}
