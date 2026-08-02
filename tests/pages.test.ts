@@ -202,11 +202,11 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('Newsreader');
 		expect(src).toContain('h1 + p');
 		expect(src).toMatch(/border-left.*\$\{link\}/);
-		// Chapter separation in continuous scroll (air + end-mark + open bead)
+		// Chapter separation in continuous scroll (air + open bead; no end asterism bead)
 		expect(src).toContain('body::after');
 		expect(src).toContain('body > h1:first-child');
 		expect(src).toMatch(/margin-top:\s*3\.5em/);
-		expect(src).toContain('radial-gradient'); // chapter-close asterism
+		expect(src).toMatch(/body::after[\s\S]*?background:\s*none/);
 		// Continuous + scrolled stacks spine sections (default only paints cover)
 		expect(src).toContain("manager: 'continuous'");
 		expect(src).toContain("flow: 'scrolled'");

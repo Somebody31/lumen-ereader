@@ -239,25 +239,16 @@ body {
 	font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
 	text-rendering: optimizeLegibility;
 }
-/*
- * Chapter close plate at the foot of every spine section so the next
- * continuous view (next chapter open) does not feel welded to prior prose.
- * Asterism: hairline · crimson bead · hairline.
- */
+/* Clear floats at section end — no decorative end-mark (user asked to drop bead UI) */
 body::after {
 	content: '' !important;
 	display: block !important;
 	clear: both !important;
-	width: 7.5rem !important;
-	height: 8px !important;
-	margin: 3.25em auto 0.35em !important;
+	height: 0 !important;
+	margin: 0 !important;
 	border: 0 !important;
-	opacity: 1 !important;
+	background: none !important;
 	pointer-events: none !important;
-	background:
-		linear-gradient(${rule}, ${rule}) left center / calc(50% - 10px) 1px no-repeat,
-		linear-gradient(${rule}, ${rule}) right center / calc(50% - 10px) 1px no-repeat,
-		radial-gradient(circle, ${link} 0 3px, transparent 3.5px) center / 8px 8px no-repeat !important;
 }
 /* Block wrappers stay inside the measure column (not image scrollWidth) */
 div, section, article, main, header, footer, aside, nav,
@@ -455,33 +446,19 @@ blockquote {
 	font-size: 1.12em;
 	line-height: 1.45;
 }
-/* In-chapter scene break — asterism-lite (rule + bead space via box-shadow) */
+/* In-chapter scene break — quiet hairline only (no center bead) */
 hr {
 	border: 0 !important;
-	height: 0 !important;
+	height: 1px !important;
 	margin: 3.75em auto !important;
 	max-width: 8.5rem !important;
-	position: relative !important;
-	background: transparent !important;
+	background: ${rule} !important;
 	overflow: visible !important;
 }
-hr::before {
-	content: '' !important;
-	display: block !important;
-	height: 1px !important;
-	background: ${rule} !important;
-}
+hr::before,
 hr::after {
-	content: '' !important;
-	position: absolute !important;
-	left: 50% !important;
-	top: 50% !important;
-	width: 6px !important;
-	height: 6px !important;
-	border-radius: 50% !important;
-	background: ${link} !important;
-	transform: translate(-50%, -50%) !important;
-	box-shadow: 0 0 0 5px ${bg} !important;
+	content: none !important;
+	display: none !important;
 }
 ul, ol {
 	margin-bottom: ${para}em !important;
