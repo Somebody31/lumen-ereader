@@ -164,7 +164,7 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(css).toContain('.reader-toc-item-top');
 		expect(css).toContain('.reader-toc-index');
 		expect(css).toContain('.reader-toc-break');
-		expect(css).toContain('reader-toc-break-bead');
+		expect(css).not.toContain('reader-toc-break-bead');
 		// Current chapter highlight + scroll into view on open
 		expect(src).toContain('activeTocIndex');
 		expect(src).toContain('currentTocIndex');
@@ -202,11 +202,12 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('Newsreader');
 		expect(src).toContain('h1 + p');
 		expect(src).toMatch(/border-left.*\$\{link\}/);
-		// Chapter separation in continuous scroll (air + open bead; no end asterism bead)
+		// Chapter separation in continuous scroll (air only; no open/end beads)
 		expect(src).toContain('body::after');
 		expect(src).toContain('body > h1:first-child');
 		expect(src).toMatch(/margin-top:\s*3\.5em/);
 		expect(src).toMatch(/body::after[\s\S]*?background:\s*none/);
+		expect(src).toMatch(/body > h1:first-child::before[\s\S]*?content:\s*none/);
 		// Continuous + scrolled stacks spine sections (default only paints cover)
 		expect(src).toContain("manager: 'continuous'");
 		expect(src).toContain("flow: 'scrolled'");

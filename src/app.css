@@ -381,20 +381,6 @@
 	background: var(--color-crimson);
 	border-radius: 1px;
 }
-/* Crimson bead above chapter titles that are not the document open */
-.reader-prose h1:not(:first-child)::before {
-	content: '';
-	display: block;
-	width: 5px;
-	height: 5px;
-	border-radius: 50%;
-	background: var(--color-crimson);
-	margin: 0 0 1.15em 0;
-	box-shadow:
-		0 0 0 4px var(--stage-bg),
-		0 0 0 5px color-mix(in srgb, var(--stage-fg) 18%, transparent);
-}
-
 /* Chapter heads — magazine section open: generous air, hairline, display opsz */
 .reader-prose h2 {
 	font-size: clamp(1.55rem, 3.2vw, 2.05rem);
@@ -411,18 +397,6 @@
 	margin-top: 0.5em;
 	padding-top: 0.25em;
 	border-top: none;
-}
-.reader-prose h2:not(:first-child)::before {
-	content: '';
-	display: block;
-	width: 5px;
-	height: 5px;
-	border-radius: 50%;
-	background: var(--color-crimson);
-	margin: 0 0 1em 0;
-	box-shadow:
-		0 0 0 4px var(--stage-bg),
-		0 0 0 5px color-mix(in srgb, var(--stage-fg) 18%, transparent);
 }
 .reader-prose h3 {
 	font-size: 1.32em;
@@ -526,33 +500,20 @@
 	margin-bottom: 0.65em;
 }
 
-/* Section / scene break — rule with crimson center bead */
+/* Section / scene break — quiet hairline only (no center bead) */
 .reader-prose hr {
 	border: 0;
-	height: 0;
+	height: 1px;
 	margin: 3.75em auto;
 	max-width: 8.5rem;
 	position: relative;
-	background: transparent;
+	background: color-mix(in srgb, var(--stage-fg) 26%, transparent);
 	overflow: visible;
 }
-.reader-prose hr::before {
-	content: '';
-	display: block;
-	height: 1px;
-	background: color-mix(in srgb, var(--stage-fg) 26%, transparent);
-}
+.reader-prose hr::before,
 .reader-prose hr::after {
-	content: '';
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	background: var(--color-crimson);
-	transform: translate(-50%, -50%);
-	box-shadow: 0 0 0 5px var(--stage-bg);
+	content: none;
+	display: none;
 }
 
 .reader-prose ul,
@@ -641,9 +602,9 @@
 }
 
 /*
- * Reader chrome — left rail as magazine spine (title stamp + meter + tools).
+ * Reader chrome — left rail as magazine spine (title stamp + tools + pct).
  * Not a floating SaaS island; hairline plate against the stage.
- * Progress lives on the rail (pct + meter) — no top hairline bead.
+ * Progress is plain percent only — no hairline/bead meters.
  */
 .reader-rail {
 	position: absolute;
@@ -751,44 +712,6 @@
 	writing-mode: horizontal-tb;
 	color: var(--stage-chrome-fg);
 	opacity: 0.92;
-}
-/* Vertical progress — hairline track + crimson fill + tip bead (scaleY, not height thrash) */
-.reader-rail-meter {
-	position: relative;
-	width: 2px;
-	height: 3.75rem;
-	overflow: visible;
-	border-radius: 1px;
-	background: color-mix(in srgb, var(--stage-fg) 14%, transparent);
-	--rail-progress: 0;
-}
-.reader-rail-meter-fill {
-	position: absolute;
-	inset: 0;
-	border-radius: 1px;
-	transform: scaleY(var(--rail-progress, 0));
-	transform-origin: bottom center;
-	transition: transform 360ms var(--ease-editorial);
-	will-change: transform;
-}
-.reader-rail-meter-bead {
-	position: absolute;
-	left: 50%;
-	bottom: calc(var(--rail-progress, 0) * 100%);
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	background: var(--color-crimson);
-	transform: translate(-50%, 50%);
-	box-shadow: 0 0 0 2px var(--stage-bg);
-	opacity: 0;
-	transition:
-		bottom 360ms var(--ease-editorial),
-		opacity 200ms ease;
-	pointer-events: none;
-}
-.reader-rail-meter[data-progress]:not([data-progress='0']) .reader-rail-meter-bead {
-	opacity: 1;
 }
 
 .reader-drawer {
@@ -1036,13 +959,12 @@
 	transform: translateY(-50%);
 	pointer-events: none;
 }
-/* Chapter break — rule · crimson bead · rule (asterism-lite) */
+/* Chapter break — quiet hairline only (no center bead) */
 .reader-toc-break {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 0.45rem;
-	padding: 0.7rem 1.1rem 0.55rem;
+	padding: 0.55rem 1.1rem 0.45rem;
 	pointer-events: none;
 }
 .reader-toc-item-has-break .reader-toc-row {
@@ -1052,19 +974,9 @@
 .reader-toc-break-rule {
 	display: block;
 	flex: 1 1 auto;
-	max-width: 3.25rem;
+	max-width: 5.5rem;
 	height: 1px;
 	background: color-mix(in srgb, var(--stage-rule) 88%, transparent);
-}
-.reader-toc-break-bead {
-	display: block;
-	width: 4px;
-	height: 4px;
-	border-radius: 50%;
-	background: var(--color-crimson);
-	opacity: 0.72;
-	flex: 0 0 auto;
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-crimson) 12%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
 	.reader-toc-row {
@@ -1110,9 +1022,7 @@
 	}
 }
 @media (prefers-reduced-motion: reduce) {
-	.reader-rail,
-	.reader-rail-meter-fill,
-	.reader-rail-meter-bead {
+	.reader-rail {
 		transition: none;
 		will-change: auto;
 	}
@@ -1138,37 +1048,21 @@
 }
 
 /*
- * End of book — magazine asterism: flanking rules + three-beat beads, center crimson.
+ * End of book — quiet centered hairline (no beads / asterism).
  * Skeleton still reads “finished” without copy.
  */
 .reader-end-mark {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: 0.75rem;
-	padding: 4rem 0 2.25rem;
-	margin-top: 1.5rem;
+	display: block;
+	width: 3.5rem;
+	height: 1px;
+	margin: 3.5rem auto 2.25rem;
+	padding: 0;
+	background: color-mix(in srgb, var(--stage-fg) 22%, transparent);
 }
 .reader-end-mark::before,
 .reader-end-mark::after {
-	content: '';
-	display: block;
-	width: 1.75rem;
-	height: 1px;
-	background: color-mix(in srgb, var(--stage-fg) 22%, transparent);
-}
-.reader-end-mark span {
-	display: block;
-	width: 4px;
-	height: 4px;
-	border-radius: 50%;
-	background: color-mix(in srgb, var(--stage-fg) 32%, transparent);
-}
-.reader-end-mark span:nth-child(2) {
-	width: 6px;
-	height: 6px;
-	background: var(--color-crimson);
-	box-shadow: 0 0 0 3px var(--stage-bg);
+	content: none;
+	display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -496,17 +496,6 @@
 
 			<div class="reader-rail-foot" aria-hidden="true">
 				<span class="reader-rail-pct">{pct}%</span>
-				<span
-					class="reader-rail-meter"
-					data-progress={pct}
-					style="--rail-progress: {pct > 0 ? Math.max(fraction, 0.04) : 0}"
-				>
-					<span
-						class="reader-rail-meter-fill"
-						style="background: var(--color-crimson)"
-					></span>
-					<span class="reader-rail-meter-bead"></span>
-				</span>
 			</div>
 		</aside>
 
@@ -990,8 +979,6 @@
 										</button>
 										{#if showBreak}
 											<div class="reader-toc-break" aria-hidden="true">
-												<span class="reader-toc-break-rule"></span>
-												<span class="reader-toc-break-bead"></span>
 												<span class="reader-toc-break-rule"></span>
 											</div>
 										{/if}

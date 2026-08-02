@@ -98,21 +98,22 @@ describe('editorial design system', () => {
 		// Chapter open: top hairline + drop cap
 		expect(appCss).toMatch(/\.reader-prose h2[\s\S]*?border-top:/);
 		expect(appCss).toMatch(/\.reader-prose h2 \+ p::first-letter/);
-		// Progress lives on the rail only (no top hairline bead)
+		// Progress is plain percent on the rail — no hairline/bead meters
 		expect(readerPage).not.toContain('reader-progress-bead');
 		expect(appCss).not.toContain('.reader-progress-bead');
-		// Rail as magazine spine: vertical title stamp + meter bead
+		expect(readerPage).not.toContain('reader-rail-meter-bead');
+		expect(appCss).not.toContain('.reader-rail-meter-bead');
+		expect(readerPage).not.toContain('reader-toc-break-bead');
+		// Rail as magazine spine: vertical title stamp + pct only
 		expect(appCss).toContain('.reader-rail-spine');
-		expect(appCss).toContain('.reader-rail-meter-bead');
 		expect(readerPage).toContain('reader-rail-spine');
-		expect(readerPage).toContain('reader-rail-meter-bead');
 		expect(readerPage).toContain('reader-rail-pct');
 		// Type sample plate in drawer
 		expect(appCss).toContain('.reader-type-sample');
 		expect(readerPage).toContain('reader-type-sample');
-		// End asterism with flanking rules + center crimson
+		// End mark is a quiet hairline (no bead asterism)
 		expect(appCss).toContain('.reader-end-mark');
-		expect(appCss).toMatch(/\.reader-end-mark::before/);
+		expect(appCss).toMatch(/\.reader-end-mark::before[\s\S]*?content:\s*none/);
 		// Blockquotes use display italic + crimson rail
 		expect(appCss).toMatch(
 			/\.reader-prose blockquote[\s\S]*?border-left:\s*2px solid var\(--color-crimson\)/

@@ -95,12 +95,8 @@
 			style:hyphens={prefs.hyphenate ? 'auto' : 'manual'}
 		>
 			{@html html}
-			<!-- book end breathing room — three-beat asterism -->
-			<div class="reader-end-mark" aria-hidden="true">
-				<span></span>
-				<span></span>
-				<span></span>
-			</div>
+			<!-- book end breathing room — quiet rule, no bead ornament -->
+			<div class="reader-end-mark" aria-hidden="true"></div>
 		</article>
 	{/if}
 </div>

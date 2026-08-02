@@ -363,7 +363,7 @@ h3 { font-size: 1.32em !important; margin-top: 2.65em !important; padding-top: 0
 h4 { font-size: 1.1em !important; }
 /*
  * First head of a spine section = chapter open for continuous stack.
- * Drop the double hairline (section already has end-mark above); keep crimson plate.
+ * Drop the double hairline; no crimson bead — air + title plate only.
  */
 body > h1:first-child,
 body > h2:first-child,
@@ -379,7 +379,7 @@ body > .chapter:first-child > h2:first-child {
 	padding-top: 0.35em !important;
 	border-top: none !important;
 }
-/* Crimson bead above the chapter title (section opener) */
+/* Kill any leftover bead/opener pseudo from earlier theme stamps */
 body > h1:first-child::before,
 body > h2:first-child::before,
 body > header:first-child > h1:first-child::before,
@@ -388,15 +388,8 @@ body > section:first-child > h1:first-child::before,
 body > section:first-child > h2:first-child::before,
 body > div:first-child > h1:first-child::before,
 body > div:first-child > h2:first-child::before {
-	content: '' !important;
-	display: block !important;
-	width: 5px !important;
-	height: 5px !important;
-	border-radius: 50% !important;
-	background: ${link} !important;
-	margin: 0.15em 0 1.25em 0 !important;
-	box-shadow: 0 0 0 4px ${bg}, 0 0 0 5px ${rule} !important;
-	pointer-events: none !important;
+	content: none !important;
+	display: none !important;
 }
 /* Drop cap after chapter — display initial (no float: epubjs continuous height) */
 h1 + p::first-letter,
