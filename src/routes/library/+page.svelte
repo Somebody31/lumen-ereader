@@ -143,18 +143,18 @@
 >
 	{#if pageDragging && books.length > 0}
 		<div
-			class="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center bg-newsprint/70 backdrop-blur-[2px]"
+			class="lib-drop-veil pointer-events-none fixed inset-0 z-[60] flex items-center justify-center bg-newsprint/70 backdrop-blur-[2px]"
 			aria-hidden="true"
 		>
 			<div
-				class="rounded-lg border-2 border-dashed border-crimson bg-paper/90 px-10 py-8 font-ui text-sm text-ink"
+				class="lib-drop-pill rounded-lg border-2 border-dashed border-crimson bg-paper/90 px-10 py-8 font-ui text-sm text-ink"
 			>
 				Release to import
 			</div>
 		</div>
 	{/if}
 
-	<section class="animate-plate-in">
+	<section class="lib-masthead">
 		<div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
 			<div class="max-w-xl">
 				<p class="type-kicker text-crimson">Library</p>
@@ -164,7 +164,7 @@
 				</p>
 			</div>
 			{#if books.length > 0}
-				<label class="relative block w-full sm:w-72">
+				<label class="lib-search relative block w-full sm:w-72">
 					<span class="sr-only">Search library</span>
 					<MagnifyingGlass
 						size={15}
@@ -194,7 +194,7 @@
 
 	{#if error}
 		<div
-			class="rounded-md border border-danger/50 bg-danger/10 px-4 py-3 font-ui text-sm text-danger"
+			class="lib-notice rounded-md border border-danger/50 bg-danger/10 px-4 py-3 font-ui text-sm text-danger"
 			role="alert"
 		>
 			{error}
@@ -202,7 +202,7 @@
 	{/if}
 	{#if notice}
 		<div
-			class="flex items-start justify-between gap-3 rounded-md border border-rule bg-surface px-4 py-3 font-ui text-sm text-ink-soft"
+			class="lib-notice flex items-start justify-between gap-3 rounded-md border border-rule bg-surface px-4 py-3 font-ui text-sm text-ink-soft"
 			role="status"
 		>
 			<p>{notice}</p>
@@ -243,12 +243,12 @@
 			{@const displayTitle = formatDisplayTitle(last.title)}
 			{@const authorLine = last.author?.trim() || 'Unknown'}
 			{@const continueMeta = [authorLine, opened].filter(Boolean).join(', ')}
-			<!-- Unboxed magazine spread — cover + broadsheet type -->
+			<!-- Unboxed magazine spread — cover seats, title unmasks, progress draws -->
 			<a
 				href="/read/{last.id}"
-				class="group continue-lead animate-plate-in stagger-1 no-underline"
+				class="group continue-lead lib-lead no-underline"
 			>
-				<div class="continue-lead-cover">
+				<div class="continue-lead-cover lib-lead-cover">
 					<div class="cover-object cover-object-hero bezel w-full">
 						<div class="bezel-inner relative aspect-[2/3]">
 							<CoverPlate
@@ -259,14 +259,14 @@
 						</div>
 					</div>
 				</div>
-				<div class="continue-lead-spine" aria-hidden="true"></div>
-				<div class="continue-lead-copy">
+				<div class="continue-lead-spine lib-lead-spine" aria-hidden="true"></div>
+				<div class="continue-lead-copy lib-lead-copy">
 					<p class="continue-lead-eyebrow">
 						Continuing{#if continueMeta}{' '}– {continueMeta}{/if}
 					</p>
-					<p class="continue-lead-title">{displayTitle}</p>
+					<p class="continue-lead-title lib-lead-title">{displayTitle}</p>
 					<div
-						class="continue-lead-progress"
+						class="continue-lead-progress lib-lead-progress"
 						role="progressbar"
 						aria-valuenow={p}
 						aria-valuemin={0}
@@ -282,13 +282,13 @@
 						</div>
 						<span class="continue-lead-pct">{p}%</span>
 					</div>
-					<span class="continue-lead-cta">
+					<span class="continue-lead-cta lib-lead-cta">
 						Resume reading
 						<span class="cta-chevron" aria-hidden="true">→</span>
 					</span>
 				</div>
 			</a>
-			<div class="mt-2 h-px bg-rule sm:mt-6" aria-hidden="true"></div>
+			<div class="lib-rule mt-2 h-px bg-rule sm:mt-6" aria-hidden="true"></div>
 		{/if}
 
 		{@const shelfBooks =
@@ -301,8 +301,8 @@
 						: filtered.filter((b) => !last || b.id !== last.id || filtered.length > 1)}
 
 		{#if shelfBooks.length > 0 || query.trim()}
-			<div class="animate-plate-in stagger-2 space-y-6">
-				<div class="flex items-baseline justify-between gap-4">
+			<div class="space-y-6">
+				<div class="lib-masthead flex items-baseline justify-between gap-4" style="animation-delay: 180ms">
 					<h2 class="type-section text-2xl text-ink sm:text-[1.75rem]">
 						{query.trim()
 							? 'Matches'
@@ -324,7 +324,7 @@
 				</div>
 
 				{#if query.trim() && filtered.length === 0}
-					<p class="font-ui text-sm text-ink-soft">No titles match “{query}”.</p>
+					<p class="lib-notice font-ui text-sm text-ink-soft">No titles match “{query}”.</p>
 				{:else}
 					<div
 						class="grid grid-cols-2 gap-x-6 gap-y-11 sm:grid-cols-3 md:grid-cols-4 {sparse
@@ -340,7 +340,7 @@
 		{/if}
 
 		<!-- Quiet drop hint — Import lives in the toolbar -->
-		<p class="type-meta animate-plate-in stagger-3 pt-4 text-center text-ink-mute">
+		<p class="type-meta lib-notice pt-4 text-center text-ink-mute" style="animation-delay: 520ms">
 			Drop a file anywhere to import · or use <span class="text-ink-soft">Import</span> in the bar ·
 			<a href="/" class="text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink"
 				>Home</a

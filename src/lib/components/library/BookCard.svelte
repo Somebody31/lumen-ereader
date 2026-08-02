@@ -18,7 +18,8 @@
 
 	const fraction = $derived(progress?.fraction ?? 0);
 	const pct = $derived(Math.round(fraction * 100));
-	const stagger = $derived(`stagger-${Math.min(5, (index % 5) + 1)}`);
+	/** Cap stagger so long shelves don’t wait forever */
+	const staggerI = $derived(Math.min(index, 8));
 	const title = $derived(formatDisplayTitle(book.title));
 	const opened = $derived.by(() => {
 		const ts = progress?.updatedAt ?? book.updatedAt;
@@ -27,7 +28,7 @@
 	});
 </script>
 
-<article class="group relative animate-plate-in {stagger}">
+<article class="lib-shelf-card group relative" style="--i: {staggerI}">
 	<a href="/read/{book.id}" class="block no-underline">
 		<div class="cover-object bezel">
 			<div class="bezel-inner relative aspect-[2/3]">
@@ -42,7 +43,7 @@
 						aria-label="Reading progress"
 					>
 						<div
-							class="h-full bg-crimson transition-[width] duration-300 ease-[var(--ease-editorial)]"
+							class="h-full origin-left bg-crimson transition-[width,transform] duration-300 ease-[var(--ease-editorial)]"
 							style="width: {pct}%"
 						></div>
 					</div>

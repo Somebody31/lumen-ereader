@@ -61,9 +61,10 @@
 	--radius-md: 10px;
 	--radius-lg: 14px;
 	--radius-xl: 18px;
-	--ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
-	--ease-atelier: cubic-bezier(0.22, 1, 0.36, 1);
-	--ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+	/* Arrival: confident settle (editorial broadsheet, not bounce) */
+	--ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-atelier: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 	--shadow-cover:
 		0 1px 2px rgba(0, 0, 0, 0.55), 0 10px 24px rgba(0, 0, 0, 0.5),
 		0 28px 56px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(240, 239, 233, 0.04);
@@ -976,6 +977,221 @@ button:hover .cta-chevron {
 	animation-delay: 250ms;
 }
 
+/* ——— Library motion: broadsheet open ———
+   Focal: continue-lead seats like a plate; title unmasks; progress draws.
+   Supporting: masthead, shelf stagger, notices, drag veil. */
+
+@keyframes lib-masthead-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+		filter: blur(3px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+		filter: blur(0);
+	}
+}
+
+@keyframes lib-kicker-in {
+	from {
+		opacity: 0;
+		letter-spacing: 0.22em;
+	}
+	to {
+		opacity: 1;
+		letter-spacing: 0.12em;
+	}
+}
+
+@keyframes lib-lead-cover-in {
+	from {
+		opacity: 0;
+		transform: translateY(14px) scale(0.96);
+		filter: blur(2px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+		filter: blur(0);
+	}
+}
+
+@keyframes lib-lead-spine-in {
+	from {
+		opacity: 0;
+		transform: scaleY(0.35);
+	}
+	to {
+		opacity: 0.55;
+		transform: scaleY(1);
+	}
+}
+
+@keyframes lib-lead-copy-in {
+	from {
+		opacity: 0;
+		transform: translateX(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes lib-lead-title-in {
+	from {
+		opacity: 0;
+		clip-path: inset(0 0 100% 0);
+		transform: translateY(0.12em);
+	}
+	to {
+		opacity: 1;
+		clip-path: inset(0 0 0 0);
+		transform: translateY(0);
+	}
+}
+
+@keyframes lib-lead-progress-draw {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+
+@keyframes lib-rule-draw {
+	from {
+		transform: scaleX(0);
+		opacity: 0;
+	}
+	to {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+}
+
+@keyframes lib-shelf-card-in {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes lib-notice-in {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes lib-drop-veil-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes lib-drop-pill-in {
+	from {
+		opacity: 0;
+		transform: scale(0.96) translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+.lib-masthead {
+	animation: lib-masthead-in 560ms var(--ease-editorial) both;
+}
+.lib-masthead .type-kicker {
+	animation: lib-kicker-in 700ms var(--ease-editorial) both;
+	animation-delay: 40ms;
+}
+
+/* Continue lead — one authored open sequence */
+.lib-lead .lib-lead-cover {
+	animation: lib-lead-cover-in 640ms var(--ease-editorial) both;
+	animation-delay: 80ms;
+	transform-origin: center bottom;
+}
+.lib-lead .lib-lead-spine {
+	animation: lib-lead-spine-in 520ms var(--ease-editorial) both;
+	animation-delay: 180ms;
+	transform-origin: center center;
+}
+.lib-lead .lib-lead-copy {
+	animation: lib-lead-copy-in 520ms var(--ease-editorial) both;
+	animation-delay: 160ms;
+}
+.lib-lead .lib-lead-title {
+	animation: lib-lead-title-in 700ms var(--ease-editorial) both;
+	animation-delay: 240ms;
+}
+.lib-lead .lib-lead-progress .continue-lead-fill {
+	transform-origin: left center;
+	animation: lib-lead-progress-draw 900ms var(--ease-editorial) both;
+	animation-delay: 420ms;
+}
+.lib-lead .lib-lead-cta {
+	animation: plate-in 480ms var(--ease-editorial) both;
+	animation-delay: 480ms;
+}
+
+.lib-rule {
+	transform-origin: left center;
+	animation: lib-rule-draw 600ms var(--ease-editorial) both;
+	animation-delay: 360ms;
+}
+
+/* Shelf: list stagger via --i (capped in component) */
+.lib-shelf-card {
+	animation: lib-shelf-card-in 480ms var(--ease-editorial) both;
+	animation-delay: calc(220ms + min(var(--i, 0), 8) * 48ms);
+}
+.lib-shelf-card .cover-object {
+	transition:
+		transform 280ms var(--ease-editorial),
+		box-shadow 280ms var(--ease-editorial);
+}
+
+/* Search field: quiet focus feedback */
+.lib-search input {
+	transition:
+		border-color 180ms var(--ease-editorial),
+		box-shadow 180ms var(--ease-editorial),
+		background-color 180ms var(--ease-editorial);
+}
+.lib-search input:focus {
+	border-color: color-mix(in srgb, var(--color-ink-mute) 80%, var(--color-rule));
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+
+.lib-notice {
+	animation: lib-notice-in 320ms var(--ease-editorial) both;
+}
+
+.lib-drop-veil {
+	animation: lib-drop-veil-in 180ms var(--ease-editorial) both;
+}
+.lib-drop-veil .lib-drop-pill {
+	animation: lib-drop-pill-in 280ms var(--ease-editorial) both;
+}
+
 /* Skeleton */
 .skeleton {
 	background: linear-gradient(
@@ -1000,5 +1216,24 @@ button:hover .cta-chevron {
 @media (prefers-reduced-motion: reduce) {
 	.skeleton {
 		animation: none;
+	}
+	.lib-masthead,
+	.lib-masthead .type-kicker,
+	.lib-lead .lib-lead-cover,
+	.lib-lead .lib-lead-spine,
+	.lib-lead .lib-lead-copy,
+	.lib-lead .lib-lead-title,
+	.lib-lead .lib-lead-progress .continue-lead-fill,
+	.lib-lead .lib-lead-cta,
+	.lib-rule,
+	.lib-shelf-card,
+	.lib-notice,
+	.lib-drop-veil,
+	.lib-drop-veil .lib-drop-pill {
+		animation: none !important;
+		filter: none !important;
+		clip-path: none !important;
+		opacity: 1 !important;
+		transform: none !important;
 	}
 }

@@ -132,6 +132,21 @@ describe('editorial design system', () => {
 		expect(library).not.toMatch(/continue-lead[^>]*(border border-rule|bg-paper)/);
 	});
 
+	test('library motion: broadsheet lead + shelf stagger, reduced-motion safe', () => {
+		expect(library).toContain('lib-lead');
+		expect(library).toContain('lib-lead-title');
+		expect(library).toContain('lib-masthead');
+		expect(library).toContain('lib-rule');
+		expect(appCss).toContain('lib-lead-cover-in');
+		expect(appCss).toContain('lib-lead-title-in');
+		expect(appCss).toContain('lib-lead-progress-draw');
+		expect(appCss).toContain('lib-shelf-card-in');
+		expect(appCss).toContain('prefers-reduced-motion');
+		const card = readFileSync(join(root, 'src/lib/components/library/BookCard.svelte'), 'utf8');
+		expect(card).toContain('lib-shelf-card');
+		expect(card).toContain('--i:');
+	});
+
 	test('buttons use soft radius ink/crimson, not pill seals', () => {
 		expect(button).toContain('rounded-md');
 		expect(button).toContain('bg-ink');
