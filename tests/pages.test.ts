@@ -41,14 +41,18 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).toContain('Open your library');
 		expect(src).toContain('href="/"');
 		expect(src).toContain('/auth?next=/&intent=sync');
-		// Shows what the product is, not empty slogans only
+		// Shows what the product is: one reading stage + real capabilities
 		expect(src).toContain('EPUB');
 		expect(src).toContain('local-first');
-		expect(src).toContain('CoverPlate');
+		expect(src).toContain('welcome-stage-reader');
+		expect(src).toContain('welcome-stage-caption');
 		expect(src).toContain('The Star Room');
 		expect(src).toContain('Literata');
 		expect(src).toContain('Newsreader');
 		expect(src).toContain('welcome-path');
+		// Not a confusing dual mock (reader + fake shelf column)
+		expect(src).not.toContain('welcome-stage-shelf');
+		expect(src).not.toContain('CoverPlate');
 		// no forced redirect file
 		expect(existsSync(join(root, 'src/routes/welcome/+page.ts'))).toBe(false);
 		const css = read('src/app.css');

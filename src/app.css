@@ -1454,17 +1454,20 @@ button:hover .cta-chevron {
 	color: var(--color-rule);
 }
 
-/* Product stage — live-looking reader + mini shelf */
+/* Product stage — single reading page (one idea, not reader + fake shelf) */
 .welcome-stage {
-	position: relative;
-	display: grid;
-	gap: 1.25rem;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+	max-width: 26rem;
+	margin-inline: auto;
+	width: 100%;
 }
-@media (min-width: 520px) {
+@media (min-width: 960px) {
 	.welcome-stage {
-		grid-template-columns: 1fr minmax(7.5rem, 9.5rem);
-		align-items: end;
-		gap: 1rem;
+		margin-inline: 0 0 auto;
+		max-width: none;
 	}
 }
 
@@ -1475,7 +1478,7 @@ button:hover .cta-chevron {
 	background: var(--stage-bg, #0c0c0c);
 	color: var(--stage-fg, #f3f2ed);
 	overflow: hidden;
-	min-height: 22rem;
+	min-height: 24rem;
 	box-shadow:
 		0 1px 0 color-mix(in srgb, var(--color-ink) 6%, transparent),
 		0 24px 48px -20px rgba(0, 0, 0, 0.55);
@@ -1492,7 +1495,6 @@ button:hover .cta-chevron {
 .welcome-stage-progress-fill {
 	height: 100%;
 	background: var(--stage-progress, #d4d0c8);
-	position: relative;
 }
 .welcome-stage-progress-bead {
 	position: absolute;
@@ -1506,31 +1508,28 @@ button:hover .cta-chevron {
 	box-shadow: 0 0 0 2px var(--stage-bg, #0c0c0c);
 }
 
-.welcome-stage-chrome {
-	display: flex;
-	flex-direction: column;
-	gap: 0.15rem;
-	margin: 0.75rem 0.75rem 0;
-	padding: 0.55rem 0.75rem;
-	border-radius: var(--radius-md);
-	border: 1px solid color-mix(in srgb, var(--stage-fg, #f3f2ed) 14%, transparent);
-	background: color-mix(in srgb, var(--stage-bg, #0c0c0c) 70%, #1a1a18);
-	backdrop-filter: blur(8px);
-}
-
 .welcome-stage-prose {
-	padding: 1.5rem 1.35rem 3.25rem;
-	max-width: 36ch;
+	padding: 1.75rem 1.5rem 3.5rem;
+	max-width: 34ch;
 	margin-inline: auto;
 	font-family: var(--font-reading);
 	font-size: 0.9375rem;
 	line-height: 1.7;
 	color: var(--stage-fg, #f3f2ed);
 }
+.welcome-stage-kicker {
+	font-family: var(--font-ui);
+	font-size: 0.625rem;
+	font-weight: 500;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: color-mix(in srgb, var(--stage-fg, #f3f2ed) 48%, transparent);
+	margin: 0 0 1rem;
+}
 .welcome-stage-h1 {
 	font-family: var(--font-display);
 	font-weight: 600;
-	font-size: 1.65rem;
+	font-size: 1.75rem;
 	letter-spacing: -0.03em;
 	line-height: 0.98;
 	margin: 0;
@@ -1593,35 +1592,16 @@ button:hover .cta-chevron {
 	color: var(--stage-fg, #f3f2ed);
 }
 
-.welcome-stage-shelf {
-	padding: 0.85rem 0.75rem 1rem;
-	border-radius: var(--radius-lg);
-	border: 1px solid var(--color-rule);
-	background: var(--color-paper);
+.welcome-stage-caption {
+	margin: 0;
+	max-width: 34ch;
+	line-height: 1.45;
+	text-wrap: pretty;
 }
-.welcome-stage-covers {
-	display: flex;
-	flex-direction: column;
-	gap: 0.55rem;
-	margin-top: 0.65rem;
-}
-@media (max-width: 519px) {
-	.welcome-stage-covers {
-		flex-direction: row;
-		justify-content: center;
+@media (min-width: 960px) {
+	.welcome-stage-caption {
+		max-width: 38ch;
 	}
-	.welcome-stage-cover {
-		width: 5.5rem;
-	}
-	.welcome-stage-shelf {
-		text-align: center;
-	}
-}
-.welcome-stage-cover {
-	transition: transform 280ms var(--ease-editorial);
-}
-.welcome-stage-cover:hover {
-	transform: translateY(-3px);
 }
 
 /* Features */
@@ -1837,9 +1817,6 @@ button:hover .cta-chevron {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.welcome-stage-cover:hover {
-		transform: none;
-	}
 	.welcome-drop-cap {
 		float: none;
 		font-size: inherit;

@@ -2,18 +2,11 @@
 	import { onMount } from 'svelte';
 	import { fetchSession } from '$lib/client/sync';
 	import type { SessionInfo } from '$lib/client/types';
-	import CoverPlate from '$lib/components/library/CoverPlate.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	const ONBOARD_KEY = 'lumen:onboarded';
 
 	let session = $state<SessionInfo | null>(null);
-
-	const shelfPreview = [
-		{ title: 'The Star Room', author: 'Lumen Samples' },
-		{ title: 'Night notes', author: 'Field log' },
-		{ title: 'False dawns', author: 'Archive' }
-	];
 
 	const themes = [
 		{ id: 'night', label: 'Night', bg: '#0c0c0c', fg: '#f3f2ed' },
@@ -73,18 +66,15 @@
 			</ul>
 		</div>
 
-		<!-- Product stage: shows the actual reading UI language -->
-		<div class="welcome-stage" aria-hidden="true">
-			<div class="welcome-stage-reader stage-night">
+		<!-- One product shot: the open reading page (not a second fake shelf) -->
+		<figure class="welcome-stage">
+			<div class="welcome-stage-reader stage-night" aria-hidden="true">
 				<div class="welcome-stage-progress">
 					<div class="welcome-stage-progress-fill" style="width: 34%"></div>
 					<span class="welcome-stage-progress-bead"></span>
 				</div>
-				<div class="welcome-stage-chrome">
-					<span class="type-chrome-title text-[13px]">The Star Room</span>
-					<span class="type-meta text-[10px] opacity-70">Lumen Samples · 34%</span>
-				</div>
 				<article class="welcome-stage-prose">
+					<p class="welcome-stage-kicker">Sample · The Star Room</p>
 					<h2 class="welcome-stage-h1">The Star Room</h2>
 					<p class="welcome-stage-byline">By Lumen Samples · Demo fiction</p>
 					<p class="welcome-stage-h2">Opening</p>
@@ -100,23 +90,11 @@
 				</article>
 				<div class="welcome-stage-pct">34%</div>
 			</div>
-
-			<div class="welcome-stage-shelf">
-				<p class="type-micro text-ink-mute">Your shelf</p>
-				<div class="welcome-stage-covers">
-					{#each shelfPreview as book, i (book.title)}
-						<div class="welcome-stage-cover" style="--i: {i}">
-							<div class="cover-object bezel">
-								<div class="bezel-inner aspect-[2/3]">
-									<CoverPlate title={book.title} author={book.author} />
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-				<p class="type-meta mt-3 text-ink-mute">Resume · progress kept</p>
-			</div>
-		</div>
+			<figcaption class="welcome-stage-caption type-meta text-ink-mute">
+				What a book looks like in Lumen — type, themes, and progress on the page. Your shelf is
+				the home screen after you open the library.
+			</figcaption>
+		</figure>
 	</section>
 
 	<!-- ——— What you actually get ——— -->
