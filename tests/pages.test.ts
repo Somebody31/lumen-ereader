@@ -164,9 +164,12 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('Newsreader');
 		expect(src).toContain('h1 + p');
 		expect(src).toMatch(/border-left.*\$\{link\}/);
-		// Center measure via side padding — not body max-width (breaks epubjs expand)
-		expect(src).toContain('calc((100% - ${measure}ch) / 2)');
-		// Drop caps float-none — floats break continuous reflow
+		// Stable default manager + scrolled (continuous was blanking after first paint)
+		expect(src).toContain("manager: 'default'");
+		expect(src).toContain("flow: 'scrolled'");
+		expect(src).toContain('safeDisplay');
+		expect(src).toContain('waitForHostSize');
+		// Drop caps float-none — floats break reflow
 		expect(src).toMatch(/p::first-letter[\s\S]*?float:\s*none/);
 		expect(src).toContain("spread: 'none'");
 		// Open zip via ArrayBuffer (object URLs request META-INF from site origin)

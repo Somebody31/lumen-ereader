@@ -439,7 +439,7 @@
 			</div>
 		</aside>
 
-		<div class="relative z-[1] h-full w-full">
+		<div class="relative z-[1] h-full w-full min-h-0">
 			{#if book.format === 'epub'}
 				<EpubReader
 					bind:this={epubRef}
