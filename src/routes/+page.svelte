@@ -250,12 +250,14 @@
 			{@const p = Math.round((progressMap[last.id]?.fraction || 0) * 100)}
 			{@const opened = formatOpened(progressMap[last.id]?.updatedAt ?? last.updatedAt)}
 			{@const displayTitle = formatDisplayTitle(last.title)}
-			<!-- Unboxed magazine lead — no card border -->
+			{@const authorLine = last.author?.trim() || 'Unknown'}
+			{@const continueMeta = [authorLine, opened].filter(Boolean).join(', ')}
+			<!-- Unboxed magazine spread — cover + broadsheet type -->
 			<a
 				href="/read/{last.id}"
-				class="group continue-lead animate-plate-in stagger-1 grid no-underline sm:grid-cols-[minmax(11rem,17rem)_minmax(0,1fr)] sm:items-end sm:gap-10 md:gap-14"
+				class="group continue-lead animate-plate-in stagger-1 no-underline"
 			>
-				<div class="relative mx-auto w-full max-w-[15rem] sm:mx-0 sm:max-w-none">
+				<div class="continue-lead-cover">
 					<div class="cover-object cover-object-hero bezel w-full">
 						<div class="bezel-inner relative aspect-[2/3]">
 							<CoverPlate
@@ -266,50 +268,35 @@
 						</div>
 					</div>
 				</div>
-				<div class="mt-8 min-w-0 sm:mt-0 sm:pb-1">
-					<p class="kicker text-crimson">Continue reading</p>
-					<p
-						class="mt-3 font-display text-[2rem] font-semibold leading-[1.06] tracking-[-0.02em] text-ink sm:text-[2.5rem] md:text-[2.85rem]"
-						style="font-family: var(--font-display); font-variation-settings: 'opsz' 56"
+				<div class="continue-lead-spine" aria-hidden="true"></div>
+				<div class="continue-lead-copy">
+					<p class="continue-lead-eyebrow">
+						Continuing{#if continueMeta}{' '}– {continueMeta}{/if}
+					</p>
+					<p class="continue-lead-title">{displayTitle}</p>
+					<div
+						class="continue-lead-progress"
+						role="progressbar"
+						aria-valuenow={p}
+						aria-valuemin={0}
+						aria-valuemax={100}
+						aria-label="Reading progress"
 					>
-						{displayTitle}
-					</p>
-					<p class="mt-3 font-ui text-[15px] italic text-ink-soft">
-						{last.author || 'Unknown author'}
-					</p>
-					<p class="mt-2 font-ui text-[13px] text-ink-mute">
-						{#if p > 0}
-							<span class="tabular-nums text-ink-soft">{p}%</span>
-							<span> · </span>
-						{/if}
-						{#if opened}
-							<span>{opened}</span>
-							<span> · </span>
-						{/if}
-						<span class="uppercase tracking-[0.06em]">{last.format}</span>
-						<span> · </span>
-						<span class="tabular-nums">{formatSize(last.sizeBytes)}</span>
-					</p>
-					{#if p > 0}
-						<div class="mt-6 flex max-w-xs items-center gap-3">
-							<div class="h-1 flex-1 rounded-full bg-surface">
-								<div
-									class="h-1 rounded-full bg-crimson transition-[width] duration-500 ease-[var(--ease-editorial)]"
-									style="width: {p}%"
-								></div>
-							</div>
-							<span class="font-ui text-xs tabular-nums text-ink-soft">{p}%</span>
+						<div class="continue-lead-track">
+							<div
+								class="continue-lead-fill"
+								style="width: {Math.max(p, p > 0 ? 1.5 : 0)}%"
+							></div>
 						</div>
-					{/if}
-					<span
-						class="mt-7 inline-flex w-fit items-center gap-2 rounded-md bg-crimson px-5 py-2.5 font-ui text-[13px] font-medium text-ink transition-[background-color,transform] duration-200 ease-[var(--ease-editorial)] group-hover:bg-crimson-soft group-active:scale-[0.98]"
-					>
+						<span class="continue-lead-pct">{p}%</span>
+					</div>
+					<span class="continue-lead-cta">
 						Resume reading
 						<span class="cta-chevron" aria-hidden="true">→</span>
 					</span>
 				</div>
 			</a>
-			<div class="mt-2 h-px bg-rule sm:mt-4" aria-hidden="true"></div>
+			<div class="mt-2 h-px bg-rule sm:mt-6" aria-hidden="true"></div>
 		{/if}
 
 		{@const shelfBooks =

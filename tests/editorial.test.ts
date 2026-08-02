@@ -97,13 +97,19 @@ describe('editorial design system', () => {
 		expect(library).toContain('Search titles or authors');
 	});
 
-	test('continue lead is unboxed magazine spread with crimson CTA', () => {
+	test('continue lead is unboxed magazine spread with underline CTA', () => {
 		expect(library).toContain('continue-lead');
+		expect(library).toContain('continue-lead-title');
+		expect(library).toContain('continue-lead-eyebrow');
+		expect(library).toContain('continue-lead-cta');
 		expect(library).toContain('cover-object-hero');
-		expect(library).toContain('Continue reading');
+		expect(library).toContain('Continuing');
 		expect(library).toContain('Resume reading');
-		expect(library).toContain('bg-crimson');
 		expect(library).toContain('cta-chevron');
+		// text CTA with crimson rule — not a filled pill chip on the lead
+		expect(library).not.toMatch(/continue-lead-cta[^>]*bg-crimson/);
+		expect(appCss).toContain('.continue-lead-title');
+		expect(appCss).toContain('.continue-lead-fill');
 		// not a bordered dashboard card
 		expect(library).not.toMatch(/continue-lead[^>]*(border border-rule|bg-paper)/);
 	});
@@ -146,7 +152,7 @@ describe('editorial design system', () => {
 
 	test('library and settings use craft patterns', () => {
 		expect(library).toContain('cover-object-hero');
-		expect(library).toContain('Continue reading');
+		expect(library).toContain('Continuing');
 		expect(shell).toContain('grain');
 		const settings = readFileSync(join(root, 'src/routes/settings/+page.svelte'), 'utf8');
 		expect(settings).toContain('theme-swatch');
