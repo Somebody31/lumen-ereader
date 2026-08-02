@@ -1,7 +1,7 @@
 import { listBooks, putBook } from './idb';
 import type { BookRecord } from './types';
 
-const SAMPLE_FLAG = 'lumen-sample-v3';
+const SAMPLE_FLAG = 'lumen-sample-v4';
 
 /** Import bundled sample once per browser if library is empty; refresh sample cover art when flag advances */
 export async function ensureSampleBook(): Promise<void> {
@@ -52,19 +52,30 @@ export async function ensureSampleBook(): Promise<void> {
 	}
 }
 
-/** Editorial broadsheet plate — newsprint ground, black ink type, crimson kicker */
+/** Editorial typeset poster — newsprint field, crimson kicker, display hierarchy */
 function coverSvg(title: string, author: string): string {
 	const t = escapeXml(title.slice(0, 36));
 	const a = escapeXml(author.slice(0, 28));
 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
-  <rect width="400" height="600" fill="#F3F2ED"/>
-  <rect x="20" y="20" width="360" height="560" fill="none" stroke="#0B0B0B" stroke-width="1"/>
-  <line x1="44" y1="72" x2="356" y2="72" stroke="#0B0B0B" stroke-width="1"/>
-  <text x="44" y="58" fill="#7A1C1C" font-family="Georgia,serif" font-size="11" font-weight="600" letter-spacing="3">LUMEN</text>
-  <text x="44" y="400" fill="#0B0B0B" font-family="Georgia,serif" font-size="30" font-weight="600">${t}</text>
-  <line x1="44" y1="420" x2="120" y2="420" stroke="#0B0B0B" stroke-width="1"/>
-  <text x="44" y="450" fill="#6A6A66" font-family="system-ui,sans-serif" font-size="13" letter-spacing="1">${a}</text>
-  <text x="44" y="540" fill="#6A6A66" font-family="system-ui,sans-serif" font-size="10" letter-spacing="2">SAMPLE · OFFLINE</text>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7F6F1"/>
+      <stop offset="100%" stop-color="#EBEAE4"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#g)"/>
+  <rect x="18" y="18" width="364" height="564" fill="none" stroke="#0B0B0B" stroke-width="1.25"/>
+  <rect x="28" y="28" width="344" height="544" fill="none" stroke="#0B0B0B" stroke-opacity="0.12" stroke-width="1"/>
+  <text x="48" y="64" fill="#7A1C1C" font-family="Georgia,serif" font-size="11" font-weight="600" letter-spacing="3.5">LUMEN</text>
+  <line x1="48" y1="78" x2="352" y2="78" stroke="#0B0B0B" stroke-width="1"/>
+  <circle cx="320" cy="140" r="36" fill="none" stroke="#0B0B0B" stroke-opacity="0.15" stroke-width="1"/>
+  <circle cx="320" cy="140" r="2" fill="#7A1C1C"/>
+  <line x1="320" y1="104" x2="320" y2="176" stroke="#0B0B0B" stroke-opacity="0.12" stroke-width="1"/>
+  <line x1="284" y1="140" x2="356" y2="140" stroke="#0B0B0B" stroke-opacity="0.12" stroke-width="1"/>
+  <text x="48" y="380" fill="#0B0B0B" font-family="Georgia,serif" font-size="34" font-weight="600">${t}</text>
+  <line x1="48" y1="402" x2="128" y2="402" stroke="#0B0B0B" stroke-width="1.5"/>
+  <text x="48" y="432" fill="#6A6A66" font-family="system-ui,sans-serif" font-size="13" letter-spacing="0.5">${a}</text>
+  <text x="48" y="548" fill="#6A6A66" font-family="system-ui,sans-serif" font-size="10" letter-spacing="2.5">SAMPLE · OFFLINE</text>
 </svg>`;
 	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }

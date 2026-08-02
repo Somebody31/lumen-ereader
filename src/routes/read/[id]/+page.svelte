@@ -8,6 +8,8 @@
 	import TextReader from '$lib/components/reader/TextReader.svelte';
 	import EpubReader from '$lib/components/reader/EpubReader.svelte';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
+	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
+	import CaretRight from 'phosphor-svelte/lib/CaretRight';
 	import List from 'phosphor-svelte/lib/List';
 	import TextAa from 'phosphor-svelte/lib/TextAa';
 	import X from 'phosphor-svelte/lib/X';
@@ -25,6 +27,7 @@
 	let typeOpen = $state(false);
 	let toc = $state<{ label: string; href: string }[]>([]);
 	let fraction = $state(0);
+	let progressLabel = $state('');
 	let epubRef: EpubReader | undefined = $state();
 
 	let hideTimer: ReturnType<typeof setTimeout> | undefined;
@@ -33,6 +36,23 @@
 
 	const id = $derived(page.params.id ?? '');
 	const stageClass = $derived(`stage-${prefs?.theme ?? 'night'}`);
+	const pct = $derived(Math.round(fraction * 100));
+
+	const themes: {
+		id: ReadingTheme;
+		label: string;
+		bg: string;
+		fg: string;
+		line: string;
+	}[] = [
+		{ id: 'night', label: 'Night', bg: '#0c0c0c', fg: '#f3f2ed', line: '#9a9a94' },
+		{ id: 'paper', label: 'Paper', bg: '#f7f5f0', fg: '#1a1c22', line: '#5a5a56' },
+		{ id: 'sepia', label: 'Sepia', bg: '#e8dcc8', fg: '#3d3428', line: '#6b5e4e' },
+		{ id: 'contrast', label: 'Contrast', bg: '#000000', fg: '#ffffff', line: '#c0c0c0' }
+	];
+
+	const sampleLine =
+		'The booth lights were already low when Mara locked the door. Outside, the lobby still hummed.';
 
 	function bumpChrome() {
 		if (focusMode) return;
@@ -65,6 +85,7 @@
 			initialLocation = prog.location;
 			fraction = prog.fraction;
 			lastLocation = prog.location;
+			progressLabel = prog.label || '';
 		}
 		if (b.format === 'text' || b.format === 'markdown') {
 			textRaw = await b.blob.text();
@@ -84,6 +105,7 @@
 	function scheduleSave(frac: number, location: string, label?: string) {
 		fraction = frac;
 		lastLocation = location;
+		if (label) progressLabel = label;
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(async () => {
 			if (!book) return;
@@ -91,7 +113,7 @@
 				bookId: book.id,
 				fraction: frac,
 				location,
-				label,
+				label: label || progressLabel || undefined,
 				updatedAt: Date.now()
 			});
 			pushProgress(book.id).catch(() => {});
@@ -120,6 +142,8 @@
 		if (e.key === 'f' || e.key === 'F') {
 			focusMode = !focusMode;
 			chromeVisible = !focusMode;
+			tocOpen = false;
+			typeOpen = false;
 			if (!focusMode) bumpChrome();
 			return;
 		}
@@ -145,12 +169,13 @@
 		}
 	}
 
-	const themes: { id: ReadingTheme; label: string }[] = [
-		{ id: 'night', label: 'Night' },
-		{ id: 'paper', label: 'Paper' },
-		{ id: 'sepia', label: 'Sepia' },
-		{ id: 'contrast', label: 'Contrast' }
-	];
+	const subline = $derived.by(() => {
+		const parts: string[] = [];
+		if (progressLabel) parts.push(progressLabel);
+		else if (book?.author) parts.push(book.author);
+		parts.push(`${pct}%`);
+		return parts.join(' · ');
+	});
 </script>
 
 <svelte:window onkeydown={onKey} onmousemove={bumpChrome} onclick={bumpChrome} />
@@ -160,7 +185,9 @@
 </svelte:head>
 
 <div
-	class="relative h-[100dvh] overflow-hidden {stageClass}"
+	class="reader-stage relative h-[100dvh] overflow-hidden {stageClass} {focusMode
+		? 'is-focus'
+		: ''}"
 	style="background: var(--stage-bg); color: var(--stage-fg);"
 >
 	<!-- progress hairline -->
@@ -168,7 +195,7 @@
 		class="pointer-events-none absolute inset-x-0 top-0 z-50 h-px"
 		style="background: color-mix(in srgb, var(--stage-fg) 12%, transparent)"
 		role="progressbar"
-		aria-valuenow={Math.round(fraction * 100)}
+		aria-valuenow={pct}
 		aria-valuemin={0}
 		aria-valuemax={100}
 		aria-label="Reading progress"
@@ -188,7 +215,7 @@
 			<p class="font-ui text-sm" style="color: var(--stage-muted)">{error}</p>
 			<a
 				href="/"
-				class="inline-flex items-center justify-center border border-current bg-transparent px-5 py-2.5 font-ui text-[13px] font-medium tracking-tight no-underline transition-opacity hover:opacity-80"
+				class="inline-flex items-center justify-center border border-current bg-transparent px-5 py-2.5 font-ui text-[13px] font-medium tracking-tight no-underline transition-opacity hover:opacity-80 active:scale-[0.98]"
 				style="color: var(--stage-fg)"
 				>Back to library</a
 			>
@@ -206,7 +233,7 @@
 			>
 				<a
 					href="/"
-					class="flex h-9 w-9 shrink-0 items-center justify-center no-underline transition-opacity hover:opacity-70"
+					class="flex h-9 w-9 shrink-0 items-center justify-center no-underline transition-opacity hover:opacity-70 active:scale-95"
 					style="color: var(--stage-chrome-mute)"
 					aria-label="Back to library"
 				>
@@ -215,17 +242,20 @@
 				<div class="min-w-0 flex-1 px-1">
 					<p
 						class="truncate font-display text-[15px] font-semibold tracking-tight sm:text-base"
-						style="color: var(--stage-chrome-fg)"
+						style="color: var(--stage-chrome-fg); font-family: var(--font-display)"
 					>
 						{book.title}
 					</p>
-					<p class="truncate font-ui text-[11px] uppercase tracking-[0.08em]" style="color: var(--stage-chrome-mute)">
-						{book.author}
+					<p
+						class="truncate font-ui text-[11px] tracking-wide"
+						style="color: var(--stage-chrome-mute)"
+					>
+						{subline}
 					</p>
 				</div>
 				<button
 					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70"
+					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70 active:scale-95"
 					style="color: var(--stage-chrome-mute)"
 					aria-label="Table of contents"
 					onclick={() => {
@@ -237,7 +267,7 @@
 				</button>
 				<button
 					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70"
+					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70 active:scale-95"
 					style="color: var(--stage-chrome-mute)"
 					aria-label="Typography and theme"
 					onclick={() => {
@@ -250,7 +280,7 @@
 			</div>
 		</header>
 
-		<div class="h-full w-full">
+		<div class="relative z-[1] h-full w-full">
 			{#if book.format === 'epub'}
 				<EpubReader
 					bind:this={epubRef}
@@ -260,6 +290,45 @@
 					onprogress={(f, loc, label) => scheduleSave(f, loc, label)}
 					ontoc={(items) => (toc = items)}
 				/>
+				<!-- Edge hit zones -->
+				{#if !focusMode}
+					<button
+						type="button"
+						class="absolute bottom-16 left-0 top-16 z-20 w-12 opacity-0 transition-opacity duration-200 hover:opacity-100 sm:w-16"
+						style="color: var(--stage-muted)"
+						aria-label="Previous page"
+						onclick={(e) => {
+							e.stopPropagation();
+							epubRef?.prev();
+							bumpChrome();
+						}}
+					>
+						<span
+							class="ml-2 flex h-10 w-10 items-center justify-center border backdrop-blur-sm"
+							style="border-color: var(--stage-rule); background: var(--stage-chrome)"
+						>
+							<CaretLeft size={18} weight="light" />
+						</span>
+					</button>
+					<button
+						type="button"
+						class="absolute bottom-16 right-0 top-16 z-20 flex w-12 justify-end opacity-0 transition-opacity duration-200 hover:opacity-100 sm:w-16"
+						style="color: var(--stage-muted)"
+						aria-label="Next page"
+						onclick={(e) => {
+							e.stopPropagation();
+							epubRef?.next();
+							bumpChrome();
+						}}
+					>
+						<span
+							class="mr-2 flex h-10 w-10 items-center justify-center border backdrop-blur-sm"
+							style="border-color: var(--stage-rule); background: var(--stage-chrome)"
+						>
+							<CaretRight size={18} weight="light" />
+						</span>
+					</button>
+				{/if}
 			{:else}
 				<TextReader
 					raw={textRaw}
@@ -271,14 +340,27 @@
 			{/if}
 		</div>
 
+		<!-- Bottom progress chip when chrome visible -->
+		{#if chromeVisible && !focusMode && !typeOpen && !tocOpen}
+			<div
+				class="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2 border px-3 py-1 font-ui text-[11px] tabular-nums backdrop-blur-md transition-opacity duration-300"
+				style="background: var(--stage-chrome); color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
+			>
+				{pct}%
+			</div>
+		{/if}
+
 		{#if typeOpen}
 			<div
-				class="absolute bottom-4 left-1/2 z-40 w-[min(100%-1.5rem,22rem)] -translate-x-1/2 border p-4 backdrop-blur-md"
+				class="absolute bottom-4 left-1/2 z-40 w-[min(100%-1.5rem,24rem)] -translate-x-1/2 border backdrop-blur-md"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 				role="dialog"
 				aria-label="Reading settings"
 			>
-				<div class="mb-3 flex items-center justify-between border-b pb-2" style="border-color: var(--stage-rule)">
+				<div
+					class="flex items-center justify-between border-b px-4 py-3"
+					style="border-color: var(--stage-rule)"
+				>
 					<p class="font-ui text-[11px] font-medium uppercase tracking-[0.12em]">Type & theme</p>
 					<button
 						type="button"
@@ -289,65 +371,94 @@
 						<X size={16} weight="light" />
 					</button>
 				</div>
-				<div class="mb-4 flex flex-wrap gap-1.5">
-					{#each themes as t (t.id)}
-						<button
-							type="button"
-							class="border px-3 py-1.5 font-ui text-xs font-medium transition-colors"
-							style={prefs.theme === t.id
-								? 'background: var(--stage-chrome-fg); color: var(--stage-chrome); border-color: var(--stage-chrome-fg)'
-								: 'background: transparent; color: var(--stage-chrome-mute); border-color: var(--stage-rule)'}
-							onclick={() => updatePrefs({ theme: t.id })}
-						>
-							{t.label}
-						</button>
-					{/each}
+
+				<!-- Live sample line -->
+				<div
+					class="border-b px-4 py-3"
+					style="border-color: var(--stage-rule); background: color-mix(in srgb, var(--stage-fg) 4%, transparent)"
+				>
+					<p
+						class="font-reading"
+						style="font-family: var(--font-reading); font-size: {prefs.fontSize}px; line-height: {prefs.lineHeight}; max-width: {prefs.measure}ch; color: var(--stage-chrome-fg)"
+					>
+						{sampleLine}
+					</p>
 				</div>
-				<label class="mb-3 block font-ui text-xs" style="color: var(--stage-chrome-mute)">
-					Size · {prefs.fontSize}px
-					<input
-						type="range"
-						min="14"
-						max="32"
-						step="1"
-						value={prefs.fontSize}
-						class="mt-1.5 w-full accent-current"
-						style="accent-color: var(--stage-chrome-fg)"
-						oninput={(e) =>
-							updatePrefs({ fontSize: Number((e.currentTarget as HTMLInputElement).value) })}
-					/>
-				</label>
-				<label class="mb-3 block font-ui text-xs" style="color: var(--stage-chrome-mute)">
-					Line height · {prefs.lineHeight.toFixed(2)}
-					<input
-						type="range"
-						min="1.4"
-						max="2.2"
-						step="0.05"
-						value={prefs.lineHeight}
-						class="mt-1.5 w-full"
-						style="accent-color: var(--stage-chrome-fg)"
-						oninput={(e) =>
-							updatePrefs({ lineHeight: Number((e.currentTarget as HTMLInputElement).value) })}
-					/>
-				</label>
-				<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
-					Measure · {prefs.measure}ch
-					<input
-						type="range"
-						min="45"
-						max="90"
-						step="1"
-						value={prefs.measure}
-						class="mt-1.5 w-full"
-						style="accent-color: var(--stage-chrome-fg)"
-						oninput={(e) =>
-							updatePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
-					/>
-				</label>
-				<p class="mt-3 border-t pt-2 font-ui text-[10px] uppercase tracking-[0.08em]" style="color: var(--stage-chrome-mute); border-color: var(--stage-rule)">
-					F focus · T contents · +/− size · Esc library
-				</p>
+
+				<div class="space-y-4 p-4">
+					<div class="flex flex-wrap gap-1.5">
+						{#each themes as t (t.id)}
+							<button
+								type="button"
+								class="theme-swatch"
+								style="width: 3.75rem; border-color: var(--stage-rule)"
+								aria-pressed={prefs.theme === t.id}
+								onclick={() => updatePrefs({ theme: t.id })}
+							>
+								<span class="theme-swatch-face" style="background: {t.bg}; height: 2.25rem">
+									<span
+										class="mx-auto mt-1.5 block h-0.5 w-6"
+										style="background: {t.fg}"
+									></span>
+								</span>
+								<span
+									class="theme-swatch-label"
+									style="color: var(--stage-chrome-mute)">{t.label}</span
+								>
+							</button>
+						{/each}
+					</div>
+					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
+						Size · <span class="tabular-nums">{prefs.fontSize}px</span>
+						<input
+							type="range"
+							min="14"
+							max="32"
+							step="1"
+							value={prefs.fontSize}
+							class="mt-1.5 w-full"
+							style="accent-color: var(--stage-chrome-fg)"
+							oninput={(e) =>
+								updatePrefs({ fontSize: Number((e.currentTarget as HTMLInputElement).value) })}
+						/>
+					</label>
+					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
+						Line height · <span class="tabular-nums">{prefs.lineHeight.toFixed(2)}</span>
+						<input
+							type="range"
+							min="1.4"
+							max="2.2"
+							step="0.05"
+							value={prefs.lineHeight}
+							class="mt-1.5 w-full"
+							style="accent-color: var(--stage-chrome-fg)"
+							oninput={(e) =>
+								updatePrefs({
+									lineHeight: Number((e.currentTarget as HTMLInputElement).value)
+								})}
+						/>
+					</label>
+					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
+						Measure · <span class="tabular-nums">{prefs.measure}ch</span>
+						<input
+							type="range"
+							min="45"
+							max="90"
+							step="1"
+							value={prefs.measure}
+							class="mt-1.5 w-full"
+							style="accent-color: var(--stage-chrome-fg)"
+							oninput={(e) =>
+								updatePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
+						/>
+					</label>
+					<p
+						class="border-t pt-2 font-ui text-[10px] uppercase tracking-[0.08em]"
+						style="color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
+					>
+						F focus · T contents · +/− size · Esc library
+					</p>
+				</div>
 			</div>
 		{/if}
 

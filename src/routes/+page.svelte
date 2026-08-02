@@ -8,6 +8,7 @@
 	import BookCard from '$lib/components/library/BookCard.svelte';
 	import CoverPlate from '$lib/components/library/CoverPlate.svelte';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
+	import X from 'phosphor-svelte/lib/X';
 
 	let books = $state<BookRecord[]>([]);
 	let progressMap = $state<Record<string, ProgressRecord>>({});
@@ -24,6 +25,17 @@
 			(b) => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
 		);
 	});
+
+	const inProgress = $derived(
+		filtered.filter((b) => (progressMap[b.id]?.fraction ?? 0) > 0.01 && (progressMap[b.id]?.fraction ?? 0) < 0.99)
+	);
+	const restShelf = $derived.by(() => {
+		const ids = new Set(inProgress.map((b) => b.id));
+		// when sparse, avoid double-listing last in both continue + shelf if only 1 book
+		return filtered.filter((b) => !ids.has(b.id));
+	});
+
+	const sparse = $derived(books.length > 0 && books.length <= 3 && !query.trim());
 
 	async function refresh() {
 		books = await listBooks();
@@ -64,21 +76,26 @@
 		await deleteBook(id);
 		await refresh();
 	}
+
+	function formatOpened(ts?: number) {
+		if (!ts) return '';
+		const d = new Date(ts);
+		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+	}
 </script>
 
 <svelte:head>
 	<title>Library · Lumen</title>
 </svelte:head>
 
-<div class="space-y-12 sm:space-y-16">
-	<!-- Masthead -->
-	<section class="animate-plate-in border-b border-rule pb-8">
+<div class="space-y-12 sm:space-y-14">
+	<!-- Masthead: no redundant kicker when library is the page -->
+	<section class="animate-plate-in">
 		<div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
 			<div class="max-w-2xl">
-				<p class="kicker mb-3">Library</p>
 				<h1
 					class="font-display text-[2.75rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[3.5rem]"
-					style="font-family: var(--font-display)"
+					style="font-family: var(--font-display); font-variation-settings: 'opsz' 72"
 				>
 					Your shelf
 				</h1>
@@ -98,11 +115,22 @@
 						type="search"
 						bind:value={query}
 						placeholder="Search titles or authors"
-						class="w-full border-0 border-b border-rule bg-transparent py-2.5 pl-7 pr-2 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink focus:outline-none"
+						class="w-full border-0 border-b border-rule bg-transparent py-2.5 pl-7 pr-8 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink focus:outline-none"
 					/>
+					{#if query}
+						<button
+							type="button"
+							class="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-ink-mute hover:text-ink"
+							aria-label="Clear search"
+							onclick={() => (query = '')}
+						>
+							<X size={14} weight="light" />
+						</button>
+					{/if}
 				</label>
 			{/if}
 		</div>
+		<div class="mt-8 h-px bg-rule"></div>
 	</section>
 
 	{#if error}
@@ -115,101 +143,143 @@
 		<div class="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each Array(5) as _, i (i)}
 				<div class="space-y-3">
-					<div class="aspect-[2/3] animate-pulse border border-rule bg-surface"></div>
-					<div class="h-3 w-3/4 animate-pulse bg-surface"></div>
-					<div class="h-2 w-1/2 animate-pulse bg-surface"></div>
+					<div class="cover-object bezel">
+						<div class="bezel-inner aspect-[2/3] skeleton"></div>
+					</div>
+					<div class="h-3 w-3/4 skeleton"></div>
+					<div class="h-2 w-1/2 skeleton"></div>
 				</div>
 			{/each}
 		</div>
 	{:else if books.length === 0}
 		<div class="animate-plate-in">
-			<ImportDropzone onfiles={handleFiles} />
+			<ImportDropzone onfiles={handleFiles} featured />
 		</div>
 		{#if importing}
 			<p class="text-center font-ui text-sm text-ink-mute">Importing…</p>
 		{/if}
 	{:else}
-		{#if last}
+		{#if last && !query.trim()}
 			{@const p = Math.round((progressMap[last.id]?.fraction || 0) * 100)}
-			<!-- Feature / continue — magazine lead story -->
+			{@const opened = formatOpened(progressMap[last.id]?.updatedAt ?? last.updatedAt)}
+			<!-- Feature / continue — magazine lead -->
 			<a
 				href="/read/{last.id}"
-				class="group animate-plate-in stagger-1 grid gap-6 border border-rule bg-paper p-0 no-underline transition-colors duration-200 hover:border-ink sm:grid-cols-[auto_1fr] sm:gap-0"
+				class="group animate-plate-in stagger-1 grid gap-0 border border-rule bg-paper no-underline transition-[border-color,box-shadow] duration-300 ease-[var(--ease-editorial)] hover:border-ink hover:shadow-[var(--shadow-plate-hover)] sm:grid-cols-[minmax(10rem,38%)_1fr]"
 			>
-				<div class="border-b border-rule sm:border-b-0 sm:border-r">
-					<div class="relative aspect-[2/3] w-full sm:h-[13.5rem] sm:w-[9rem] sm:aspect-auto">
-						<CoverPlate
-							title={last.title}
-							author={last.author}
-							coverDataUrl={last.coverDataUrl}
-						/>
+				<div
+					class="flex items-center justify-center border-b border-rule bg-surface/60 p-6 sm:border-b-0 sm:border-r sm:p-8 md:p-10"
+				>
+					<div class="cover-object cover-object-hero bezel w-full max-w-[11rem] sm:max-w-[13.5rem]">
+						<div class="bezel-inner relative aspect-[2/3]">
+							<CoverPlate
+								title={last.title}
+								author={last.author}
+								coverDataUrl={last.coverDataUrl}
+							/>
+						</div>
 					</div>
 				</div>
-				<div class="flex min-w-0 flex-col justify-center px-5 pb-6 pt-1 sm:px-8 sm:py-7">
-					<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-						<p class="kicker text-crimson" style="color: var(--color-crimson)">Continue reading</p>
-						<span class="font-ui text-[10px] uppercase tracking-[0.12em] text-ink-mute"
-							>{last.format}</span
-						>
-					</div>
+				<div class="flex min-w-0 flex-col justify-center px-6 py-8 sm:px-10 sm:py-12">
+					<p class="font-ui text-[11px] font-medium uppercase tracking-[0.14em] text-crimson">
+						Continue reading
+					</p>
 					<p
-						class="mt-2 font-display text-[1.65rem] font-semibold leading-[1.1] tracking-tight text-ink sm:text-[2rem]"
-						style="font-family: var(--font-display)"
+						class="mt-3 font-display text-[1.85rem] font-semibold leading-[1.08] tracking-tight text-ink sm:text-[2.35rem] md:text-[2.65rem]"
+						style="font-family: var(--font-display); font-variation-settings: 'opsz' 56"
 					>
 						{last.title}
 					</p>
-					<p class="mt-2 font-ui text-sm text-ink-soft">{last.author}</p>
+					<p class="mt-3 font-ui text-[15px] text-ink-soft">
+						{last.author}
+						{#if opened}
+							<span class="text-ink-mute"> · {opened}</span>
+						{/if}
+					</p>
 					{#if p > 0}
-						<div class="mt-5 flex max-w-xs items-center gap-3">
-							<div class="h-px flex-1 bg-rule">
-								<div class="h-px bg-ink" style="width: {p}%"></div>
+						<div class="mt-7 flex max-w-sm items-center gap-3">
+							<div class="h-[3px] flex-1 bg-rule">
+								<div
+									class="h-[3px] bg-ink transition-[width] duration-500 ease-[var(--ease-editorial)]"
+									style="width: {p}%"
+								></div>
 							</div>
 							<span class="font-ui text-xs tabular-nums text-ink-mute">{p}%</span>
 						</div>
 					{/if}
 					<span
-						class="mt-5 inline-flex w-fit items-center gap-2 border-b border-ink pb-0.5 font-ui text-[13px] font-medium text-ink transition-opacity group-hover:opacity-70"
+						class="mt-7 inline-flex w-fit items-center gap-2 border-b border-ink pb-0.5 font-ui text-[13px] font-medium text-ink transition-opacity duration-200 group-hover:opacity-70"
 					>
-						Resume reading →
+						Resume reading
+						<span aria-hidden="true">→</span>
 					</span>
 				</div>
 			</a>
 		{/if}
 
-		<div class="animate-plate-in stagger-2 space-y-6">
-			<div class="flex items-baseline justify-between gap-4 border-b border-rule pb-3">
-				<h2
-					class="font-display text-2xl font-semibold tracking-tight text-ink"
-					style="font-family: var(--font-display)"
-				>
-					{filtered.length === books.length ? 'All books' : 'Matches'}
-				</h2>
-				<p class="font-ui text-xs uppercase tracking-[0.1em] text-ink-mute">
-					{filtered.length}
-					{filtered.length === 1 ? 'title' : 'titles'}
-					{#if importing}
-						· importing…
+		{@const shelfBooks = sparse && last && !query.trim()
+			? restShelf.filter((b) => b.id !== last!.id)
+			: query.trim()
+				? filtered
+				: restShelf.length
+					? restShelf
+					: filtered.filter((b) => !last || b.id !== last.id || filtered.length > 1)}
+
+		{#if shelfBooks.length > 0 || query.trim()}
+			<div class="animate-plate-in stagger-2 space-y-6">
+				<div class="flex items-baseline justify-between gap-4">
+					<h2
+						class="font-display text-2xl font-semibold tracking-tight text-ink sm:text-[1.75rem]"
+						style="font-family: var(--font-display)"
+					>
+						{query.trim()
+							? 'Matches'
+							: inProgress.length && !sparse
+								? 'Also on the shelf'
+								: sparse
+									? 'On the shelf'
+									: 'All books'}
+					</h2>
+					{#if !sparse || query.trim()}
+						<p class="font-ui text-xs tabular-nums text-ink-mute">
+							{query.trim() ? filtered.length : shelfBooks.length}
+							{(query.trim() ? filtered.length : shelfBooks.length) === 1 ? 'title' : 'titles'}
+							{#if importing}
+								<span class="text-ink-mute"> · importing…</span>
+							{/if}
+						</p>
 					{/if}
-				</p>
-			</div>
-			<div class="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-				{#each filtered as book, i (book.id)}
-					<div class="relative">
-						<BookCard {book} progress={progressMap[book.id]} ondelete={handleDelete} index={i} />
+				</div>
+				<div class="h-px bg-rule"></div>
+
+				{#if query.trim() && filtered.length === 0}
+					<p class="font-ui text-sm text-ink-mute">No titles match “{query}”.</p>
+				{:else}
+					<div
+						class="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 md:grid-cols-4 {sparse
+							? 'lg:grid-cols-4'
+							: 'lg:grid-cols-5'}"
+					>
+						{#each query.trim() ? filtered : shelfBooks as book, i (book.id)}
+							<BookCard {book} progress={progressMap[book.id]} ondelete={handleDelete} index={i} />
+						{/each}
 					</div>
-				{/each}
+				{/if}
 			</div>
-		</div>
+		{/if}
 
 		<section class="animate-plate-in stagger-3 pt-2">
-			<div class="mb-4 border-b border-rule pb-3">
-				<h2
-					class="font-display text-2xl font-semibold tracking-tight text-ink"
-					style="font-family: var(--font-display)"
-				>
-					Add more
-				</h2>
-			</div>
+			{#if !sparse}
+				<div class="mb-4">
+					<h2
+						class="font-display text-2xl font-semibold tracking-tight text-ink"
+						style="font-family: var(--font-display)"
+					>
+						Add more
+					</h2>
+					<div class="mt-3 h-px bg-rule"></div>
+				</div>
+			{/if}
 			<ImportDropzone onfiles={handleFiles} compact />
 		</section>
 	{/if}

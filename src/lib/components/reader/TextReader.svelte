@@ -48,14 +48,14 @@
 
 <div
 	bind:this={scroller}
-	class="reader-scroll h-full overflow-y-auto px-[var(--reader-margin,1.5rem)] py-16 sm:py-20"
+	class="reader-scroll h-full overflow-y-auto px-[var(--reader-margin,1.5rem)] py-20 sm:py-24"
 	style:--reader-size="{prefs.fontSize}px"
 	style:--reader-lh={prefs.lineHeight}
 	style:--reader-measure="{prefs.measure}ch"
 	style:--reader-margin="{prefs.margin}px"
 	onscroll={onScroll}
 >
-	<article class="reader-prose">
+	<article class="reader-prose relative z-[1]">
 		{@html html}
 	</article>
 </div>

@@ -4,10 +4,13 @@
 
 	let {
 		onfiles,
-		compact = false
+		compact = false,
+		featured = false
 	}: {
 		onfiles: (files: FileList | File[]) => void;
 		compact?: boolean;
+		/** Full empty-state hero treatment */
+		featured?: boolean;
 	} = $props();
 
 	let dragging = $state(false);
@@ -31,9 +34,13 @@
 <div
 	role="button"
 	tabindex="0"
-	class="relative border transition-colors duration-200 ease-[var(--ease-editorial)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink {dragging
-		? 'border-ink bg-surface'
-		: 'border-rule bg-paper hover:border-ink'} {compact ? 'p-6 sm:p-8' : 'p-10 sm:p-14'}"
+	class="import-frame relative border border-rule bg-paper outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink {dragging
+		? 'is-dragging'
+		: 'hover:border-ink/60'} {featured
+		? 'p-12 sm:p-16'
+		: compact
+			? 'p-6 sm:p-8'
+			: 'p-10 sm:p-14'}"
 	ondragenter={(e) => {
 		e.preventDefault();
 		dragging = true;
@@ -62,12 +69,23 @@
 	/>
 	<div class="pointer-events-none flex flex-col items-center text-center">
 		<span
-			class="mb-4 flex h-11 w-11 items-center justify-center border border-rule bg-newsprint"
+			class="mb-4 flex h-11 w-11 items-center justify-center border border-rule bg-newsprint transition-transform duration-200 {dragging
+				? 'scale-105 border-ink'
+				: ''}"
 		>
 			<UploadSimple size={20} weight="light" class="text-ink" />
 		</span>
-		{#if !compact}
-			<p class="kicker mb-2">Import</p>
+		{#if featured}
+			<h2
+				class="mb-3 font-display text-[2rem] font-semibold tracking-tight text-ink sm:text-[2.5rem]"
+				style="font-family: var(--font-display); font-variation-settings: 'opsz' 48"
+			>
+				Drop a manuscript
+			</h2>
+			<p class="mb-8 max-w-md font-ui text-[15px] leading-relaxed text-ink-soft">
+				EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.
+			</p>
+		{:else if !compact}
 			<h2
 				class="mb-2 font-display text-[1.65rem] font-semibold tracking-tight text-ink sm:text-3xl"
 				style="font-family: var(--font-display)"
@@ -78,7 +96,9 @@
 				EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.
 			</p>
 		{:else}
-			<p class="mb-5 font-ui text-sm text-ink-soft">Drop EPUB, Markdown, or text — or browse</p>
+			<p class="mb-5 font-ui text-sm text-ink-soft">
+				{dragging ? 'Release to import' : 'Drop EPUB, Markdown, or text — or browse'}
+			</p>
 		{/if}
 		<span class="pointer-events-auto" role="presentation">
 			<Button

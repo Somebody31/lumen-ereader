@@ -19,7 +19,7 @@ const button = readFileSync(join(root, 'src/lib/components/ui/Button.svelte'), '
 describe('editorial design system', () => {
 	test('EDITORIAL tokens declare broadsheet identity', () => {
 		expect(EDITORIAL.world).toBe('broadsheet');
-		expect(EDITORIAL.palette.newsprint).toBe('#F3F2ED');
+		expect(EDITORIAL.palette.newsprint.toLowerCase()).toBe('#f0efe9');
 		expect(EDITORIAL.palette.ink).toBe('#0B0B0B');
 		expect(EDITORIAL.palette.crimson).toBe('#7A1C1C');
 		expect(EDITORIAL.typography.display).toContain('Newsreader');
@@ -92,8 +92,7 @@ describe('editorial design system', () => {
 	});
 
 	test('sample cover is broadsheet plate (not atelier indigo seal)', () => {
-		expect(seed).toContain('lumen-sample-v3');
-		expect(seed).toContain('#F3F2ED');
+		expect(seed).toContain('lumen-sample-v4');
 		expect(seed).toContain('#0B0B0B');
 		expect(seed).toContain('#7A1C1C');
 		expect(seed).not.toContain('#1F3A68');
@@ -101,6 +100,27 @@ describe('editorial design system', () => {
 	});
 
 	test('theme-color is newsprint', () => {
-		expect(layout).toContain('#F3F2ED');
+		expect(layout).toContain('#F0EFE9');
+	});
+
+	test('cover materiality classes ship in app.css', () => {
+		expect(appCss).toContain('.cover-object');
+		expect(appCss).toContain('.grain');
+		expect(appCss).toContain('--shadow-cover');
+		expect(appCss).toContain('.reader-stage');
+		expect(appCss).toContain('.theme-swatch');
+		expect(appCss).toContain('.import-frame');
+	});
+
+	test('library and settings use craft patterns', () => {
+		expect(library).toContain('cover-object-hero');
+		expect(library).toContain('Continue reading');
+		expect(shell).toContain('grain');
+		const settings = readFileSync(join(root, 'src/routes/settings/+page.svelte'), 'utf8');
+		expect(settings).toContain('theme-swatch');
+		expect(settings).toContain('Preview');
+		expect(readerPage).toContain('subline');
+		expect(readerPage).toContain('reader-stage');
+		expect(readerPage).toContain('sampleLine');
 	});
 });

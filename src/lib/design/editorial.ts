@@ -5,13 +5,13 @@
 export const EDITORIAL = {
 	world: 'broadsheet',
 	palette: {
-		newsprint: '#F3F2ED',
-		paper: '#FFFFFF',
-		surface: '#EBEAE4',
+		newsprint: '#F0EFE9',
+		paper: '#FAF9F6',
+		surface: '#E5E4DE',
 		ink: '#0B0B0B',
 		inkSoft: '#3A3A38',
 		inkMute: '#6A6A66',
-		rule: '#C9C8C2',
+		rule: '#C4C3BC',
 		ruleStrong: '#0B0B0B',
 		/** Deep news crimson — rare emphasis, not SaaS accent scatter */
 		crimson: '#7A1C1C',
