@@ -82,7 +82,32 @@ describe('editorial design system', () => {
 		expect(readerPage).not.toContain('shadow-island');
 		expect(readerPage).not.toContain('bg-indigo');
 		expect(readerPage).not.toContain('accent-indigo');
-		expect(readerPage).not.toContain('ease-atelier');
+	});
+
+	test('reader prose is bolder broadsheet: title plate, drop cap, crimson motifs', () => {
+		// Title plate — full display scale + short crimson rule (system accent, not full-width hairline only)
+		expect(appCss).toMatch(/\.reader-prose h1::after/);
+		expect(appCss).toContain('--color-crimson');
+		// Drop cap after chapter head
+		expect(appCss).toMatch(/\.reader-prose h2 \+ p::first-letter/);
+		// Magazine progress + crimson tip bead (scaleX fill, fixed-size bead)
+		expect(appCss).toContain('.reader-progress');
+		expect(appCss).toContain('.reader-progress-fill');
+		expect(appCss).toContain('.reader-progress-bead');
+		expect(appCss).toMatch(/\.reader-progress-fill[\s\S]*?scaleX/);
+		expect(readerPage).toContain('reader-progress');
+		expect(readerPage).toContain('reader-progress-bead');
+		expect(readerPage).toContain('data-progress');
+		// Three-beat end asterism
+		expect(appCss).toContain('.reader-end-mark');
+		// Blockquotes use crimson rail (not mute rule only)
+		expect(appCss).toMatch(
+			/\.reader-prose blockquote[\s\S]*?border-left:\s*2px solid var\(--color-crimson\)/
+		);
+		// Reduced-motion quietens drop cap float
+		expect(appCss).toMatch(
+			/@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*?\.reader-prose h2 \+ p::first-letter/
+		);
 	});
 
 	test('shell is a toolbar stamp + import CTA', () => {

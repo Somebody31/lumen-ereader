@@ -91,5 +91,9 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('letter-spacing');
 		expect(src).toContain('hyphens');
 		expect(src).toContain('Newsreader');
+		// Bolder parity with text prose
+		expect(src).toContain("'h2 + p::first-letter'");
+		expect(src).toContain("'h1 + p'");
+		expect(src).toMatch(/border-left.*link|border-left.*\$\{link\}/);
 	});
 });

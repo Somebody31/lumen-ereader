@@ -309,7 +309,7 @@
 	font-variation-settings: 'opsz' 48;
 }
 
-/* Book body — long-form reading surface */
+/* Book body — long-form reading surface (broadsheet column at full strength) */
 .reader-prose {
 	font-family: var(--reader-font, var(--font-reading));
 	color: var(--stage-fg);
@@ -327,7 +327,6 @@
 	font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 0, 'tnum' 0, 'calt' 1;
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 14;
-	/* Soft ink — slightly less harsh than pure pure white on black */
 	text-rendering: optimizeLegibility;
 }
 
@@ -337,39 +336,61 @@
 .reader-prose h4 {
 	font-family: var(--font-display);
 	font-weight: 600;
-	letter-spacing: -0.02em;
-	line-height: 1.18;
-	margin: 1.75em 0 0.5em;
+	letter-spacing: -0.025em;
+	line-height: 1.12;
+	margin: 2.1em 0 0.55em;
 	text-align: left;
 	hyphens: none;
 	-webkit-hyphens: none;
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 48;
-	/* Heads break column rhythm deliberately */
 	text-wrap: balance;
+	color: var(--stage-fg);
 }
 
+/* Title plate — display at broadsheet scale, crimson rule (system accent) */
 .reader-prose h1 {
-	font-size: 1.72em;
-	margin-top: 0;
-	padding-bottom: 0.35em;
-	border-bottom: 1px solid color-mix(in srgb, var(--stage-fg) 12%, transparent);
+	font-size: clamp(2.05rem, 5.2vw, 2.85rem);
+	font-weight: 600;
+	letter-spacing: -0.03em;
+	line-height: 0.98;
+	margin-top: 0.15em;
+	margin-bottom: 0.55em;
+	padding-bottom: 0;
+	border-bottom: none;
+	font-variation-settings: 'opsz' 72;
 }
+.reader-prose h1::after {
+	content: '';
+	display: block;
+	width: 3.25rem;
+	height: 2px;
+	margin-top: 0.85em;
+	background: var(--color-crimson);
+	border-radius: 1px;
+}
+
+/* Chapter heads — clear scale step under the title plate */
 .reader-prose h2 {
-	font-size: 1.38em;
+	font-size: clamp(1.45rem, 2.8vw, 1.85rem);
+	letter-spacing: -0.028em;
+	font-variation-settings: 'opsz' 48;
+	margin-top: 2.35em;
+	padding-top: 0.15em;
 }
 .reader-prose h3 {
-	font-size: 1.18em;
+	font-size: 1.28em;
+	font-variation-settings: 'opsz' 36;
 }
 .reader-prose h4 {
-	font-size: 1.05em;
+	font-size: 1.08em;
 	font-weight: 600;
-	letter-spacing: -0.01em;
+	letter-spacing: -0.015em;
+	font-variation-settings: 'opsz' 28;
 }
 
 .reader-prose p {
-	margin: 0 0 var(--reader-para, 0.95em);
-	/* Comfortable book measure feel */
+	margin: 0 0 var(--reader-para, 1.05em);
 	text-wrap: pretty;
 }
 
@@ -377,18 +398,52 @@
 	margin-bottom: 0;
 }
 
-/* First paragraph after a heading sits tighter */
-.reader-prose h1 + p,
+/* Byline under title — italic display, not body */
+.reader-prose h1 + p {
+	font-family: var(--font-display);
+	font-style: italic;
+	font-size: 1.02em;
+	font-weight: 400;
+	line-height: 1.45;
+	color: var(--stage-muted);
+	letter-spacing: 0.005em;
+	margin-top: 0.35em;
+	margin-bottom: 2em;
+	padding-bottom: 1.35em;
+	border-bottom: 1px solid color-mix(in srgb, var(--stage-fg) 14%, transparent);
+	font-variation-settings: 'opsz' 18;
+	font-optical-sizing: auto;
+}
+
+/* First paragraph after a chapter head sits tighter + drop cap */
 .reader-prose h2 + p,
 .reader-prose h3 + p,
 .reader-prose h4 + p {
-	margin-top: 0.15em;
+	margin-top: 0.2em;
+}
+
+.reader-prose h2 + p::first-letter {
+	font-family: var(--font-display);
+	font-weight: 500;
+	font-size: 3.35em;
+	line-height: 0.82;
+	float: left;
+	padding-right: 0.1em;
+	padding-top: 0.06em;
+	color: var(--stage-fg);
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 72;
+	/* Avoid drop-cap when user prefers reduced motion / small measure is ok */
 }
 
 .reader-prose a {
 	color: var(--color-crimson);
-	text-underline-offset: 0.18em;
+	text-underline-offset: 0.2em;
 	text-decoration-thickness: from-font;
+	text-decoration-color: color-mix(in srgb, var(--color-crimson) 55%, transparent);
+}
+.reader-prose a:hover {
+	text-decoration-color: var(--color-crimson);
 }
 
 .reader-prose em,
@@ -402,39 +457,60 @@
 }
 
 .reader-prose blockquote {
-	margin: 1.4em 0;
-	padding: 0.15em 0 0.15em 1.05em;
-	border-left: 2px solid color-mix(in srgb, var(--stage-fg) 22%, transparent);
+	margin: 1.75em 0;
+	padding: 0.35em 0 0.35em 1.15em;
+	border-left: 2px solid var(--color-crimson);
 	color: var(--stage-muted);
 	font-style: italic;
-	font-variation-settings: 'opsz' 14;
+	font-size: 1.04em;
+	font-variation-settings: 'opsz' 16;
 }
 
 .reader-prose blockquote p {
 	margin-bottom: 0.65em;
 }
 
+/* Section break — short rule with crimson center bead */
 .reader-prose hr {
 	border: 0;
+	height: 0;
+	margin: 2.5em auto;
+	max-width: 5.5rem;
+	position: relative;
+	background: transparent;
+}
+.reader-prose hr::before {
+	content: '';
+	display: block;
 	height: 1px;
-	margin: 2em auto;
-	max-width: 4rem;
-	background: color-mix(in srgb, var(--stage-fg) 18%, transparent);
+	background: color-mix(in srgb, var(--stage-fg) 22%, transparent);
+}
+.reader-prose hr::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--color-crimson);
+	transform: translate(-50%, -50%);
+	box-shadow: 0 0 0 3px var(--stage-bg);
 }
 
 .reader-prose ul,
 .reader-prose ol {
-	margin: 0 0 var(--reader-para, 0.95em);
+	margin: 0 0 var(--reader-para, 1.05em);
 	padding-left: 1.35em;
 }
 
 .reader-prose li {
-	margin-bottom: 0.35em;
-	padding-left: 0.15em;
+	margin-bottom: 0.4em;
+	padding-left: 0.2em;
 }
 
 .reader-prose li::marker {
-	color: color-mix(in srgb, var(--stage-fg) 45%, transparent);
+	color: color-mix(in srgb, var(--color-crimson) 55%, var(--stage-fg));
 }
 
 .reader-prose code {
@@ -474,7 +550,7 @@
 	margin-top: 0;
 }
 
-/* Soft column set — vignette on sides of stage */
+/* Soft column set — vignette frames the page like a booth stage */
 .reader-stage {
 	position: relative;
 	isolation: isolate;
@@ -487,24 +563,71 @@
 	inset: 0;
 	z-index: 5;
 	background: radial-gradient(
-		ellipse 82% 88% at 50% 42%,
-		transparent 48%,
+		ellipse 78% 86% at 50% 40%,
+		transparent 42%,
 		var(--stage-vignette, transparent) 100%
 	);
-	opacity: 0.72;
+	opacity: 0.85;
 }
 
 .reader-stage.is-focus::after {
-	opacity: 0.92;
+	opacity: 1;
 }
 
 .reader-stage.is-focus .reader-prose {
 	max-width: min(var(--reader-measure, 68ch), 74ch);
 }
 
-/* Slight lift so body text clears the floating % chip */
 .reader-stage .reader-prose {
 	padding-bottom: 0.5rem;
+}
+
+/* Top progress — magazine hairline with crimson tip (matches continue-lead) */
+.reader-progress {
+	pointer-events: none;
+	position: absolute;
+	inset-inline: 0;
+	top: 0;
+	z-index: 50;
+	height: 2px;
+	background: color-mix(in srgb, var(--stage-fg) 10%, transparent);
+	--reader-progress: 0;
+}
+.reader-progress-fill {
+	height: 100%;
+	width: 100%;
+	min-width: 0;
+	background: var(--stage-progress);
+	transform: scaleX(var(--reader-progress, 0));
+	transform-origin: left center;
+	transition: transform 320ms var(--ease-editorial);
+	will-change: transform;
+}
+/* Bead outside the scaled fill so diameter stays 5px */
+.reader-progress-bead {
+	position: absolute;
+	top: 50%;
+	left: calc(var(--reader-progress, 0) * 100%);
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--color-crimson);
+	transform: translate(-50%, -50%);
+	box-shadow: 0 0 0 2px var(--stage-bg);
+	opacity: 0;
+	transition:
+		left 320ms var(--ease-editorial),
+		opacity 200ms ease;
+}
+.reader-progress[data-progress]:not([data-progress='0']) .reader-progress-bead {
+	opacity: 1;
+}
+
+/* Chrome bar — slightly more present when revealed */
+.reader-chrome-bar {
+	box-shadow:
+		0 1px 0 color-mix(in srgb, var(--stage-fg) 6%, transparent),
+		0 12px 32px color-mix(in srgb, var(--stage-bg) 55%, transparent);
 }
 
 /* Scroll pad — room under chrome, book-like end space */
@@ -522,16 +645,39 @@
 	border-radius: 4px;
 }
 
+/* End of book — three-beat asterism, center crimson */
 .reader-end-mark {
 	display: flex;
 	justify-content: center;
-	padding: 2.5rem 0 1rem;
+	align-items: center;
+	gap: 0.65rem;
+	padding: 3.25rem 0 1.5rem;
 }
 .reader-end-mark span {
 	display: block;
-	width: 2.5rem;
-	height: 1px;
-	background: color-mix(in srgb, var(--stage-fg) 22%, transparent);
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--stage-fg) 28%, transparent);
+}
+.reader-end-mark span:nth-child(2) {
+	width: 5px;
+	height: 5px;
+	background: var(--color-crimson);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.reader-prose h2 + p::first-letter {
+		float: none;
+		font-size: inherit;
+		line-height: inherit;
+		padding: 0;
+		font-weight: inherit;
+	}
+	.reader-progress-fill {
+		transition: none;
+		will-change: auto;
+	}
 }
 
 .epub-view {

@@ -340,20 +340,19 @@
 		: ''}"
 	style="background: var(--stage-bg); color: var(--stage-fg);"
 >
-	<!-- progress hairline -->
+	<!-- progress hairline + crimson bead (broadsheet meter) -->
 	<div
-		class="pointer-events-none absolute inset-x-0 top-0 z-50 h-px"
-		style="background: color-mix(in srgb, var(--stage-fg) 12%, transparent)"
+		class="reader-progress"
 		role="progressbar"
 		aria-valuenow={pct}
 		aria-valuemin={0}
 		aria-valuemax={100}
 		aria-label="Reading progress"
+		data-progress={pct}
+		style="--reader-progress: {pct > 0 ? Math.max(fraction, 0.012) : 0}"
 	>
-		<div
-			class="h-full transition-[width] duration-300 ease-[var(--ease-editorial)]"
-			style="width: {fraction * 100}%; background: var(--stage-progress)"
-		></div>
+		<div class="reader-progress-fill"></div>
+		<div class="reader-progress-bead" aria-hidden="true"></div>
 	</div>
 
 	{#if sizeBanner && !loading && !error && chromeVisible && !focusMode}
@@ -396,7 +395,7 @@
 				: 'pointer-events-none -translate-y-1 opacity-0'}"
 		>
 			<div
-				class="mx-3 flex min-w-0 items-center gap-0.5 rounded-lg border px-2 py-1.5 backdrop-blur-md sm:mx-4"
+				class="reader-chrome-bar mx-3 flex min-w-0 items-center gap-0.5 rounded-lg border px-2.5 py-2 backdrop-blur-md sm:mx-4"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 			>
 				<a
@@ -407,9 +406,9 @@
 				>
 					<ArrowLeft size={18} weight="light" />
 				</a>
-				<div class="min-w-0 flex-1 px-1">
+				<div class="min-w-0 flex-1 px-1.5">
 					<p
-						class="type-chrome-title truncate text-[15px] sm:text-base"
+						class="type-chrome-title truncate text-base sm:text-[1.05rem]"
 						style="color: var(--stage-chrome-fg)"
 					>
 						{formatDisplayTitle(book.title)}
@@ -535,8 +534,8 @@
 
 		{#if chromeVisible && !focusMode && !typeOpen && !tocOpen}
 			<div
-				class="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full border px-3.5 py-1.5 font-ui text-[11px] tabular-nums shadow-sm backdrop-blur-md transition-opacity duration-300"
-				style="background: color-mix(in srgb, var(--stage-chrome) 92%, transparent); color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
+				class="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full border px-4 py-1.5 font-ui text-[12px] font-medium tabular-nums tracking-wide shadow-sm backdrop-blur-md transition-opacity duration-300"
+				style="background: color-mix(in srgb, var(--stage-chrome) 94%, transparent); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 			>
 				{pct}%
 			</div>

@@ -100,39 +100,69 @@
 				'font-family':
 					'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif',
 				'font-weight': '600',
-				'letter-spacing': '-0.02em',
-				'line-height': '1.18',
+				'letter-spacing': '-0.025em',
+				'line-height': '1.12',
 				'text-align': 'left',
 				hyphens: 'none',
-				'margin-top': '1.6em',
-				'margin-bottom': '0.5em',
-				'font-optical-sizing': 'auto'
+				'margin-top': '2em',
+				'margin-bottom': '0.55em',
+				'font-optical-sizing': 'auto',
+				color: fg
 			},
 			h1: {
-				'font-size': '1.72em',
-				'margin-top': '0.4em',
-				'padding-bottom': '0.35em',
+				'font-size': '2.15em',
+				'letter-spacing': '-0.03em',
+				'line-height': '0.98',
+				'margin-top': '0.25em',
+				'margin-bottom': '0.55em',
+				'padding-bottom': '0.55em',
+				'border-bottom': `2px solid ${link}`,
+				'max-width': '18ch'
+			},
+			h2: {
+				'font-size': '1.55em',
+				'letter-spacing': '-0.028em',
+				'margin-top': '2.2em'
+			},
+			h3: { 'font-size': '1.28em' },
+			h4: { 'font-size': '1.08em' },
+			'h1 + p': {
+				'font-family':
+					'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif',
+				'font-style': 'italic',
+				'font-size': '1.02em',
+				color: mute,
+				'margin-bottom': '1.75em',
+				'padding-bottom': '1.15em',
 				'border-bottom': `1px solid ${rule}`
 			},
-			h2: { 'font-size': '1.38em' },
-			h3: { 'font-size': '1.18em' },
-			h4: { 'font-size': '1.05em' },
+			'h2 + p::first-letter': {
+				'font-family':
+					'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif',
+				'font-weight': '500',
+				'font-size': '3.2em',
+				'line-height': '0.82',
+				float: 'left',
+				'padding-right': '0.1em',
+				'padding-top': '0.06em'
+			},
 			a: {
 				color: link,
-				'text-underline-offset': '0.18em'
+				'text-underline-offset': '0.2em'
 			},
 			blockquote: {
-				margin: '1.4em 0',
-				padding: '0.15em 0 0.15em 1.05em',
-				'border-left': `2px solid ${rule}`,
+				margin: '1.75em 0',
+				padding: '0.35em 0 0.35em 1.15em',
+				'border-left': `2px solid ${link}`,
 				color: mute,
-				'font-style': 'italic'
+				'font-style': 'italic',
+				'font-size': '1.04em'
 			},
 			hr: {
 				border: '0',
 				height: '1px',
-				margin: '2em auto',
-				'max-width': '4rem',
+				margin: '2.5em auto',
+				'max-width': '5.5rem',
 				background: rule
 			},
 			'ul, ol': {

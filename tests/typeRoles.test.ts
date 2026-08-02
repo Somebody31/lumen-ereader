@@ -84,5 +84,9 @@ describe('TYPE_ROLES map (shipped design rules)', () => {
 		expect(appCss).toContain('orphans: 3');
 		expect(appCss).toContain('widows: 3');
 		expect(appCss).toContain('text-wrap: pretty');
+		// Bolder: display opsz at title plate; byline is italic display
+		expect(appCss).toMatch(/\.reader-prose h1[\s\S]*?font-variation-settings:\s*'opsz' 72/);
+		expect(appCss).toMatch(/\.reader-prose h1 \+ p[\s\S]*?font-family:\s*var\(--font-display\)/);
+		expect(appCss).toMatch(/\.reader-prose h1 \+ p[\s\S]*?font-style:\s*italic/);
 	});
 });

@@ -163,8 +163,10 @@
 			{#if bottomSpacer > 0}
 				<div style="height: {bottomSpacer}px" aria-hidden="true"></div>
 			{/if}
-			<!-- book end breathing room -->
+			<!-- book end breathing room — three-beat asterism -->
 			<div class="reader-end-mark" aria-hidden="true">
+				<span></span>
+				<span></span>
 				<span></span>
 			</div>
 		</article>
