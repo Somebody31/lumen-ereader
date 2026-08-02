@@ -154,16 +154,21 @@ describe('book rendering surfaces', () => {
 
 	test('EpubReader themes heads, links, blockquotes with prefs', () => {
 		const src = read('src/lib/components/reader/EpubReader.svelte');
-		expect(src).toContain('bodyTheme');
+		// Serialized CSS with !important so publisher styles cannot shove layout
+		expect(src).toContain('buildThemeCss');
+		expect(src).toContain('registerCss');
 		expect(src).toContain('fontStack(prefs.fontFamily)');
-		expect(src).toContain("'h1, h2, h3, h4'");
 		expect(src).toContain('blockquote');
 		expect(src).toContain('letter-spacing');
 		expect(src).toContain('hyphens');
 		expect(src).toContain('Newsreader');
-		expect(src).toContain("'h2 + p::first-letter'");
-		expect(src).toContain("'h1 + p'");
-		expect(src).toMatch(/border-left.*link|border-left.*\$\{link\}/);
+		expect(src).toContain('h1 + p');
+		expect(src).toMatch(/border-left.*\$\{link\}/);
+		// Center measure via side padding — not body max-width (breaks epubjs expand)
+		expect(src).toContain('calc((100% - ${measure}ch) / 2)');
+		// Drop caps float-none — floats break continuous reflow
+		expect(src).toMatch(/p::first-letter[\s\S]*?float:\s*none/);
+		expect(src).toContain("spread: 'none'");
 		// Open zip via ArrayBuffer (object URLs request META-INF from site origin)
 		expect(src).toContain('arrayBuffer');
 		expect(src).toContain('resolveEpub');
