@@ -166,11 +166,12 @@
 	--stage-bg: var(--color-stage-paper);
 	--stage-fg: var(--color-stage-paper-ink);
 	--stage-muted: #5a5a56;
+	/* Light chrome: use stage paper ink — shell --color-ink is ivory (nocturne) and vanishes on white */
 	--stage-chrome: rgba(255, 255, 255, 0.96);
-	--stage-chrome-fg: var(--color-ink);
-	--stage-chrome-mute: var(--color-ink-mute);
-	--stage-rule: var(--color-rule);
-	--stage-progress: var(--color-ink);
+	--stage-chrome-fg: var(--color-stage-paper-ink);
+	--stage-chrome-mute: #5a5a56;
+	--stage-rule: #d8d5cc;
+	--stage-progress: var(--color-stage-paper-ink);
 	--stage-vignette: rgba(40, 36, 28, 0.08);
 }
 

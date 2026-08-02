@@ -53,6 +53,18 @@ describe('editorial design system', () => {
 		expect(appCss).toContain('.reader-prose');
 	});
 
+	test('paper stage chrome uses dark paper ink, not shell ivory', () => {
+		// Shell --color-ink is light (#F0EFE9); paper chrome must use --color-stage-paper-ink
+		const paperBlock = appCss.match(/\.stage-paper\s*\{[^}]+\}/)?.[0] ?? '';
+		expect(paperBlock).toContain('--stage-chrome-fg: var(--color-stage-paper-ink)');
+		expect(paperBlock).toContain('--stage-progress: var(--color-stage-paper-ink)');
+		expect(paperBlock).not.toMatch(/--stage-chrome-fg:\s*var\(--color-ink\)/);
+		expect(paperBlock).not.toMatch(/--stage-progress:\s*var\(--color-ink\)/);
+		// Sepia already pairs light chrome with dark stage-sepia-ink
+		const sepiaBlock = appCss.match(/\.stage-sepia\s*\{[^}]+\}/)?.[0] ?? '';
+		expect(sepiaBlock).toContain('--stage-chrome-fg: var(--color-stage-sepia-ink)');
+	});
+
 	test('reader chrome uses hairline editorial language, not pill islands', () => {
 		expect(readerPage).toContain('ease-editorial');
 		expect(readerPage).toContain('border-color: var(--stage-rule)');
