@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { flattenToc, resolveTocTarget } from '$lib/client/epubNav';
 	import { fontStack, type ReaderPrefs } from '$lib/client/types';
 	/* Absolute URLs so @font-face works inside epubjs iframes (parent page fonts do not) */
 	import literataWoff2 from '@fontsource-variable/literata/files/literata-latin-opsz-normal.woff2?url';
@@ -940,19 +941,136 @@ pre {
 	export async function prev() {
 		await rendition?.prev();
 	}
-	export async function goTo(href: string) {
-		if (!rendition) return;
+
+	/**
+	 * After display, pin the continuous scroller to the target section.
+	 * epubjs continuous moveTo only scrolls when distY > 0 (relative scrollBy),
+	 * so returning to an earlier chapter or a section already in the stack often no-ops.
+	 */
+	function forceScrollToResolved(resolved: { href?: string; index?: number; target: string | number }) {
 		try {
-			await rendition.display(href);
-			await fillContinuous();
-			// Keep iframe expanded after manual nav
-			requestAnimationFrame(() => {
-				reexpandViews();
-				resizeToHost();
-			});
-		} catch (e) {
-			console.warn('[EpubReader] goTo failed', href, e);
+			const manager = rendition?.manager;
+			if (!manager) return;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const views: any[] = manager.views?.all?.() || [];
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			let view: any = null;
+			// views.find(section) matches section.index — prefer a real spine section
+			if (typeof resolved.index === 'number' && book?.spine?.get) {
+				const section = book.spine.get(resolved.index);
+				if (section) view = manager.views?.find?.(section) || null;
+			}
+			if (!view && typeof resolved.index === 'number') {
+				view = views.find((v) => v?.section?.index === resolved.index) || null;
+			}
+			if (!view && resolved.href) {
+				view =
+					views.find(
+						(v) =>
+							v?.section?.href === resolved.href ||
+							pathMatches(v?.section?.href, resolved.href)
+					) || null;
+			}
+			if (!view && views.length === 1) {
+				// Fresh clear+add leaves only the target section
+				view = views[0];
+			}
+			if (!view) return;
+
+			const base = view.offset?.() || { top: 0, left: 0 };
+			let top = base.top || 0;
+			let left = base.left || 0;
+			const targetStr = typeof resolved.target === 'string' ? resolved.target : '';
+			if (targetStr.includes('#')) {
+				try {
+					const loc = view.locationOf?.(targetStr);
+					if (loc && typeof loc.top === 'number') {
+						// locationOf is relative to the view
+						top = (base.top || 0) + (loc.top || 0);
+						left = (base.left || 0) + (loc.left || 0);
+					}
+				} catch {
+					/* */
+				}
+			}
+			// Absolute scroll — continuous.moveTo uses relative scrollBy and ignores ≤0
+			if (typeof manager.scrollTo === 'function') {
+				manager.scrollTo(left, top, true);
+			}
+			const c = host?.querySelector?.('.epub-container') as HTMLElement | null;
+			if (c) {
+				c.scrollTop = Math.max(0, top);
+				if (left) c.scrollLeft = Math.max(0, left);
+			}
+		} catch {
+			/* */
 		}
+	}
+
+	function pathMatches(a?: string, b?: string): boolean {
+		if (!a || !b) return false;
+		const na = a.split('#')[0].replace(/^\//, '');
+		const nb = b.split('#')[0].replace(/^\//, '');
+		return na === nb || na.endsWith(nb) || nb.endsWith(na);
+	}
+
+	/** Navigate to a TOC href, CFI, or spine path. Resolves nav↔spine path mismatches. */
+	export async function goTo(href: string) {
+		if (!rendition || !book) return;
+		const raw = (href || '').trim();
+		if (!raw) return;
+
+		const resolved = resolveTocTarget(raw, book);
+		const attempts: Array<string | number> = [];
+		if (resolved) attempts.push(resolved.target);
+		if (resolved && typeof resolved.index === 'number') attempts.push(resolved.index);
+		if (resolved?.href && resolved.href !== resolved.target) attempts.push(resolved.href);
+		attempts.push(raw);
+		// de-dupe while preserving order
+		const seen = new Set<string>();
+		const unique = attempts.filter((t) => {
+			const k = String(t);
+			if (seen.has(k)) return false;
+			seen.add(k);
+			return true;
+		});
+
+		let displayed = false;
+		let used: string | number = raw;
+		for (const target of unique) {
+			try {
+				await rendition.display(target);
+				displayed = true;
+				used = target;
+				break;
+			} catch (e) {
+				console.warn('[EpubReader] goTo attempt failed', target, e);
+			}
+		}
+
+		if (!displayed) {
+			console.warn('[EpubReader] goTo failed for all candidates', raw, unique);
+			return;
+		}
+
+		await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+		await fillContinuous();
+		forceScrollToResolved({
+			target: used,
+			href: resolved?.href,
+			index: resolved?.index
+		});
+		// Continuous may append views and shift layout — restamp + re-pin once more
+		requestAnimationFrame(() => {
+			reexpandViews();
+			resizeToHost();
+			injectThemeIntoContents(activePrefs);
+			forceScrollToResolved({
+				target: used,
+				href: resolved?.href,
+				index: resolved?.index
+			});
+		});
 	}
 
 	onMount(() => {
@@ -1151,9 +1269,10 @@ pre {
 
 				try {
 					const nav = await book.loaded.navigation;
-					const toc = (nav.toc || []).map((t: { label: string; href: string }) => ({
-						label: t.label,
-						href: t.href
+					// Flatten nested nav/NCX trees so every chapter is clickable
+					const toc = flattenToc(nav.toc || []).map(({ label, href }) => ({
+						label,
+						href
 					}));
 					ontoc?.(toc);
 				} catch {

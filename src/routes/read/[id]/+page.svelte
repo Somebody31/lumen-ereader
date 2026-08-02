@@ -910,8 +910,10 @@
 											class="w-full border-b px-3 py-2.5 text-left font-ui text-sm transition-opacity hover:opacity-70"
 											style="color: var(--stage-chrome-mute); border-color: color-mix(in srgb, var(--stage-rule) 70%, transparent)"
 											onclick={() => {
-												epubRef?.goTo(item.href);
+												const href = item.href;
 												tocOpen = false;
+												// Fire after drawer close so continuous layout has room; resolve nav↔spine paths inside goTo
+												void epubRef?.goTo(href);
 											}}
 										>
 											{item.label}

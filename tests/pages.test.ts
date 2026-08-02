@@ -182,6 +182,11 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('let displayReady = $state(false)');
 		expect(src).toContain('applyLivePrefs');
 		expect(src).toContain('applyPrefs');
+		// Contents-tab chapter nav: resolve nav↔spine paths + force scroll in continuous
+		expect(src).toContain('resolveTocTarget');
+		expect(src).toContain('flattenToc');
+		expect(src).toContain('forceScrollToResolved');
+		expect(src).toContain('export async function goTo');
 		expect(src).toContain('stampBodyInline');
 		expect(src).toContain('activePrefs');
 		expect(src).toContain('patchLayoutFormat');
