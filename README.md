@@ -1,6 +1,6 @@
 # Lumen
 
-Local-first e-reader with a calm “planetarium booth” UI. Import EPUB, Markdown, or plain text; read offline; optionally sync to Cloudflare R2 + KV behind a passphrase.
+Local-first e-reader with a stationery-atelier UI (cool ash desk, indigo structure, vermillion seal). Import EPUB, Markdown, or plain text; read offline; optionally sync to Cloudflare R2 + KV behind a passphrase.
 
 **Stack:** SvelteKit · Bun · Hono · Tailwind v4 · IndexedDB · `@sveltejs/adapter-cloudflare`
 
