@@ -1,25 +1,34 @@
 /**
- * Editorial (broadsheet) design tokens — single source for identity checks.
+ * Editorial nocturne design tokens — single source for identity checks.
  * CSS mirrors these values in `src/app.css` `@theme`.
  */
 export const EDITORIAL = {
-	world: 'broadsheet',
+	world: 'nocturne',
 	palette: {
-		newsprint: '#F0EFE9',
-		paper: '#FAF9F6',
-		surface: '#E5E4DE',
-		ink: '#0B0B0B',
-		inkSoft: '#3A3A38',
-		inkMute: '#6A6A66',
-		rule: '#C4C3BC',
-		ruleStrong: '#0B0B0B',
-		/** Deep news crimson — rare emphasis, not SaaS accent scatter */
-		crimson: '#7A1C1C',
-		crimsonSoft: '#922424',
-		danger: '#9B2C2C'
+		/** Page ground — near-black */
+		newsprint: '#0A0A0A',
+		/** Elevated cards */
+		paper: '#141413',
+		surface: '#1C1C1A',
+		/** Warm ivory type */
+		ink: '#F0EFE9',
+		inkSoft: '#B8B7B0',
+		inkMute: '#7A7A74',
+		rule: '#2A2A28',
+		ruleStrong: '#E8E7E1',
+		/** Lifted crimson for dark grounds */
+		crimson: '#C44A42',
+		crimsonSoft: '#D45A52',
+		danger: '#E06058'
+	},
+	radius: {
+		sm: '6px',
+		md: '10px',
+		lg: '14px',
+		xl: '18px'
 	},
 	typography: {
-		/** Mastheads & titles — Google News editorial face with opsz */
+		/** Mastheads & titles — editorial face with opsz */
 		display: 'Newsreader Variable',
 		/** UI chrome — classic newsroom sans */
 		ui: 'Source Sans 3 Variable',
@@ -27,7 +36,7 @@ export const EDITORIAL = {
 		reading: 'Literata Variable'
 	},
 	/** Rejected dominant identities */
-	not: ['atelier', 'planetarium', 'indigo-primary', 'vermillion-seal']
+	not: ['atelier', 'planetarium', 'indigo-primary', 'vermillion-seal', 'light-newsprint']
 } as const;
 
 export function isEditorialPalette(css: string): boolean {

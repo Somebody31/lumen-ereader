@@ -98,7 +98,7 @@
 
 	{#if prefs}
 		<section
-			class="animate-plate-in stagger-1 grid gap-8 border border-rule bg-paper p-0 lg:grid-cols-[1fr_minmax(16rem,22rem)]"
+			class="animate-plate-in stagger-1 grid gap-8 overflow-hidden rounded-lg border border-rule bg-paper p-0 lg:grid-cols-[1fr_minmax(16rem,22rem)]"
 		>
 			<div class="space-y-6 p-6 sm:p-8">
 				<div>
@@ -197,9 +197,9 @@
 		</section>
 	{/if}
 
-	<section class="animate-plate-in stagger-2 space-y-5 border border-rule bg-paper p-6 sm:p-8">
+	<section class="animate-plate-in stagger-2 space-y-5 rounded-lg border border-rule bg-paper p-6 sm:p-8">
 		<div class="flex items-start gap-3.5">
-			<span class="mt-0.5 flex h-9 w-9 items-center justify-center border border-rule bg-newsprint">
+			<span class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-newsprint">
 				{#if session?.syncAvailable && session.authenticated}
 					<Cloud size={17} weight="light" class="text-ink" />
 				{:else}
@@ -250,7 +250,7 @@
 							type="password"
 							bind:value={passphrase}
 							autocomplete="current-password"
-							class="mt-1.5 w-full border border-rule bg-newsprint px-3 py-2.5 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink focus:outline-none"
+							class="mt-1.5 w-full rounded-md border border-rule bg-newsprint px-3 py-2.5 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink-mute focus:outline-none"
 							placeholder="Deployment passphrase"
 						/>
 					</label>

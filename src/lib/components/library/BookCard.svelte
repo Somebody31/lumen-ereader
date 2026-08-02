@@ -63,7 +63,7 @@
 	</a>
 	<button
 		type="button"
-		class="absolute right-1 top-1 z-10 flex h-8 w-8 items-center justify-center border border-rule bg-paper/95 text-ink-mute opacity-0 shadow-sm backdrop-blur-sm transition-all duration-200 group-hover:opacity-100 hover:border-ink hover:text-danger focus-visible:opacity-100 active:scale-95"
+		class="absolute right-1.5 top-1.5 z-10 flex h-8 w-8 items-center justify-center rounded-md border border-rule bg-paper/95 text-ink-mute opacity-0 shadow-sm backdrop-blur-sm transition-all duration-200 group-hover:opacity-100 hover:border-ink hover:text-danger focus-visible:opacity-100 active:scale-95"
 		aria-label="Delete {book.title}"
 		onclick={(e) => {
 			e.preventDefault();

@@ -228,7 +228,7 @@
 				: 'pointer-events-none -translate-y-1 opacity-0'}"
 		>
 			<div
-				class="mx-3 flex min-w-0 items-center gap-1 border px-2 py-1.5 backdrop-blur-md sm:mx-4"
+				class="mx-3 flex min-w-0 items-center gap-1 rounded-lg border px-2 py-1.5 backdrop-blur-md sm:mx-4"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 			>
 				<a
@@ -343,7 +343,7 @@
 		<!-- Bottom progress chip when chrome visible -->
 		{#if chromeVisible && !focusMode && !typeOpen && !tocOpen}
 			<div
-				class="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2 border px-3 py-1 font-ui text-[11px] tabular-nums backdrop-blur-md transition-opacity duration-300"
+				class="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-full border px-3 py-1 font-ui text-[11px] tabular-nums backdrop-blur-md transition-opacity duration-300"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
 			>
 				{pct}%
@@ -352,7 +352,7 @@
 
 		{#if typeOpen}
 			<div
-				class="absolute bottom-4 left-1/2 z-40 w-[min(100%-1.5rem,24rem)] -translate-x-1/2 border backdrop-blur-md"
+				class="absolute bottom-4 left-1/2 z-40 w-[min(100%-1.5rem,24rem)] -translate-x-1/2 overflow-hidden rounded-lg border backdrop-blur-md"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 				role="dialog"
 				aria-label="Reading settings"

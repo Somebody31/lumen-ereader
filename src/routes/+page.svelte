@@ -165,7 +165,7 @@
 			<!-- Feature / continue — magazine lead -->
 			<a
 				href="/read/{last.id}"
-				class="group animate-plate-in stagger-1 grid gap-0 border border-rule bg-paper no-underline transition-[border-color,box-shadow] duration-300 ease-[var(--ease-editorial)] hover:border-ink hover:shadow-[var(--shadow-plate-hover)] sm:grid-cols-[minmax(10rem,38%)_1fr]"
+				class="group animate-plate-in stagger-1 grid gap-0 overflow-hidden rounded-lg border border-rule bg-paper no-underline transition-[border-color,box-shadow] duration-300 ease-[var(--ease-editorial)] hover:border-ink-mute hover:shadow-[var(--shadow-plate-hover)] sm:grid-cols-[minmax(10rem,38%)_1fr]"
 			>
 				<div
 					class="flex items-center justify-center border-b border-rule bg-surface/60 p-6 sm:border-b-0 sm:border-r sm:p-8 md:p-10"

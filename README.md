@@ -1,6 +1,6 @@
 # Lumen
 
-Local-first e-reader with an editorial broadsheet UI (newsprint ground, black ink, Newsreader + Source Sans 3 + Literata, deep crimson emphasis). Import EPUB, Markdown, or plain text; read offline; optionally sync to Cloudflare R2 + KV behind a passphrase.
+Local-first e-reader with an editorial nocturne UI (near-black ground, warm ivory type, Newsreader + Source Sans 3 + Literata, crimson emphasis, soft radii). Import EPUB, Markdown, or plain text; read offline; optionally sync to Cloudflare R2 + KV behind a passphrase.
 
 **Stack:** SvelteKit · Bun · Hono · Tailwind v4 · IndexedDB · `@sveltejs/adapter-cloudflare`
 

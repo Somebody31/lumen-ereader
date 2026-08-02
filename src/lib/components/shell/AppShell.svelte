@@ -14,7 +14,7 @@
 	<div class="relative min-h-[100dvh] bg-newsprint text-ink">
 		<div class="grain" aria-hidden="true"></div>
 
-		<header class="sticky top-0 z-40 border-b border-rule bg-newsprint/90 backdrop-blur-md">
+		<header class="sticky top-0 z-40 border-b border-rule bg-newsprint/85 backdrop-blur-md">
 			<div
 				class="mx-auto flex h-14 max-w-[1120px] items-center justify-between px-4 sm:h-[3.75rem] sm:px-6"
 			>

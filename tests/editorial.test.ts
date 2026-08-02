@@ -17,11 +17,12 @@ const library = readFileSync(join(root, 'src/routes/+page.svelte'), 'utf8');
 const button = readFileSync(join(root, 'src/lib/components/ui/Button.svelte'), 'utf8');
 
 describe('editorial design system', () => {
-	test('EDITORIAL tokens declare broadsheet identity', () => {
-		expect(EDITORIAL.world).toBe('broadsheet');
-		expect(EDITORIAL.palette.newsprint.toLowerCase()).toBe('#f0efe9');
-		expect(EDITORIAL.palette.ink).toBe('#0B0B0B');
-		expect(EDITORIAL.palette.crimson).toBe('#7A1C1C');
+	test('EDITORIAL tokens declare nocturne identity', () => {
+		expect(EDITORIAL.world).toBe('nocturne');
+		expect(EDITORIAL.palette.newsprint.toLowerCase()).toBe('#0a0a0a');
+		expect(EDITORIAL.palette.ink.toLowerCase()).toBe('#f0efe9');
+		expect(EDITORIAL.palette.crimson.toLowerCase()).toBe('#c44a42');
+		expect(EDITORIAL.radius.md).toBe('10px');
 		expect(EDITORIAL.typography.display).toContain('Newsreader');
 		expect(EDITORIAL.typography.ui).toContain('Source Sans 3');
 		expect(EDITORIAL.typography.reading).toContain('Literata');
@@ -39,6 +40,8 @@ describe('editorial design system', () => {
 		expect(appCss).toContain('Source Sans 3');
 		expect(appCss).toContain('Literata');
 		expect(appCss).toContain('font-optical-sizing');
+		expect(appCss).toContain('color-scheme: dark');
+		expect(appCss).toContain('--radius-md: 10px');
 		// Reject old atelier primary hexes as system identity
 		expect(appCss).not.toMatch(/--color-indigo:\s*#1f3a68/i);
 		expect(appCss).not.toMatch(/--color-seal:\s*#e03c2b/i);
@@ -61,8 +64,7 @@ describe('editorial design system', () => {
 		expect(readerPage).toContain('chromeVisible');
 		expect(readerPage).toContain('focusMode');
 		expect(readerPage).toContain('scheduleSave');
-		// No residual atelier pill island chrome
-		expect(readerPage).not.toContain('rounded-full');
+		// Soft radius OK; reject full SaaS pill chrome on main chrome bars
 		expect(readerPage).not.toContain('shadow-island');
 		expect(readerPage).not.toContain('bg-indigo');
 		expect(readerPage).not.toContain('accent-indigo');
@@ -84,8 +86,8 @@ describe('editorial design system', () => {
 		expect(library).toContain('BookCard');
 	});
 
-	test('buttons are square ink/crimson, not pill seals', () => {
-		expect(button).toContain('rounded-none');
+	test('buttons use soft radius ink/crimson, not pill seals', () => {
+		expect(button).toContain('rounded-md');
 		expect(button).toContain('bg-ink');
 		expect(button).toContain('bg-crimson');
 		expect(button).not.toContain('rounded-full');
@@ -99,8 +101,8 @@ describe('editorial design system', () => {
 		expect(seed).not.toContain('#E03C2B');
 	});
 
-	test('theme-color is newsprint', () => {
-		expect(layout).toContain('#F0EFE9');
+	test('theme-color is nocturne black', () => {
+		expect(layout).toContain('#0A0A0A');
 	});
 
 	test('cover materiality classes ship in app.css', () => {

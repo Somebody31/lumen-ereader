@@ -69,7 +69,7 @@
 	/>
 	<div class="pointer-events-none flex flex-col items-center text-center">
 		<span
-			class="mb-4 flex h-11 w-11 items-center justify-center border border-rule bg-newsprint transition-transform duration-200 {dragging
+			class="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-rule bg-newsprint transition-transform duration-200 {dragging
 				? 'scale-105 border-ink'
 				: ''}"
 		>
