@@ -164,11 +164,13 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('Newsreader');
 		expect(src).toContain('h1 + p');
 		expect(src).toMatch(/border-left.*\$\{link\}/);
-		// Stable default manager + scrolled (continuous was blanking after first paint)
-		expect(src).toContain("manager: 'default'");
+		// Continuous + scrolled stacks spine sections (default only paints cover)
+		expect(src).toContain("manager: 'continuous'");
 		expect(src).toContain("flow: 'scrolled'");
 		expect(src).toContain('safeDisplay');
 		expect(src).toContain('waitForHostSize');
+		expect(src).toContain('fillContinuous');
+		expect(src).toContain('attachWheelChain');
 		// Drop caps float-none — floats break reflow
 		expect(src).toMatch(/p::first-letter[\s\S]*?float:\s*none/);
 		expect(src).toContain("spread: 'none'");

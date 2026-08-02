@@ -27,6 +27,10 @@
 	/** Theme/resize effects must not run until first successful display. */
 	let displayReady = false;
 	let resizeObserver: ResizeObserver | null = null;
+	let lastResizeW = 0;
+	let lastResizeH = 0;
+	let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+	let wheelCleanup: (() => void) | null = null;
 
 	const themeStyles = $derived.by(() => {
 		const map: Record<
@@ -248,13 +252,53 @@ pre {
 		}
 	}
 
-	function resizeToHost() {
+	function resizeToHost(force = false) {
 		if (!rendition || !host) return;
 		const w = host.clientWidth;
 		const h = host.clientHeight;
 		if (w < 8 || h < 8) return;
+		// Continuous trims/destroys views when resize races with 0 or noisy sub-pixel changes.
+		if (!force && Math.abs(w - lastResizeW) < 2 && Math.abs(h - lastResizeH) < 2) return;
+		lastResizeW = w;
+		lastResizeH = h;
 		try {
 			rendition.resize(w, h);
+		} catch {
+			/* */
+		}
+	}
+
+	function scheduleResize() {
+		if (resizeTimer) clearTimeout(resizeTimer);
+		resizeTimer = setTimeout(() => {
+			resizeTimer = null;
+			resizeToHost();
+		}, 80);
+	}
+
+	/** Force iframe expand after CSS/theme so continuous keeps non-zero view heights. */
+	function reexpandViews() {
+		try {
+			const views = rendition?.manager?.views?.all?.() || [];
+			for (const v of views) {
+				try {
+					v.expand?.();
+				} catch {
+					/* */
+				}
+			}
+		} catch {
+			/* */
+		}
+	}
+
+	/** Continuous fill appends following spine sections under the current view. */
+	async function fillContinuous() {
+		try {
+			const fill = rendition?.manager?.fill;
+			if (typeof fill === 'function') {
+				await fill.call(rendition.manager);
+			}
 		} catch {
 			/* */
 		}
@@ -283,6 +327,41 @@ pre {
 		});
 	}
 
+	/** Cover images often finish after first expand — remeasure once they load. */
+	function waitForIframeImages(ms = 2500): Promise<void> {
+		return new Promise((resolve) => {
+			try {
+				const contents = rendition?.getContents?.() || [];
+				const pending: HTMLImageElement[] = [];
+				for (const c of contents) {
+					const imgs = c.document?.images;
+					if (!imgs) continue;
+					for (const img of Array.from(imgs) as HTMLImageElement[]) {
+						if (!img.complete) pending.push(img);
+					}
+				}
+				if (!pending.length) {
+					resolve();
+					return;
+				}
+				let left = pending.length;
+				const finish = () => {
+					if (--left <= 0) {
+						clearTimeout(timer);
+						resolve();
+					}
+				};
+				const timer = setTimeout(resolve, ms);
+				for (const img of pending) {
+					img.addEventListener('load', finish, { once: true });
+					img.addEventListener('error', finish, { once: true });
+				}
+			} catch {
+				resolve();
+			}
+		});
+	}
+
 	function hasDisplayedContent(): boolean {
 		try {
 			const contents = rendition?.getContents?.() || [];
@@ -306,14 +385,33 @@ pre {
 		}
 	}
 
+	/** True when the open section is basically a cover plate (image, almost no prose). */
+	function isMostlyImageSection(): boolean {
+		try {
+			const contents = rendition?.getContents?.() || [];
+			if (!contents.length) return false;
+			for (const c of contents) {
+				const doc = c.document as Document | undefined;
+				if (!doc?.body) continue;
+				const text = (doc.body.innerText || '').replace(/\s+/g, ' ').trim();
+				const media = doc.querySelectorAll('img, svg, image, video').length;
+				if (media > 0 && text.length < 80) return true;
+			}
+			return false;
+		} catch {
+			return false;
+		}
+	}
+
 	async function safeDisplay(target?: string) {
 		if (!rendition) return;
 		// Bad CFIs (stale progress) flash then blank — always fall back to start.
 		if (target) {
 			try {
 				await rendition.display(target);
-				// Give continuous manager a frame to expand
+				// Give continuous manager a frame to expand + fill
 				await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+				await fillContinuous();
 				if (hasDisplayedContent()) return;
 				console.warn('[EpubReader] restored location produced empty view, opening start');
 			} catch (e) {
@@ -321,6 +419,62 @@ pre {
 			}
 		}
 		await rendition.display();
+		await fillContinuous();
+	}
+
+	/**
+	 * When a spine section is shorter than the viewport (typical cover), wheel past
+	 * the end advances to the next section so the book never feels stuck on page 1.
+	 */
+	function attachWheelChain() {
+		wheelCleanup?.();
+		wheelCleanup = null;
+		const container = host?.querySelector?.('.epub-container') as HTMLElement | null;
+		if (!container || !rendition) return;
+
+		let chaining = false;
+		const onWheel = async (e: Event) => {
+			const we = e as WheelEvent;
+			if (!displayReady || chaining || !rendition) return;
+			const { scrollTop, scrollHeight, clientHeight } = container;
+			const canDown = scrollTop + clientHeight < scrollHeight - 4;
+			const canUp = scrollTop > 4;
+
+			if (we.deltaY > 8 && !canDown) {
+				we.preventDefault();
+				chaining = true;
+				try {
+					await rendition.next();
+					await fillContinuous();
+				} catch {
+					/* */
+				} finally {
+					setTimeout(() => {
+						chaining = false;
+					}, 280);
+				}
+			} else if (we.deltaY < -8 && !canUp) {
+				we.preventDefault();
+				chaining = true;
+				try {
+					await rendition.prev();
+					// Land near the end of the previous section
+					requestAnimationFrame(() => {
+						const c = host?.querySelector?.('.epub-container') as HTMLElement | null;
+						if (c) c.scrollTop = Math.max(0, c.scrollHeight - c.clientHeight);
+					});
+				} catch {
+					/* */
+				} finally {
+					setTimeout(() => {
+						chaining = false;
+					}, 280);
+				}
+			}
+		};
+
+		container.addEventListener('wheel', onWheel, { passive: false });
+		wheelCleanup = () => container.removeEventListener('wheel', onWheel);
 	}
 
 	/** epubjs CJS/ESM interop: default may be nested one level. */
@@ -348,8 +502,12 @@ pre {
 		if (!rendition) return;
 		try {
 			await rendition.display(href);
+			await fillContinuous();
 			// Keep iframe expanded after manual nav
-			requestAnimationFrame(() => resizeToHost());
+			requestAnimationFrame(() => {
+				reexpandViews();
+				resizeToHost();
+			});
 		} catch (e) {
 			console.warn('[EpubReader] goTo failed', href, e);
 		}
@@ -391,14 +549,18 @@ pre {
 
 				const w = host.clientWidth;
 				const h = host.clientHeight;
+				lastResizeW = w;
+				lastResizeH = h;
 
-				// default manager + scrolled: one spine section at a time, stable height.
-				// continuous was destroying views when bounds/theme races zeroed height.
+				// continuous + scrolled: stack spine sections so the whole book scrolls.
+				// default only ever paints the first spine item (usually the cover image).
+				// Stability: waitForHostSize above, debounced resize, fill after display,
+				// theme via content hook (before expand), displayReady gate on $effect.
 				rendition = book.renderTo(host, {
 					width: w,
 					height: h,
 					flow: 'scrolled',
-					manager: 'default',
+					manager: 'continuous',
 					spread: 'none',
 					allowScriptedContent: false
 				});
@@ -419,19 +581,45 @@ pre {
 				await safeDisplay(start);
 				if (cancelled) return;
 
-				// Two frames: let iframe expand after CSS injection, then remeasure.
+				// Two frames: let iframe expand after CSS injection, then remeasure + fill.
 				await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 				if (cancelled || !host) return;
-				resizeToHost();
+				reexpandViews();
+				await fillContinuous();
+
+				// Cover art often loads late — re-expand then fill chapters under it.
+				await waitForIframeImages();
+				if (cancelled || !host) return;
+				reexpandViews();
+				await fillContinuous();
+				resizeToHost(true);
 
 				// If still empty after restore + resize, force first spine item.
 				if (!hasDisplayedContent()) {
 					await rendition.display();
+					await fillContinuous();
 					await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-					resizeToHost();
+					reexpandViews();
+					resizeToHost(true);
+				}
+
+				// Fresh open landed on a cover plate only: step into the first prose section.
+				// Saved CFIs are left alone so resume stays accurate.
+				if (!start && isMostlyImageSection()) {
+					for (let i = 0; i < 4; i++) {
+						if (!isMostlyImageSection()) break;
+						try {
+							await rendition.next();
+							await fillContinuous();
+						} catch {
+							break;
+						}
+					}
+					reexpandViews();
 				}
 
 				displayReady = true;
+				attachWheelChain();
 
 				rendition.on(
 					'relocated',
@@ -442,9 +630,10 @@ pre {
 				);
 
 				// Keep stage size in sync (rail chrome, window resize, mobile keyboard).
+				// Debounced — continuous destroys zero-height views if resize storms.
 				resizeObserver = new ResizeObserver(() => {
 					if (!displayReady || cancelled) return;
-					resizeToHost();
+					scheduleResize();
 				});
 				resizeObserver.observe(host);
 
@@ -472,6 +661,10 @@ pre {
 		return () => {
 			cancelled = true;
 			displayReady = false;
+			wheelCleanup?.();
+			wheelCleanup = null;
+			if (resizeTimer) clearTimeout(resizeTimer);
+			resizeTimer = null;
 			resizeObserver?.disconnect();
 			resizeObserver = null;
 		};
@@ -490,14 +683,21 @@ pre {
 		void prefs.textAlign;
 		void prefs.hyphenate;
 		injectThemeIntoContents();
-		// Theme changes reflow text — remeasure after paint
+		// Theme reflow: expand views first; avoid resize storms that blank continuous.
 		requestAnimationFrame(() => {
-			requestAnimationFrame(() => resizeToHost());
+			requestAnimationFrame(() => {
+				reexpandViews();
+				void fillContinuous();
+			});
 		});
 	});
 
 	onDestroy(() => {
 		displayReady = false;
+		wheelCleanup?.();
+		wheelCleanup = null;
+		if (resizeTimer) clearTimeout(resizeTimer);
+		resizeTimer = null;
 		resizeObserver?.disconnect();
 		resizeObserver = null;
 		try {
@@ -546,10 +746,19 @@ pre {
 	.epub-host :global(.epub-container) {
 		width: 100% !important;
 		height: 100% !important;
+		/* Continuous stacks .epub-view blocks; container scrolls them */
+		overflow-y: auto !important;
+		overflow-x: hidden !important;
+		-webkit-overflow-scrolling: touch;
+	}
+	.epub-host :global(.epub-view) {
+		/* Let expand() set explicit height; never clip to 0 */
+		min-height: 0;
 	}
 	.epub-host :global(iframe) {
 		border: 0;
 		/* Never clamp iframe height — expand sets explicit px heights */
 		max-width: none;
+		max-height: none;
 	}
 </style>
