@@ -22,8 +22,8 @@ describe('editorial design system', () => {
 		expect(EDITORIAL.palette.newsprint).toBe('#F3F2ED');
 		expect(EDITORIAL.palette.ink).toBe('#0B0B0B');
 		expect(EDITORIAL.palette.crimson).toBe('#7A1C1C');
-		expect(EDITORIAL.typography.display).toContain('Source Serif');
-		expect(EDITORIAL.typography.ui).toContain('Geist');
+		expect(EDITORIAL.typography.display).toContain('Newsreader');
+		expect(EDITORIAL.typography.ui).toContain('Source Sans 3');
 		expect(EDITORIAL.typography.reading).toContain('Literata');
 		expect(EDITORIAL.not).toContain('atelier');
 	});
@@ -35,9 +35,10 @@ describe('editorial design system', () => {
 		expect(appCss).toContain('--font-display:');
 		expect(appCss).toContain('--font-ui:');
 		expect(appCss).toContain('--font-reading:');
-		expect(appCss).toContain('Source Serif');
-		expect(appCss).toContain('Geist');
+		expect(appCss).toContain('Newsreader');
+		expect(appCss).toContain('Source Sans 3');
 		expect(appCss).toContain('Literata');
+		expect(appCss).toContain('font-optical-sizing');
 		// Reject old atelier primary hexes as system identity
 		expect(appCss).not.toMatch(/--color-indigo:\s*#1f3a68/i);
 		expect(appCss).not.toMatch(/--color-seal:\s*#e03c2b/i);

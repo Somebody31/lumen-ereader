@@ -19,8 +19,11 @@ export const EDITORIAL = {
 		danger: '#9B2C2C'
 	},
 	typography: {
-		display: "Source Serif 4 Variable",
-		ui: 'Geist Variable',
+		/** Mastheads & titles — Google News editorial face with opsz */
+		display: 'Newsreader Variable',
+		/** UI chrome — classic newsroom sans */
+		ui: 'Source Sans 3 Variable',
+		/** Long-form body — digital reading face with opsz */
 		reading: 'Literata Variable'
 	},
 	/** Rejected dominant identities */
@@ -32,11 +35,11 @@ export function isEditorialPalette(css: string): boolean {
 		EDITORIAL.palette.newsprint,
 		EDITORIAL.palette.ink,
 		EDITORIAL.palette.crimson,
-		"--font-display",
-		"--font-ui",
-		"--font-reading",
-		'Source Serif',
-		'Geist',
+		'--font-display',
+		'--font-ui',
+		'--font-reading',
+		'Newsreader',
+		'Source Sans 3',
 		'Literata'
 	];
 	const lower = css.toLowerCase();

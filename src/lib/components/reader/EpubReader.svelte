@@ -64,14 +64,15 @@
 				body: {
 					background: bg,
 					color: fg,
-					'font-family': '"Source Serif 4", Georgia, serif',
+					'font-family': '"Literata Variable", Literata, Georgia, serif',
 					'font-size': `${prefs.fontSize}px !important`,
 					'line-height': `${prefs.lineHeight} !important`,
 					'max-width': `${prefs.measure}ch`,
 					margin: '0 auto',
-					padding: `${prefs.margin}px !important`
+					padding: `${prefs.margin}px !important`,
+					'font-optical-sizing': 'auto'
 				},
-				a: { color: '#E8A54B' }
+				a: { color: '#7A1C1C' }
 			});
 
 			const start = initialLocation || undefined;
@@ -109,14 +110,15 @@
 			body: {
 				background: bg,
 				color: fg,
-				'font-family': '"Source Serif 4", Georgia, serif',
+				'font-family': '"Literata Variable", Literata, Georgia, serif',
 				'font-size': `${prefs.fontSize}px !important`,
 				'line-height': `${prefs.lineHeight} !important`,
 				'max-width': `${prefs.measure}ch`,
 				margin: '0 auto',
-				padding: `${prefs.margin}px !important`
+				padding: `${prefs.margin}px !important`,
+				'font-optical-sizing': 'auto'
 			},
-			a: { color: '#E8A54B' }
+			a: { color: '#7A1C1C' }
 		});
 	});
 

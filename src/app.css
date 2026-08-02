@@ -1,7 +1,12 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/geist' layer(base);
-@import '@fontsource-variable/source-serif-4' layer(base);
-@import '@fontsource-variable/literata' layer(base);
+/* Display: Newsreader opsz — true editorial/news face for mastheads */
+@import '@fontsource-variable/newsreader/opsz.css' layer(base);
+@import '@fontsource-variable/newsreader/opsz-italic.css' layer(base);
+/* UI: Source Sans 3 — newsroom pair, clean labels without SaaS mono feel */
+@import '@fontsource-variable/source-sans-3' layer(base);
+/* Reading: Literata opsz — purpose-built for long digital prose */
+@import '@fontsource-variable/literata/opsz.css' layer(base);
+@import '@fontsource-variable/literata/opsz-italic.css' layer(base);
 
 /* Editorial broadsheet — cool newsprint, black ink, display serif, hairline rules */
 @theme {
@@ -45,9 +50,9 @@
 	--color-sepia: #e8dcc8;
 	--color-sepia-ink: #3d3428;
 
-	--font-display: 'Source Serif 4 Variable', 'Source Serif 4', 'Times New Roman', Georgia, serif;
-	--font-ui: 'Geist Variable', 'Geist', system-ui, sans-serif;
-	--font-reading: 'Literata Variable', 'Literata', Georgia, 'Times New Roman', serif;
+	--font-display: 'Newsreader Variable', Newsreader, 'Times New Roman', Georgia, serif;
+	--font-ui: 'Source Sans 3 Variable', 'Source Sans 3', system-ui, sans-serif;
+	--font-reading: 'Literata Variable', Literata, Georgia, 'Times New Roman', serif;
 	--radius-sm: 2px;
 	--radius-md: 4px;
 	--radius-lg: 6px;
@@ -165,7 +170,10 @@
 	font-size: var(--reader-size, 1.125rem);
 	max-width: var(--reader-measure, 68ch);
 	margin-inline: auto;
-	font-feature-settings: 'liga' 1, 'kern' 1;
+	font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 0;
+	font-optical-sizing: auto;
+	/* Body optical size — Literata opsz axis when available */
+	font-variation-settings: 'opsz' 14;
 }
 
 .reader-prose h1,
@@ -176,6 +184,8 @@
 	letter-spacing: -0.02em;
 	line-height: 1.2;
 	margin: 1.6em 0 0.55em;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 48;
 }
 
 .reader-prose h1 {
@@ -294,6 +304,8 @@
 	letter-spacing: -0.025em;
 	line-height: 1.08;
 	color: var(--color-ink);
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 72;
 }
 
 @keyframes plate-in {
