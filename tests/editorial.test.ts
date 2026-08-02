@@ -21,7 +21,9 @@ describe('editorial design system', () => {
 		expect(EDITORIAL.world).toBe('nocturne');
 		expect(EDITORIAL.palette.newsprint.toLowerCase()).toBe('#0a0a0a');
 		expect(EDITORIAL.palette.ink.toLowerCase()).toBe('#f0efe9');
-		expect(EDITORIAL.palette.crimson.toLowerCase()).toBe('#c44a42');
+		expect(EDITORIAL.palette.crimson.toLowerCase()).toBe('#d0544c');
+		expect(EDITORIAL.palette.inkMute.toLowerCase()).toBe('#9c9b94');
+		expect(EDITORIAL.palette.rule.toLowerCase()).toBe('#3f3f3c');
 		expect(EDITORIAL.radius.md).toBe('10px');
 		expect(EDITORIAL.typography.display).toContain('Newsreader');
 		expect(EDITORIAL.typography.ui).toContain('Source Sans 3');
@@ -90,7 +92,15 @@ describe('editorial design system', () => {
 		expect(button).toContain('rounded-md');
 		expect(button).toContain('bg-ink');
 		expect(button).toContain('bg-crimson');
+		expect(button).toContain('bg-surface');
 		expect(button).not.toContain('rounded-full');
+	});
+
+	test('contrast ladder is lifted for dark shell', () => {
+		expect(appCss).toContain('--color-ink-mute: #9c9b94');
+		expect(appCss).toContain('--color-ink-soft: #c8c7c0');
+		expect(appCss).toContain('--color-rule: #3f3f3c');
+		expect(shell).toContain('text-ink-soft');
 	});
 
 	test('sample cover is broadsheet plate (not atelier indigo seal)', () => {

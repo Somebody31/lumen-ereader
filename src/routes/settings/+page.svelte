@@ -108,11 +108,11 @@
 					>
 						Reading defaults
 					</h2>
-					<p class="mt-1 font-ui text-sm text-ink-mute">Applied when you open a book.</p>
+					<p class="mt-1 font-ui text-sm text-ink-soft">Applied when you open a book.</p>
 				</div>
 
 				<div>
-					<p class="mb-2.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-mute">Theme</p>
+					<p class="mb-2.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-soft">Theme</p>
 					<div class="flex flex-wrap gap-2">
 						{#each themes as t (t.id)}
 							<button
@@ -138,7 +138,7 @@
 					</div>
 				</div>
 
-				<label class="block font-ui text-xs text-ink-mute">
+				<label class="block font-ui text-xs text-ink-soft">
 					Font size · <span class="tabular-nums text-ink">{prefs.fontSize}px</span>
 					<input
 						type="range"
@@ -150,7 +150,7 @@
 							savePrefs({ fontSize: Number((e.currentTarget as HTMLInputElement).value) })}
 					/>
 				</label>
-				<label class="block font-ui text-xs text-ink-mute">
+				<label class="block font-ui text-xs text-ink-soft">
 					Line height · <span class="tabular-nums text-ink">{prefs.lineHeight.toFixed(2)}</span>
 					<input
 						type="range"
@@ -163,7 +163,7 @@
 							savePrefs({ lineHeight: Number((e.currentTarget as HTMLInputElement).value) })}
 					/>
 				</label>
-				<label class="block font-ui text-xs text-ink-mute">
+				<label class="block font-ui text-xs text-ink-soft">
 					Column measure · <span class="tabular-nums text-ink">{prefs.measure}ch</span>
 					<input
 						type="range"
@@ -183,14 +183,14 @@
 				style="background: {previewTheme.bg}; color: {previewTheme.fg}"
 				aria-label="Reading preview"
 			>
-				<p class="font-ui text-[10px] uppercase tracking-[0.12em] opacity-50">Preview</p>
+				<p class="font-ui text-[10px] uppercase tracking-[0.12em] opacity-70">Preview</p>
 				<p
 					class="mt-4 font-reading"
 					style="font-family: var(--font-reading); font-size: {prefs.fontSize}px; line-height: {prefs.lineHeight}; max-width: {prefs.measure}ch; font-variation-settings: 'opsz' 14"
 				>
 					{sample}
 				</p>
-				<p class="mt-4 font-ui text-[11px] opacity-45">
+				<p class="mt-4 font-ui text-[11px] opacity-70">
 					{previewTheme.label} · {prefs.fontSize}px · {prefs.measure}ch
 				</p>
 			</div>

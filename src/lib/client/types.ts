@@ -22,6 +22,9 @@ export interface BookRecord extends BookMeta {
 	blob: Blob;
 }
 
+/** Library shelf item — blob stripped so listing stays cheap */
+export type BookListItem = BookMeta;
+
 export interface ProgressRecord {
 	bookId: string;
 	/** 0–1 fraction through the book when known */

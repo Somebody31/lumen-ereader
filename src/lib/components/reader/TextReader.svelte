@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { estimateProgressFromScroll, renderTextContent, scrollToFraction } from '$lib/client/textRender';
+	import {
+		CHUNK_WINDOW,
+		estimateChunkHeight,
+		estimateProgressFromScroll,
+		renderTextChunks,
+		scrollToFraction
+	} from '$lib/client/textRender';
 	import type { ReaderPrefs } from '$lib/client/types';
 
 	let {
@@ -17,32 +23,111 @@
 		onprogress: (fraction: number, location: string) => void;
 	} = $props();
 
-	let html = $state('');
+	let chunks = $state<string[]>([]);
+	let heights = $state<number[]>([]);
+	let ready = $state(false);
+	let parsePct = $state(0);
 	let scroller: HTMLElement | undefined = $state();
 	let restored = false;
+	let first = $state(0);
+	let last = $state(0);
+	let raf = 0;
+
+	const topSpacer = $derived(heights.slice(0, first).reduce((a, b) => a + b, 0));
+	const bottomSpacer = $derived(heights.slice(last + 1).reduce((a, b) => a + b, 0));
+
+	function measureAction(node: HTMLElement, index: number) {
+		const apply = () => {
+			const h = node.offsetHeight;
+			if (h > 0 && Math.abs(h - (heights[index] ?? 0)) > 4) {
+				const next = heights.slice();
+				next[index] = h;
+				heights = next;
+			}
+		};
+		apply();
+		const ro = new ResizeObserver(apply);
+		ro.observe(node);
+		return {
+			update(newIndex: number) {
+				index = newIndex;
+				apply();
+			},
+			destroy() {
+				ro.disconnect();
+			}
+		};
+	}
 
 	onMount(() => {
 		let cancelled = false;
-		renderTextContent(raw, format).then((h) => {
-			if (!cancelled) html = h;
-		});
+		(async () => {
+			const htmlChunks = await renderTextChunks(raw, format, (done, total) => {
+				if (!cancelled && total > 0) parsePct = Math.round((done / total) * 100);
+			});
+			if (cancelled) return;
+			chunks = htmlChunks;
+			heights = htmlChunks.map((h) => estimateChunkHeight(h, prefs.fontSize));
+			last = Math.min(htmlChunks.length - 1, CHUNK_WINDOW * 2);
+			first = 0;
+			ready = true;
+		})();
 		return () => {
 			cancelled = true;
+			cancelAnimationFrame(raf);
 		};
 	});
 
 	$effect(() => {
-		if (!scroller || !html || restored) return;
+		if (!scroller || !ready || restored) return;
 		requestAnimationFrame(() => {
-			if (scroller) scrollToFraction(scroller, initialFraction);
+			if (scroller) {
+				scrollToFraction(scroller, initialFraction);
+				updateWindow();
+			}
 			restored = true;
 		});
 	});
 
+	function updateWindow() {
+		if (!scroller || !chunks.length) return;
+		const scrollTop = scroller.scrollTop;
+		const viewH = scroller.clientHeight;
+		let acc = 0;
+		let start = 0;
+		let end = chunks.length - 1;
+
+		for (let i = 0; i < heights.length; i++) {
+			const next = acc + heights[i];
+			if (next >= scrollTop - viewH) {
+				start = i;
+				break;
+			}
+			acc = next;
+		}
+		acc = 0;
+		for (let i = 0; i < heights.length; i++) {
+			acc += heights[i];
+			if (acc >= scrollTop + viewH * 2) {
+				end = i;
+				break;
+			}
+		}
+
+		const pad = CHUNK_WINDOW;
+		first = Math.max(0, start - pad);
+		last = Math.min(chunks.length - 1, end + pad);
+	}
+
 	function onScroll() {
 		if (!scroller) return;
-		const fraction = estimateProgressFromScroll(scroller);
-		onprogress(fraction, `scroll:${fraction.toFixed(4)}`);
+		cancelAnimationFrame(raf);
+		raf = requestAnimationFrame(() => {
+			if (!scroller) return;
+			updateWindow();
+			const fraction = estimateProgressFromScroll(scroller);
+			onprogress(fraction, `scroll:${fraction.toFixed(4)}`);
+		});
 	}
 </script>
 
@@ -55,7 +140,24 @@
 	style:--reader-margin="{prefs.margin}px"
 	onscroll={onScroll}
 >
-	<article class="reader-prose relative z-[1]">
-		{@html html}
-	</article>
+	{#if !ready}
+		<div class="reader-prose relative z-[1] py-12 text-center" style="color: var(--stage-muted)">
+			<p class="font-ui text-sm">Preparing text… {parsePct}%</p>
+		</div>
+	{:else}
+		<article class="reader-prose relative z-[1]">
+			{#if topSpacer > 0}
+				<div style="height: {topSpacer}px" aria-hidden="true"></div>
+			{/if}
+			{#each { length: last - first + 1 } as _, j (first + j)}
+				{@const i = first + j}
+				<section class="text-chunk" data-chunk={i} use:measureAction={i}>
+					{@html chunks[i]}
+				</section>
+			{/each}
+			{#if bottomSpacer > 0}
+				<div style="height: {bottomSpacer}px" aria-hidden="true"></div>
+			{/if}
+		</article>
+	{/if}
 </div>

@@ -12,14 +12,14 @@ export const EDITORIAL = {
 		surface: '#1C1C1A',
 		/** Warm ivory type */
 		ink: '#F0EFE9',
-		inkSoft: '#B8B7B0',
-		inkMute: '#7A7A74',
-		rule: '#2A2A28',
+		inkSoft: '#C8C7C0',
+		inkMute: '#9C9B94',
+		rule: '#3F3F3C',
 		ruleStrong: '#E8E7E1',
 		/** Lifted crimson for dark grounds */
-		crimson: '#C44A42',
-		crimsonSoft: '#D45A52',
-		danger: '#E06058'
+		crimson: '#D0544C',
+		crimsonSoft: '#E0665E',
+		danger: '#E86A62'
 	},
 	radius: {
 		sm: '6px',

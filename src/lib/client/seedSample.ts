@@ -1,4 +1,4 @@
-import { listBooks, putBook } from './idb';
+import { getBook, listBooks, putBook } from './idb';
 import type { BookRecord } from './types';
 
 const SAMPLE_FLAG = 'lumen-sample-v4';
@@ -14,13 +14,16 @@ export async function ensureSampleBook(): Promise<void> {
 
 	// Migrate old sample cover when flag bumps
 	if (existing.length > 0) {
-		const sample = existing.find(
+		const sampleMeta = existing.find(
 			(b) => b.fileName === 'the-star-room.txt' || b.title === 'The Star Room'
 		);
-		if (sample) {
-			sample.coverDataUrl = coverSvg(sample.title, sample.author);
-			sample.updatedAt = Date.now();
-			await putBook(sample);
+		if (sampleMeta) {
+			const full = await getBook(sampleMeta.id);
+			if (full) {
+				full.coverDataUrl = coverSvg(full.title, full.author);
+				full.updatedAt = Date.now();
+				await putBook(full);
+			}
 		}
 		localStorage.setItem(SAMPLE_FLAG, '1');
 		return;

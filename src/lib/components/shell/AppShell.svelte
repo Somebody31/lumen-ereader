@@ -21,7 +21,7 @@
 				<a href="/" class="group flex items-baseline gap-3 no-underline">
 					<span class="display text-[1.65rem] tracking-[-0.03em] sm:text-[1.85rem]">Lumen</span>
 					<span
-						class="hidden text-[10px] font-medium uppercase tracking-[0.16em] text-ink-mute sm:inline"
+						class="hidden text-[10px] font-medium uppercase tracking-[0.16em] text-ink-soft sm:inline"
 						>Reader</span
 					>
 				</a>
@@ -31,7 +31,7 @@
 						class="px-3 py-2 font-ui text-[13px] tracking-tight transition-colors duration-200 {path ===
 						'/'
 							? 'text-ink underline decoration-1 underline-offset-[6px]'
-							: 'text-ink-mute hover:text-ink'}"
+							: 'text-ink-soft hover:text-ink'}"
 					>
 						Library
 					</a>
@@ -41,7 +41,7 @@
 							'/settings'
 						)
 							? 'text-ink underline decoration-1 underline-offset-[6px]'
-							: 'text-ink-mute hover:text-ink'}"
+							: 'text-ink-soft hover:text-ink'}"
 					>
 						Settings
 					</a>
@@ -54,8 +54,8 @@
 		</main>
 
 		{#if !isLibrary}
-			<footer class="relative z-10 mx-auto max-w-[1120px] border-t border-rule/70 px-4 py-6 sm:px-6">
-				<p class="font-ui text-[10px] uppercase tracking-[0.12em] text-ink-mute/80">
+			<footer class="relative z-10 mx-auto max-w-[1120px] border-t border-rule px-4 py-6 sm:px-6">
+				<p class="font-ui text-[10px] uppercase tracking-[0.12em] text-ink-soft">
 					Local-first · offline by default
 				</p>
 			</footer>

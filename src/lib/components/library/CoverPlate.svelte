@@ -50,7 +50,7 @@
 				style="border-color: color-mix(in srgb, {palette.fg} 22%, transparent)"
 			>
 				<span
-					class="font-ui text-[8px] font-medium uppercase tracking-[0.18em] opacity-55 sm:text-[9px]"
+					class="font-ui text-[8px] font-medium uppercase tracking-[0.18em] opacity-70 sm:text-[9px]"
 					>Lumen</span
 				>
 				<span
@@ -67,7 +67,7 @@
 					{shortTitle}
 				</p>
 				{#if author}
-					<p class="mt-2 font-ui text-[10px] opacity-60 sm:text-[11px]">{author}</p>
+					<p class="mt-2 font-ui text-[10px] opacity-75 sm:text-[11px]">{author}</p>
 				{/if}
 				<div
 					class="mt-4 h-px w-8"

@@ -1,5 +1,11 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { BookRecord, BookmarkRecord, ProgressRecord, ReaderPrefs } from './types';
+import type {
+	BookListItem,
+	BookRecord,
+	BookmarkRecord,
+	ProgressRecord,
+	ReaderPrefs
+} from './types';
 import { DEFAULT_PREFS } from './types';
 
 interface LumenDB extends DBSchema {
@@ -45,10 +51,16 @@ function getDb() {
 	return dbPromise;
 }
 
-export async function listBooks(): Promise<BookRecord[]> {
+function stripBlob(book: BookRecord): BookListItem {
+	const { blob: _blob, ...meta } = book;
+	return meta;
+}
+
+/** Shelf listing without file blobs (keeps library scroll light). */
+export async function listBooks(): Promise<BookListItem[]> {
 	const db = await getDb();
 	const all = await db.getAllFromIndex('books', 'by-updated');
-	return all.reverse();
+	return all.reverse().map(stripBlob);
 }
 
 export async function getBook(id: string): Promise<BookRecord | undefined> {
@@ -109,7 +121,7 @@ export async function putPrefs(prefs: ReaderPrefs): Promise<void> {
 	await db.put('prefs', { id: 'default', ...prefs });
 }
 
-export async function getLastOpened(): Promise<BookRecord | undefined> {
+export async function getLastOpened(): Promise<BookListItem | undefined> {
 	const db = await getDb();
 	const progresses = await db.getAll('progress');
 	if (!progresses.length) {
@@ -117,5 +129,6 @@ export async function getLastOpened(): Promise<BookRecord | undefined> {
 		return books[0];
 	}
 	progresses.sort((a, b) => b.updatedAt - a.updatedAt);
-	return getBook(progresses[0].bookId);
+	const full = await getBook(progresses[0].bookId);
+	return full ? stripBlob(full) : undefined;
 }

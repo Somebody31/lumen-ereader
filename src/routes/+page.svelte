@@ -3,19 +3,21 @@
 	import { listBooks, deleteBook, getProgress, getLastOpened } from '$lib/client/idb';
 	import { importFiles } from '$lib/client/importBook';
 	import { ensureSampleBook } from '$lib/client/seedSample';
-	import type { BookRecord, ProgressRecord } from '$lib/client/types';
+	import { formatBytes, LARGE_SIZE_BYTES, WARN_SIZE_BYTES } from '$lib/client/textRender';
+	import type { BookListItem, ProgressRecord } from '$lib/client/types';
 	import ImportDropzone from '$lib/components/library/ImportDropzone.svelte';
 	import BookCard from '$lib/components/library/BookCard.svelte';
 	import CoverPlate from '$lib/components/library/CoverPlate.svelte';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import X from 'phosphor-svelte/lib/X';
 
-	let books = $state<BookRecord[]>([]);
+	let books = $state<BookListItem[]>([]);
 	let progressMap = $state<Record<string, ProgressRecord>>({});
-	let last = $state<BookRecord | null>(null);
+	let last = $state<BookListItem | null>(null);
 	let query = $state('');
 	let loading = $state(true);
 	let error = $state('');
+	let notice = $state('');
 	let importing = $state(false);
 
 	const filtered = $derived.by(() => {
@@ -59,8 +61,18 @@
 	async function handleFiles(files: FileList | File[]) {
 		importing = true;
 		error = '';
+		notice = '';
 		try {
-			await importFiles(files);
+			const list = Array.from(files);
+			const large = list.filter((f) => f.size >= WARN_SIZE_BYTES);
+			await importFiles(list);
+			if (large.length) {
+				const biggest = large.reduce((a, b) => (a.size > b.size ? a : b));
+				notice =
+					biggest.size >= LARGE_SIZE_BYTES
+						? `Imported large file (${formatBytes(biggest.size)}). Opening uses chunked rendering; first open may still take a moment.`
+						: `Imported ${formatBytes(biggest.size)} file. Large text is rendered in chunks for smoother scrolling.`;
+			}
 			await refresh();
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Import failed';
@@ -134,8 +146,27 @@
 	</section>
 
 	{#if error}
-		<div class="border border-danger/40 bg-danger/5 px-4 py-3 font-ui text-sm text-danger" role="alert">
+		<div
+			class="rounded-md border border-danger/50 bg-danger/10 px-4 py-3 font-ui text-sm text-danger"
+			role="alert"
+		>
 			{error}
+		</div>
+	{/if}
+	{#if notice}
+		<div
+			class="flex items-start justify-between gap-3 rounded-md border border-rule bg-surface px-4 py-3 font-ui text-sm text-ink-soft"
+			role="status"
+		>
+			<p>{notice}</p>
+			<button
+				type="button"
+				class="shrink-0 text-ink-soft hover:text-ink"
+				aria-label="Dismiss"
+				onclick={() => (notice = '')}
+			>
+				<X size={16} weight="light" />
+			</button>
 		</div>
 	{/if}
 

@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { getBook, getPrefs, putPrefs, putProgress, getProgress } from '$lib/client/idb';
 	import { pushProgress } from '$lib/client/sync';
+	import { formatBytes, LARGE_SIZE_BYTES, WARN_SIZE_BYTES } from '$lib/client/textRender';
 	import type { BookRecord, ReaderPrefs, ReadingTheme } from '$lib/client/types';
 	import TextReader from '$lib/components/reader/TextReader.svelte';
 	import EpubReader from '$lib/components/reader/EpubReader.svelte';
@@ -21,6 +22,7 @@
 	let error = $state('');
 	let loading = $state(true);
 	let textRaw = $state('');
+	let sizeBanner = $state('');
 	let chromeVisible = $state(true);
 	let focusMode = $state(false);
 	let tocOpen = $state(false);
@@ -86,6 +88,14 @@
 			fraction = prog.fraction;
 			lastLocation = prog.location;
 			progressLabel = prog.label || '';
+		}
+		if (b.sizeBytes >= WARN_SIZE_BYTES) {
+			sizeBanner =
+				b.sizeBytes >= LARGE_SIZE_BYTES
+					? `Large file (${formatBytes(b.sizeBytes)}). Text is prepared in chunks; scrolling stays light after load.`
+					: `This file is ${formatBytes(b.sizeBytes)}. Rendering in chunks for smoother reading.`;
+		} else {
+			sizeBanner = '';
 		}
 		if (b.format === 'text' || b.format === 'markdown') {
 			textRaw = await b.blob.text();
@@ -205,6 +215,24 @@
 			style="width: {fraction * 100}%; background: var(--stage-progress)"
 		></div>
 	</div>
+
+	{#if sizeBanner && !loading && !error && chromeVisible && !focusMode}
+		<div
+			class="absolute inset-x-0 top-[3.75rem] z-30 mx-3 flex items-start justify-between gap-3 rounded-md border px-3 py-2 font-ui text-[12px] backdrop-blur-md sm:mx-4 sm:top-16"
+			style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
+			role="status"
+		>
+			<p class="min-w-0 leading-snug" style="color: var(--stage-chrome-mute)">{sizeBanner}</p>
+			<button
+				type="button"
+				class="shrink-0 p-0.5 transition-opacity hover:opacity-70"
+				aria-label="Dismiss size notice"
+				onclick={() => (sizeBanner = '')}
+			>
+				<X size={14} weight="light" />
+			</button>
+		</div>
+	{/if}
 
 	{#if loading}
 		<div class="flex h-full items-center justify-center font-ui text-sm" style="color: var(--stage-muted)">
