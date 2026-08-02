@@ -171,6 +171,9 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('waitForHostSize');
 		expect(src).toContain('fillContinuous');
 		expect(src).toContain('attachWheelChain');
+		// Stage width is host-bound, not largest image
+		expect(src).toContain('clampMediaInContents');
+		expect(src).toMatch(/img[\s\S]*?max-width:\s*100%/);
 		// Drop caps float-none — floats break reflow
 		expect(src).toMatch(/p::first-letter[\s\S]*?float:\s*none/);
 		expect(src).toContain("spread: 'none'");

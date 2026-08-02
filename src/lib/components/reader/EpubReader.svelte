@@ -71,8 +71,9 @@
 
 	/**
 	 * Serialized CSS with !important so publisher sheets cannot win.
-	 * Keep layout simple: fixed padding (no max-width on body) so epubjs
-	 * textHeight / continuous expand stay stable.
+	 * Width is locked to the iframe (stage), never to intrinsic image size.
+	 * overflow-x hidden + overflow-y visible: clips wide media without
+	 * collapsing continuous textHeight (which needs vertical overflow visible).
 	 */
 	function buildThemeCss(): string {
 		const { bg, fg, mute, link, rule } = themeStyles;
@@ -90,20 +91,27 @@
 			'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif';
 
 		return `
+*, *::before, *::after {
+	box-sizing: border-box !important;
+}
 html {
 	margin: 0 !important;
 	padding: 0 !important;
 	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 0 !important;
 	height: auto !important;
-	/* overflow:visible — overflow:hidden makes continuous textHeight collapse */
-	overflow: visible !important;
+	/* x clip keeps large cover art from widening the stage; y must stay open for textHeight */
+	overflow-x: hidden !important;
+	overflow-y: visible !important;
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
 }
 body {
 	box-sizing: border-box !important;
 	width: 100% !important;
-	max-width: none !important;
+	max-width: 100% !important;
+	min-width: 0 !important;
 	min-height: 0 !important;
 	margin: 0 !important;
 	padding: ${topPad}px ${margin}px ${bottomPad}px ${leftPad}px !important;
@@ -112,7 +120,8 @@ body {
 	left: auto !important;
 	right: auto !important;
 	transform: none !important;
-	overflow: visible !important;
+	overflow-x: hidden !important;
+	overflow-y: visible !important;
 	overflow-wrap: break-word !important;
 	word-wrap: break-word !important;
 	column-count: auto !important;
@@ -130,13 +139,31 @@ body {
 	font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
 	text-rendering: optimizeLegibility;
 }
-img, svg, video, canvas, object, embed {
+/* Intrinsic image/SVG size must never set the column width */
+img, svg, video, canvas, object, embed, picture, image {
 	max-width: 100% !important;
+	width: auto !important;
 	height: auto !important;
+	object-fit: contain !important;
+	box-sizing: border-box !important;
+}
+img[width], img[height], svg[width], svg[height] {
+	width: auto !important;
+	height: auto !important;
+	max-width: 100% !important;
+}
+figure, picture, .cover, .cover-image, [class*="cover"], [class*="image"] {
+	max-width: 100% !important;
+	width: auto !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
 }
 table {
 	max-width: 100% !important;
+	width: auto !important;
 	border-collapse: collapse;
+	display: block;
+	overflow-x: auto;
 }
 td, th {
 	word-wrap: break-word !important;
@@ -232,6 +259,82 @@ pre {
 `;
 	}
 
+	/**
+	 * Force media to the iframe width. max-width:100% alone fails when the
+	 * containing block grows with the image (publisher width attrs / fixed px).
+	 */
+	function clampMediaInContents(contents: {
+		document?: Document;
+		window?: Window;
+		contentWidth?: (w?: number) => number;
+		addStylesheetCss?: (css: string, key: string) => void;
+	}) {
+		try {
+			const doc = contents.document;
+			if (!doc) return;
+
+			// Pin body to the iframe viewport width so % media has a stable basis.
+			const frameW =
+				contents.window?.innerWidth ||
+				doc.documentElement?.clientWidth ||
+				0;
+			if (frameW > 8 && typeof contents.contentWidth === 'function') {
+				try {
+					contents.contentWidth(frameW);
+				} catch {
+					/* */
+				}
+			}
+
+			const root = doc.documentElement;
+			const body = doc.body;
+			root?.style.setProperty('max-width', '100%', 'important');
+			root?.style.setProperty('min-width', '0', 'important');
+			root?.style.setProperty('overflow-x', 'hidden', 'important');
+			body?.style.setProperty('max-width', '100%', 'important');
+			body?.style.setProperty('min-width', '0', 'important');
+			body?.style.setProperty('width', '100%', 'important');
+			body?.style.setProperty('overflow-x', 'hidden', 'important');
+
+			const media = doc.querySelectorAll(
+				'img, svg, video, canvas, object, embed, picture, figure, image'
+			);
+			for (const node of media) {
+				const el = node as HTMLElement;
+				el.style.setProperty('max-width', '100%', 'important');
+				el.style.setProperty('width', 'auto', 'important');
+				el.style.setProperty('height', 'auto', 'important');
+				el.style.setProperty('object-fit', 'contain', 'important');
+				if (el instanceof HTMLImageElement) {
+					// HTML width/height attributes beat max-width:100% in some engines
+					el.removeAttribute('width');
+					el.removeAttribute('height');
+				}
+			}
+
+			// Fixed-width wrappers (common on cover pages) still blow the column out
+			const wide = doc.querySelectorAll('[style*="width"], [width]');
+			for (const node of wide) {
+				const el = node as HTMLElement;
+				if (el.tagName === 'BODY' || el.tagName === 'HTML') continue;
+				const attrW = el.getAttribute('width');
+				if (attrW && /^\d+$/.test(attrW) && Number(attrW) > frameW && frameW > 8) {
+					el.removeAttribute('width');
+				}
+				const sw = el.style?.width;
+				if (sw && /px$/i.test(sw)) {
+					const px = parseFloat(sw);
+					if (frameW > 8 && px > frameW) {
+						el.style.setProperty('max-width', '100%', 'important');
+						el.style.setProperty('width', '100%', 'important');
+					}
+				}
+			}
+		} catch {
+			/* */
+		}
+	}
+
 	function injectThemeIntoContents() {
 		if (!rendition) return;
 		const css = buildThemeCss();
@@ -246,6 +349,7 @@ pre {
 			const contents = rendition.getContents?.() || [];
 			for (const c of contents) {
 				c.addStylesheetCss?.(css, 'lumen-theme');
+				clampMediaInContents(c);
 			}
 		} catch {
 			/* */
@@ -565,11 +669,33 @@ pre {
 					allowScriptedContent: false
 				});
 
-				// Theme once per section, before expand measures textHeight.
+				// Theme + clamp media before expand measures textHeight/width.
+				// Large cover images must not become the column width.
 				rendition.hooks.content.register((contents: {
 					addStylesheetCss?: (css: string, key: string) => void;
+					document?: Document;
+					window?: Window;
+					contentWidth?: (w?: number) => number;
 				}) => {
 					contents.addStylesheetCss?.(buildThemeCss(), 'lumen-theme');
+					clampMediaInContents(contents);
+					// After late image decode, clamp again so expand keeps stage width
+					try {
+						const imgs = contents.document?.images;
+						if (imgs) {
+							for (const img of Array.from(imgs)) {
+								const run = () => {
+									clampMediaInContents(contents);
+									reexpandViews();
+								};
+								if (!img.complete) {
+									img.addEventListener('load', run, { once: true });
+								}
+							}
+						}
+					} catch {
+						/* */
+					}
 				});
 
 				// Seed default theme for first paint
@@ -587,9 +713,16 @@ pre {
 				reexpandViews();
 				await fillContinuous();
 
-				// Cover art often loads late — re-expand then fill chapters under it.
+				// Cover art often loads late — re-clamp width, re-expand, fill chapters.
 				await waitForIframeImages();
 				if (cancelled || !host) return;
+				try {
+					for (const c of rendition.getContents?.() || []) {
+						clampMediaInContents(c);
+					}
+				} catch {
+					/* */
+				}
 				reexpandViews();
 				await fillContinuous();
 				resizeToHost(true);
@@ -745,20 +878,25 @@ pre {
 	}
 	.epub-host :global(.epub-container) {
 		width: 100% !important;
+		max-width: 100% !important;
 		height: 100% !important;
 		/* Continuous stacks .epub-view blocks; container scrolls them */
 		overflow-y: auto !important;
+		/* Never let a wide cover image create a horizontal stage */
 		overflow-x: hidden !important;
 		-webkit-overflow-scrolling: touch;
 	}
 	.epub-host :global(.epub-view) {
-		/* Let expand() set explicit height; never clip to 0 */
+		/* Height from expand(); width never exceeds the host */
 		min-height: 0;
+		max-width: 100% !important;
+		box-sizing: border-box !important;
 	}
 	.epub-host :global(iframe) {
 		border: 0;
-		/* Never clamp iframe height — expand sets explicit px heights */
-		max-width: none;
+		/* Cap width to host; leave height to expand() px values */
+		max-width: 100% !important;
 		max-height: none;
+		box-sizing: border-box !important;
 	}
 </style>
