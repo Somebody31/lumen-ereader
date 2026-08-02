@@ -199,12 +199,16 @@
 }
 
 .reader-prose {
-	font-family: var(--font-reading);
+	font-family: var(--reader-font, var(--font-reading));
 	color: var(--stage-fg);
 	line-height: var(--reader-lh, 1.7);
 	font-size: var(--reader-size, 1.125rem);
 	max-width: var(--reader-measure, 68ch);
 	margin-inline: auto;
+	letter-spacing: var(--reader-tracking, 0em);
+	text-align: var(--reader-align, left);
+	hyphens: var(--reader-hyphens, manual);
+	-webkit-hyphens: var(--reader-hyphens, manual);
 	font-feature-settings: 'liga' 1, 'kern' 1, 'onum' 0, 'tnum' 1;
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 14;
@@ -218,6 +222,9 @@
 	letter-spacing: -0.02em;
 	line-height: 1.2;
 	margin: 1.6em 0 0.55em;
+	text-align: left;
+	hyphens: none;
+	-webkit-hyphens: none;
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 48;
 }
@@ -233,7 +240,7 @@
 }
 
 .reader-prose p {
-	margin: 0 0 1em;
+	margin: 0 0 var(--reader-para, 1em);
 }
 
 .reader-prose a {

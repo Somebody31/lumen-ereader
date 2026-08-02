@@ -2,17 +2,36 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { getBook, getPrefs, putPrefs, putProgress, getProgress } from '$lib/client/idb';
+	import {
+		deleteBookmark,
+		getBook,
+		getPrefs,
+		listBookmarks,
+		putBookmark,
+		putPrefs,
+		putProgress,
+		getProgress
+	} from '$lib/client/idb';
 	import { pushProgress } from '$lib/client/sync';
 	import { formatBytes, LARGE_SIZE_BYTES, WARN_SIZE_BYTES } from '$lib/client/textRender';
-	import type { BookRecord, ReaderPrefs, ReadingTheme } from '$lib/client/types';
+	import {
+		fontStack,
+		READING_FONTS,
+		type BookmarkRecord,
+		type BookRecord,
+		type ReaderPrefs,
+		type ReadingFont,
+		type ReadingTheme
+	} from '$lib/client/types';
 	import TextReader from '$lib/components/reader/TextReader.svelte';
 	import EpubReader from '$lib/components/reader/EpubReader.svelte';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
+	import BookmarkSimple from 'phosphor-svelte/lib/BookmarkSimple';
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CaretRight from 'phosphor-svelte/lib/CaretRight';
 	import List from 'phosphor-svelte/lib/List';
 	import TextAa from 'phosphor-svelte/lib/TextAa';
+	import Trash from 'phosphor-svelte/lib/Trash';
 	import X from 'phosphor-svelte/lib/X';
 
 	let book = $state<BookRecord | null>(null);
@@ -27,18 +46,23 @@
 	let focusMode = $state(false);
 	let tocOpen = $state(false);
 	let typeOpen = $state(false);
+	let tocTab = $state<'contents' | 'bookmarks'>('contents');
 	let toc = $state<{ label: string; href: string }[]>([]);
+	let bookmarks = $state<BookmarkRecord[]>([]);
 	let fraction = $state(0);
 	let progressLabel = $state('');
 	let epubRef: EpubReader | undefined = $state();
+	let bookmarkFlash = $state('');
 
 	let hideTimer: ReturnType<typeof setTimeout> | undefined;
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
 	let lastLocation = '';
+	let wakeLock: WakeLockSentinel | null = null;
 
 	const id = $derived(page.params.id ?? '');
 	const stageClass = $derived(`stage-${prefs?.theme ?? 'night'}`);
 	const pct = $derived(Math.round(fraction * 100));
+	const dimOpacity = $derived(Math.max(0, 1 - (prefs?.brightness ?? 1)));
 
 	const themes: {
 		id: ReadingTheme;
@@ -63,6 +87,29 @@
 		hideTimer = setTimeout(() => {
 			chromeVisible = false;
 		}, 2800);
+	}
+
+	async function refreshBookmarks() {
+		if (!id) return;
+		const list = await listBookmarks(id);
+		bookmarks = list.sort((a, b) => b.createdAt - a.createdAt);
+	}
+
+	async function applyWakeLock(on: boolean) {
+		try {
+			if (on && 'wakeLock' in navigator) {
+				if (wakeLock) return;
+				wakeLock = await navigator.wakeLock.request('screen');
+				wakeLock.addEventListener('release', () => {
+					wakeLock = null;
+				});
+			} else if (wakeLock) {
+				await wakeLock.release();
+				wakeLock = null;
+			}
+		} catch {
+			/* denied or unsupported */
+		}
 	}
 
 	async function load() {
@@ -100,15 +147,27 @@
 		if (b.format === 'text' || b.format === 'markdown') {
 			textRaw = await b.blob.text();
 		}
+		await refreshBookmarks();
+		if (prefs.keepAwake) await applyWakeLock(true);
 		loading = false;
 		bumpChrome();
 	}
 
 	onMount(() => {
 		load();
+
+		const onVis = () => {
+			if (document.visibilityState === 'visible' && prefs?.keepAwake) {
+				applyWakeLock(true);
+			}
+		};
+		document.addEventListener('visibilitychange', onVis);
+
 		return () => {
 			clearTimeout(hideTimer);
 			clearTimeout(saveTimer);
+			document.removeEventListener('visibilitychange', onVis);
+			applyWakeLock(false);
 		};
 	});
 
@@ -134,6 +193,57 @@
 		if (!prefs) return;
 		prefs = { ...prefs, ...partial };
 		await putPrefs(prefs);
+		if ('keepAwake' in partial) {
+			await applyWakeLock(!!prefs.keepAwake);
+		}
+	}
+
+	async function addBookmarkHere() {
+		if (!book) return;
+		const location =
+			lastLocation ||
+			(book.format === 'epub' ? '' : `scroll:${fraction.toFixed(4)}`);
+		if (!location && book.format === 'epub') {
+			// EPUB not relocated yet — still allow a start mark
+		}
+		const bm: BookmarkRecord = {
+			id: crypto.randomUUID(),
+			bookId: book.id,
+			location: location || 'start',
+			label: progressLabel || `${Math.round(fraction * 100)}%`,
+			createdAt: Date.now()
+		};
+		await putBookmark(bm);
+		await refreshBookmarks();
+		bookmarkFlash = 'Saved bookmark';
+		setTimeout(() => (bookmarkFlash = ''), 1600);
+	}
+
+	async function removeBookmark(bmId: string) {
+		await deleteBookmark(bmId);
+		await refreshBookmarks();
+	}
+
+	function goBookmark(bm: BookmarkRecord) {
+		if (book?.format === 'epub') {
+			epubRef?.goTo(bm.location);
+		} else {
+			// Text: location is scroll:fraction
+			const m = /^scroll:([\d.]+)$/.exec(bm.location);
+			if (m) {
+				const f = Number(m[1]);
+				scheduleSave(f, bm.location, bm.label);
+				// Reload path: TextReader only restores initialFraction once —
+				// soft jump via re-key would need component API; for now set hash-style by full navigation
+				const scroller = document.querySelector('.reader-scroll') as HTMLElement | null;
+				if (scroller) {
+					const max = scroller.scrollHeight - scroller.clientHeight;
+					scroller.scrollTop = Math.max(0, Math.min(max, f * max));
+				}
+			}
+		}
+		tocOpen = false;
+		bumpChrome();
 	}
 
 	function onKey(e: KeyboardEvent) {
@@ -160,6 +270,22 @@
 		if (e.key === 't' || e.key === 'T') {
 			tocOpen = !tocOpen;
 			typeOpen = false;
+			if (tocOpen) tocTab = 'contents';
+			return;
+		}
+		if (e.key === 'b' || e.key === 'B') {
+			if (e.shiftKey) {
+				tocOpen = true;
+				typeOpen = false;
+				tocTab = 'bookmarks';
+			} else {
+				addBookmarkHere();
+			}
+			return;
+		}
+		if (e.key === ',' || e.key === '<') {
+			typeOpen = !typeOpen;
+			tocOpen = false;
 			return;
 		}
 		if (e.key === '+' || e.key === '=') {
@@ -186,6 +312,19 @@
 		parts.push(`${pct}%`);
 		return parts.join(' · ');
 	});
+
+	function sampleStyle(p: ReaderPrefs) {
+		return [
+			`font-family: ${fontStack(p.fontFamily)}`,
+			`font-size: ${p.fontSize}px`,
+			`line-height: ${p.lineHeight}`,
+			`letter-spacing: ${p.letterSpacing ?? 0}em`,
+			`max-width: ${p.measure}ch`,
+			`text-align: ${p.textAlign ?? 'left'}`,
+			`hyphens: ${p.hyphenate ? 'auto' : 'manual'}`,
+			`color: var(--stage-chrome-fg)`
+		].join('; ');
+	}
 </script>
 
 <svelte:window onkeydown={onKey} onmousemove={bumpChrome} onclick={bumpChrome} />
@@ -256,7 +395,7 @@
 				: 'pointer-events-none -translate-y-1 opacity-0'}"
 		>
 			<div
-				class="mx-3 flex min-w-0 items-center gap-1 rounded-lg border px-2 py-1.5 backdrop-blur-md sm:mx-4"
+				class="mx-3 flex min-w-0 items-center gap-0.5 rounded-lg border px-2 py-1.5 backdrop-blur-md sm:mx-4"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 			>
 				<a
@@ -285,7 +424,17 @@
 					type="button"
 					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70 active:scale-95"
 					style="color: var(--stage-chrome-mute)"
-					aria-label="Table of contents"
+					aria-label="Save bookmark"
+					title="Bookmark (B)"
+					onclick={() => addBookmarkHere()}
+				>
+					<BookmarkSimple size={18} weight="light" />
+				</button>
+				<button
+					type="button"
+					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70 active:scale-95"
+					style="color: var(--stage-chrome-mute)"
+					aria-label="Table of contents and bookmarks"
 					onclick={() => {
 						tocOpen = !tocOpen;
 						typeOpen = false;
@@ -318,7 +467,6 @@
 					onprogress={(f, loc, label) => scheduleSave(f, loc, label)}
 					ontoc={(items) => (toc = items)}
 				/>
-				<!-- Edge hit zones -->
 				{#if !focusMode}
 					<button
 						type="button"
@@ -368,7 +516,25 @@
 			{/if}
 		</div>
 
-		<!-- Bottom progress chip when chrome visible -->
+		<!-- Brightness dim (under chrome, over text) -->
+		{#if dimOpacity > 0.01}
+			<div
+				class="pointer-events-none absolute inset-0 z-[15]"
+				style="background: rgba(0,0,0,{dimOpacity})"
+				aria-hidden="true"
+			></div>
+		{/if}
+
+		{#if bookmarkFlash}
+			<div
+				class="pointer-events-none absolute bottom-16 left-1/2 z-40 -translate-x-1/2 rounded-full border px-3 py-1.5 font-ui text-[11px] backdrop-blur-md"
+				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
+				role="status"
+			>
+				{bookmarkFlash}
+			</div>
+		{/if}
+
 		{#if chromeVisible && !focusMode && !typeOpen && !tocOpen}
 			<div
 				class="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-full border px-3 py-1 font-ui text-[11px] tabular-nums backdrop-blur-md transition-opacity duration-300"
@@ -380,16 +546,16 @@
 
 		{#if typeOpen}
 			<div
-				class="absolute bottom-4 left-1/2 z-40 w-[min(100%-1.5rem,24rem)] -translate-x-1/2 overflow-hidden rounded-lg border backdrop-blur-md"
+				class="absolute bottom-4 left-1/2 z-40 flex max-h-[min(78dvh,36rem)] w-[min(100%-1.5rem,26rem)] -translate-x-1/2 flex-col overflow-hidden rounded-lg border backdrop-blur-md"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 				role="dialog"
 				aria-label="Reading settings"
 			>
 				<div
-					class="flex items-center justify-between border-b px-4 py-3"
+					class="flex shrink-0 items-center justify-between border-b px-4 py-3"
 					style="border-color: var(--stage-rule)"
 				>
-					<p class="font-ui text-[11px] font-medium uppercase tracking-[0.12em]">Type & theme</p>
+					<p class="font-ui text-[11px] font-medium uppercase tracking-[0.12em]">Reading</p>
 					<button
 						type="button"
 						class="flex h-8 w-8 items-center justify-center transition-opacity hover:opacity-70"
@@ -400,42 +566,74 @@
 					</button>
 				</div>
 
-				<!-- Live sample line -->
 				<div
-					class="border-b px-4 py-3"
+					class="shrink-0 border-b px-4 py-3"
 					style="border-color: var(--stage-rule); background: color-mix(in srgb, var(--stage-fg) 4%, transparent)"
 				>
-					<p
-						class="font-reading"
-						style="font-family: var(--font-reading); font-size: {prefs.fontSize}px; line-height: {prefs.lineHeight}; max-width: {prefs.measure}ch; color: var(--stage-chrome-fg)"
-					>
+					<p class="font-reading" lang="en" style={sampleStyle(prefs)}>
 						{sampleLine}
 					</p>
 				</div>
 
-				<div class="space-y-4 p-4">
-					<div class="flex flex-wrap gap-1.5">
-						{#each themes as t (t.id)}
-							<button
-								type="button"
-								class="theme-swatch"
-								style="width: 3.75rem; border-color: var(--stage-rule)"
-								aria-pressed={prefs.theme === t.id}
-								onclick={() => updatePrefs({ theme: t.id })}
-							>
-								<span class="theme-swatch-face" style="background: {t.bg}; height: 2.25rem">
-									<span
-										class="mx-auto mt-1.5 block h-0.5 w-6"
-										style="background: {t.fg}"
-									></span>
-								</span>
-								<span
-									class="theme-swatch-label"
-									style="color: var(--stage-chrome-mute)">{t.label}</span
+				<div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
+					<!-- Theme -->
+					<div>
+						<p
+							class="mb-2 font-ui text-[10px] font-medium uppercase tracking-[0.1em]"
+							style="color: var(--stage-chrome-mute)"
+						>
+							Theme
+						</p>
+						<div class="flex flex-wrap gap-1.5">
+							{#each themes as t (t.id)}
+								<button
+									type="button"
+									class="theme-swatch"
+									style="width: 3.75rem; border-color: var(--stage-rule)"
+									aria-pressed={prefs.theme === t.id}
+									onclick={() => updatePrefs({ theme: t.id })}
 								>
-							</button>
-						{/each}
+									<span class="theme-swatch-face" style="background: {t.bg}; height: 2.25rem">
+										<span
+											class="mx-auto mt-1.5 block h-0.5 w-6"
+											style="background: {t.fg}"
+										></span>
+									</span>
+									<span
+										class="theme-swatch-label"
+										style="color: var(--stage-chrome-mute)">{t.label}</span
+									>
+								</button>
+							{/each}
+						</div>
 					</div>
+
+					<!-- Font family -->
+					<div>
+						<p
+							class="mb-2 font-ui text-[10px] font-medium uppercase tracking-[0.1em]"
+							style="color: var(--stage-chrome-mute)"
+						>
+							Typeface
+						</p>
+						<div class="flex flex-wrap gap-1.5">
+							{#each READING_FONTS as f (f.id)}
+								<button
+									type="button"
+									class="rounded-md border px-2.5 py-1.5 font-ui text-[12px] transition-opacity hover:opacity-80"
+									style="border-color: var(--stage-rule); color: var(--stage-chrome-fg); background: {prefs.fontFamily ===
+									f.id
+										? 'color-mix(in srgb, var(--stage-fg) 10%, transparent)'
+										: 'transparent'}; font-family: {f.stack}"
+									aria-pressed={prefs.fontFamily === f.id}
+									onclick={() => updatePrefs({ fontFamily: f.id as ReadingFont })}
+								>
+									{f.label}
+								</button>
+							{/each}
+						</div>
+					</div>
+
 					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
 						Size · <span class="tabular-nums">{prefs.fontSize}px</span>
 						<input
@@ -467,6 +665,42 @@
 						/>
 					</label>
 					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
+						Letter spacing · <span class="tabular-nums"
+							>{(prefs.letterSpacing ?? 0).toFixed(3)}em</span
+						>
+						<input
+							type="range"
+							min="0"
+							max="0.08"
+							step="0.005"
+							value={prefs.letterSpacing ?? 0}
+							class="mt-1.5 w-full"
+							style="accent-color: var(--stage-chrome-fg)"
+							oninput={(e) =>
+								updatePrefs({
+									letterSpacing: Number((e.currentTarget as HTMLInputElement).value)
+								})}
+						/>
+					</label>
+					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
+						Paragraph space · <span class="tabular-nums"
+							>{(prefs.paragraphSpacing ?? 1).toFixed(2)}em</span
+						>
+						<input
+							type="range"
+							min="0.4"
+							max="2"
+							step="0.1"
+							value={prefs.paragraphSpacing ?? 1}
+							class="mt-1.5 w-full"
+							style="accent-color: var(--stage-chrome-fg)"
+							oninput={(e) =>
+								updatePrefs({
+									paragraphSpacing: Number((e.currentTarget as HTMLInputElement).value)
+								})}
+						/>
+					</label>
+					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
 						Measure · <span class="tabular-nums">{prefs.measure}ch</span>
 						<input
 							type="range"
@@ -480,11 +714,108 @@
 								updatePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
 						/>
 					</label>
+					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
+						Margin · <span class="tabular-nums">{prefs.margin}px</span>
+						<input
+							type="range"
+							min="12"
+							max="48"
+							step="2"
+							value={prefs.margin}
+							class="mt-1.5 w-full"
+							style="accent-color: var(--stage-chrome-fg)"
+							oninput={(e) =>
+								updatePrefs({ margin: Number((e.currentTarget as HTMLInputElement).value) })}
+						/>
+					</label>
+
+					<!-- Align + hyphen -->
+					<div class="flex flex-wrap items-center gap-2">
+						<p
+							class="w-full font-ui text-[10px] font-medium uppercase tracking-[0.1em]"
+							style="color: var(--stage-chrome-mute)"
+						>
+							Composition
+						</p>
+						<button
+							type="button"
+							class="rounded-md border px-2.5 py-1.5 font-ui text-[12px]"
+							style="border-color: var(--stage-rule); background: {(prefs.textAlign ?? 'left') ===
+							'left'
+								? 'color-mix(in srgb, var(--stage-fg) 10%, transparent)'
+								: 'transparent'}; color: var(--stage-chrome-fg)"
+							aria-pressed={(prefs.textAlign ?? 'left') === 'left'}
+							onclick={() => updatePrefs({ textAlign: 'left' })}
+						>
+							Left
+						</button>
+						<button
+							type="button"
+							class="rounded-md border px-2.5 py-1.5 font-ui text-[12px]"
+							style="border-color: var(--stage-rule); background: {prefs.textAlign === 'justify'
+								? 'color-mix(in srgb, var(--stage-fg) 10%, transparent)'
+								: 'transparent'}; color: var(--stage-chrome-fg)"
+							aria-pressed={prefs.textAlign === 'justify'}
+							onclick={() => updatePrefs({ textAlign: 'justify' })}
+						>
+							Justify
+						</button>
+						<button
+							type="button"
+							class="rounded-md border px-2.5 py-1.5 font-ui text-[12px]"
+							style="border-color: var(--stage-rule); background: {prefs.hyphenate
+								? 'color-mix(in srgb, var(--stage-fg) 10%, transparent)'
+								: 'transparent'}; color: var(--stage-chrome-fg)"
+							aria-pressed={!!prefs.hyphenate}
+							onclick={() => updatePrefs({ hyphenate: !prefs!.hyphenate })}
+						>
+							Hyphenate
+						</button>
+					</div>
+
+					<label class="block font-ui text-xs" style="color: var(--stage-chrome-mute)">
+						Brightness · <span class="tabular-nums"
+							>{Math.round((prefs.brightness ?? 1) * 100)}%</span
+						>
+						<input
+							type="range"
+							min="0.55"
+							max="1"
+							step="0.05"
+							value={prefs.brightness ?? 1}
+							class="mt-1.5 w-full"
+							style="accent-color: var(--stage-chrome-fg)"
+							oninput={(e) =>
+								updatePrefs({
+									brightness: Number((e.currentTarget as HTMLInputElement).value)
+								})}
+						/>
+					</label>
+
+					<label
+						class="flex cursor-pointer items-center justify-between gap-3 font-ui text-xs"
+						style="color: var(--stage-chrome-mute)"
+					>
+						<span>
+							Keep screen awake
+							<span class="mt-0.5 block text-[10px] opacity-80">Uses the Wake Lock API when available</span
+							>
+						</span>
+						<input
+							type="checkbox"
+							class="h-4 w-4 shrink-0"
+							style="accent-color: var(--stage-chrome-fg)"
+							checked={!!prefs.keepAwake}
+							onchange={(e) =>
+								updatePrefs({ keepAwake: (e.currentTarget as HTMLInputElement).checked })}
+						/>
+					</label>
+
 					<p
 						class="border-t pt-2 font-ui text-[10px] uppercase tracking-[0.08em]"
 						style="color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
 					>
-						F focus · T contents · +/− size · Esc library
+						F focus · T contents · B bookmark · Shift+B marks · , type · +/− size · Esc library
 					</p>
 				</div>
 			</div>
@@ -496,13 +827,34 @@
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 				role="dialog"
 				aria-modal="true"
-				aria-label="Contents"
+				aria-label="Contents and bookmarks"
 			>
 				<div
 					class="flex items-center justify-between px-4 py-3"
 					style="border-bottom: 1px solid var(--stage-rule)"
 				>
-					<p class="font-ui text-[11px] font-medium uppercase tracking-[0.12em]">Contents</p>
+					<div class="flex gap-3">
+						<button
+							type="button"
+							class="font-ui text-[11px] font-medium uppercase tracking-[0.12em] transition-opacity"
+							style="color: {tocTab === 'contents'
+								? 'var(--stage-chrome-fg)'
+								: 'var(--stage-chrome-mute)'}"
+							onclick={() => (tocTab = 'contents')}
+						>
+							Contents
+						</button>
+						<button
+							type="button"
+							class="font-ui text-[11px] font-medium uppercase tracking-[0.12em] transition-opacity"
+							style="color: {tocTab === 'bookmarks'
+								? 'var(--stage-chrome-fg)'
+								: 'var(--stage-chrome-mute)'}"
+							onclick={() => (tocTab = 'bookmarks')}
+						>
+							Marks · {bookmarks.length}
+						</button>
+					</div>
 					<button
 						type="button"
 						class="flex h-8 w-8 items-center justify-center transition-opacity hover:opacity-70"
@@ -513,30 +865,88 @@
 					</button>
 				</div>
 				<div class="flex-1 overflow-y-auto p-2">
-					{#if toc.length === 0}
-						<p class="px-2 py-4 font-ui text-sm" style="color: var(--stage-chrome-mute)">
-							{book.format === 'epub'
-								? 'No table of contents in this file.'
-								: 'Scroll the text document freely.'}
-						</p>
+					{#if tocTab === 'contents'}
+						{#if toc.length === 0}
+							<p class="px-2 py-4 font-ui text-sm" style="color: var(--stage-chrome-mute)">
+								{book.format === 'epub'
+									? 'No table of contents in this file.'
+									: 'Scroll the text document freely.'}
+							</p>
+						{:else}
+							<ul class="space-y-0">
+								{#each toc as item, i (i)}
+									<li>
+										<button
+											type="button"
+											class="w-full border-b px-3 py-2.5 text-left font-ui text-sm transition-opacity hover:opacity-70"
+											style="color: var(--stage-chrome-mute); border-color: color-mix(in srgb, var(--stage-rule) 70%, transparent)"
+											onclick={() => {
+												epubRef?.goTo(item.href);
+												tocOpen = false;
+											}}
+										>
+											{item.label}
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
 					{:else}
-						<ul class="space-y-0">
-							{#each toc as item, i (i)}
-								<li>
-									<button
-										type="button"
-										class="w-full border-b px-3 py-2.5 text-left font-ui text-sm transition-opacity hover:opacity-70"
-										style="color: var(--stage-chrome-mute); border-color: color-mix(in srgb, var(--stage-rule) 70%, transparent)"
-										onclick={() => {
-											epubRef?.goTo(item.href);
-											tocOpen = false;
-										}}
+						<div class="mb-2 px-2">
+							<button
+								type="button"
+								class="w-full rounded-md border px-3 py-2 font-ui text-[13px] transition-opacity hover:opacity-80"
+								style="border-color: var(--stage-rule); color: var(--stage-chrome-fg)"
+								onclick={() => addBookmarkHere()}
+							>
+								Bookmark this place
+							</button>
+						</div>
+						{#if bookmarks.length === 0}
+							<p class="px-2 py-4 font-ui text-sm" style="color: var(--stage-chrome-mute)">
+								No bookmarks yet. Press B while reading.
+							</p>
+						{:else}
+							<ul class="space-y-0">
+								{#each bookmarks as bm (bm.id)}
+									<li
+										class="flex items-stretch border-b"
+										style="border-color: color-mix(in srgb, var(--stage-rule) 70%, transparent)"
 									>
-										{item.label}
-									</button>
-								</li>
-							{/each}
-						</ul>
+										<button
+											type="button"
+											class="min-w-0 flex-1 px-3 py-2.5 text-left transition-opacity hover:opacity-70"
+											onclick={() => goBookmark(bm)}
+										>
+											<span
+												class="block font-ui text-sm"
+												style="color: var(--stage-chrome-fg)">{bm.label}</span
+											>
+											<span
+												class="mt-0.5 block font-ui text-[11px]"
+												style="color: var(--stage-chrome-mute)"
+											>
+												{new Date(bm.createdAt).toLocaleString(undefined, {
+													month: 'short',
+													day: 'numeric',
+													hour: '2-digit',
+													minute: '2-digit'
+												})}
+											</span>
+										</button>
+										<button
+											type="button"
+											class="flex w-10 shrink-0 items-center justify-center transition-opacity hover:opacity-70"
+											style="color: var(--stage-chrome-mute)"
+											aria-label="Delete bookmark"
+											onclick={() => removeBookmark(bm.id)}
+										>
+											<Trash size={15} weight="light" />
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
 					{/if}
 				</div>
 			</div>

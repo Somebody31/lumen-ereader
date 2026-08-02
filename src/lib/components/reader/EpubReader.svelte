@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import type { ReaderPrefs } from '$lib/client/types';
+	import { fontStack, type ReaderPrefs } from '$lib/client/types';
 
 	let {
 		blob,
@@ -25,13 +25,45 @@
 
 	const themeStyles = $derived.by(() => {
 		const map: Record<string, { bg: string; fg: string }> = {
-			night: { bg: '#0B0E14', fg: '#E8E6E1' },
-			paper: { bg: '#F2EFE8', fg: '#1A1C22' },
-			sepia: { bg: '#E8DCC8', fg: '#3D3428' },
-			contrast: { bg: '#000000', fg: '#FFFFFF' }
+			night: { bg: '#0c0c0c', fg: '#f3f2ed' },
+			paper: { bg: '#f7f5f0', fg: '#1a1c22' },
+			sepia: { bg: '#e8dcc8', fg: '#3d3428' },
+			contrast: { bg: '#000000', fg: '#ffffff' }
 		};
 		return map[prefs.theme] || map.night;
 	});
+
+	function bodyTheme() {
+		const { bg, fg } = themeStyles;
+		const align = prefs.textAlign ?? 'left';
+		const tracking = prefs.letterSpacing ?? 0;
+		const para = prefs.paragraphSpacing ?? 1;
+		const hyphens = prefs.hyphenate ? 'auto' : 'manual';
+		return {
+			body: {
+				background: bg,
+				color: fg,
+				'font-family': fontStack(prefs.fontFamily),
+				'font-size': `${prefs.fontSize}px !important`,
+				'line-height': `${prefs.lineHeight} !important`,
+				'letter-spacing': `${tracking}em`,
+				'max-width': `${prefs.measure}ch`,
+				margin: '0 auto',
+				padding: `${prefs.margin}px !important`,
+				'text-align': align,
+				hyphens,
+				'-webkit-hyphens': hyphens,
+				'font-optical-sizing': 'auto'
+			},
+			p: {
+				'margin-bottom': `${para}em`,
+				'text-align': align,
+				hyphens,
+				'-webkit-hyphens': hyphens
+			},
+			a: { color: '#7A1C1C' }
+		};
+	}
 
 	export async function next() {
 		await rendition?.next();
@@ -59,21 +91,7 @@
 				manager: 'continuous'
 			});
 
-			const { bg, fg } = themeStyles;
-			rendition.themes.default({
-				body: {
-					background: bg,
-					color: fg,
-					'font-family': '"Literata Variable", Literata, Georgia, serif',
-					'font-size': `${prefs.fontSize}px !important`,
-					'line-height': `${prefs.lineHeight} !important`,
-					'max-width': `${prefs.measure}ch`,
-					margin: '0 auto',
-					padding: `${prefs.margin}px !important`,
-					'font-optical-sizing': 'auto'
-				},
-				a: { color: '#7A1C1C' }
-			});
+			rendition.themes.default(bodyTheme());
 
 			const start = initialLocation || undefined;
 			await rendition.display(start);
@@ -105,21 +123,18 @@
 
 	$effect(() => {
 		if (!rendition) return;
-		const { bg, fg } = themeStyles;
-		rendition.themes.default({
-			body: {
-				background: bg,
-				color: fg,
-				'font-family': '"Literata Variable", Literata, Georgia, serif',
-				'font-size': `${prefs.fontSize}px !important`,
-				'line-height': `${prefs.lineHeight} !important`,
-				'max-width': `${prefs.measure}ch`,
-				margin: '0 auto',
-				padding: `${prefs.margin}px !important`,
-				'font-optical-sizing': 'auto'
-			},
-			a: { color: '#7A1C1C' }
-		});
+		// Re-apply when any visual pref changes
+		void prefs.theme;
+		void prefs.fontFamily;
+		void prefs.fontSize;
+		void prefs.lineHeight;
+		void prefs.letterSpacing;
+		void prefs.paragraphSpacing;
+		void prefs.measure;
+		void prefs.margin;
+		void prefs.textAlign;
+		void prefs.hyphenate;
+		rendition.themes.default(bodyTheme());
 	});
 
 	onDestroy(() => {

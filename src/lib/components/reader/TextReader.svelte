@@ -7,7 +7,7 @@
 		renderTextChunks,
 		scrollToFraction
 	} from '$lib/client/textRender';
-	import type { ReaderPrefs } from '$lib/client/types';
+	import { fontStack, type ReaderPrefs } from '$lib/client/types';
 
 	let {
 		raw,
@@ -134,10 +134,15 @@
 <div
 	bind:this={scroller}
 	class="reader-scroll h-full overflow-y-auto px-[var(--reader-margin,1.5rem)] py-20 sm:py-24"
+	style:--reader-font={fontStack(prefs.fontFamily)}
 	style:--reader-size="{prefs.fontSize}px"
 	style:--reader-lh={prefs.lineHeight}
 	style:--reader-measure="{prefs.measure}ch"
 	style:--reader-margin="{prefs.margin}px"
+	style:--reader-tracking="{(prefs.letterSpacing ?? 0)}em"
+	style:--reader-para="{(prefs.paragraphSpacing ?? 1)}em"
+	style:--reader-align={prefs.textAlign ?? 'left'}
+	style:--reader-hyphens={prefs.hyphenate ? 'auto' : 'manual'}
 	onscroll={onScroll}
 >
 	{#if !ready}
@@ -145,7 +150,7 @@
 			<p class="font-ui text-sm">Preparing text… {parsePct}%</p>
 		</div>
 	{:else}
-		<article class="reader-prose relative z-[1]">
+		<article class="reader-prose relative z-[1]" lang="en">
 			{#if topSpacer > 0}
 				<div style="height: {topSpacer}px" aria-hidden="true"></div>
 			{/if}

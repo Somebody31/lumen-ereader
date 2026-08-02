@@ -2,7 +2,14 @@
 	import { onMount } from 'svelte';
 	import { getPrefs, putPrefs } from '$lib/client/idb';
 	import { fetchSession, login, logout, pullLibrary, pushAll } from '$lib/client/sync';
-	import type { ReaderPrefs, ReadingTheme, SessionInfo } from '$lib/client/types';
+	import {
+		fontStack,
+		READING_FONTS,
+		type ReaderPrefs,
+		type ReadingFont,
+		type ReadingTheme,
+		type SessionInfo
+	} from '$lib/client/types';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Cloud from 'phosphor-svelte/lib/Cloud';
 	import CloudSlash from 'phosphor-svelte/lib/CloudSlash';
@@ -138,6 +145,27 @@
 					</div>
 				</div>
 
+				<div>
+					<p class="mb-2.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-soft">
+						Typeface
+					</p>
+					<div class="flex flex-wrap gap-2">
+						{#each READING_FONTS as f (f.id)}
+							<button
+								type="button"
+								class="rounded-md border border-rule px-3 py-2 font-ui text-[13px] text-ink transition-colors hover:bg-newsprint"
+								style="font-family: {f.stack}; background: {prefs.fontFamily === f.id
+									? 'var(--color-newsprint, #ebe8e1)'
+									: 'transparent'}"
+								aria-pressed={prefs.fontFamily === f.id}
+								onclick={() => savePrefs({ fontFamily: f.id as ReadingFont })}
+							>
+								{f.label}
+							</button>
+						{/each}
+					</div>
+				</div>
+
 				<label class="block font-ui text-xs text-ink-soft">
 					Font size · <span class="tabular-nums text-ink">{prefs.fontSize}px</span>
 					<input
@@ -164,6 +192,36 @@
 					/>
 				</label>
 				<label class="block font-ui text-xs text-ink-soft">
+					Letter spacing ·
+					<span class="tabular-nums text-ink">{(prefs.letterSpacing ?? 0).toFixed(3)}em</span>
+					<input
+						type="range"
+						min="0"
+						max="0.08"
+						step="0.005"
+						value={prefs.letterSpacing ?? 0}
+						class="mt-2 w-full accent-ink"
+						oninput={(e) =>
+							savePrefs({ letterSpacing: Number((e.currentTarget as HTMLInputElement).value) })}
+					/>
+				</label>
+				<label class="block font-ui text-xs text-ink-soft">
+					Paragraph space ·
+					<span class="tabular-nums text-ink">{(prefs.paragraphSpacing ?? 1).toFixed(2)}em</span>
+					<input
+						type="range"
+						min="0.4"
+						max="2"
+						step="0.1"
+						value={prefs.paragraphSpacing ?? 1}
+						class="mt-2 w-full accent-ink"
+						oninput={(e) =>
+							savePrefs({
+								paragraphSpacing: Number((e.currentTarget as HTMLInputElement).value)
+							})}
+					/>
+				</label>
+				<label class="block font-ui text-xs text-ink-soft">
 					Column measure · <span class="tabular-nums text-ink">{prefs.measure}ch</span>
 					<input
 						type="range"
@@ -173,6 +231,91 @@
 						class="mt-2 w-full accent-ink"
 						oninput={(e) =>
 							savePrefs({ measure: Number((e.currentTarget as HTMLInputElement).value) })}
+					/>
+				</label>
+				<label class="block font-ui text-xs text-ink-soft">
+					Margin · <span class="tabular-nums text-ink">{prefs.margin}px</span>
+					<input
+						type="range"
+						min="12"
+						max="48"
+						step="2"
+						value={prefs.margin}
+						class="mt-2 w-full accent-ink"
+						oninput={(e) =>
+							savePrefs({ margin: Number((e.currentTarget as HTMLInputElement).value) })}
+					/>
+				</label>
+
+				<div>
+					<p class="mb-2.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-soft">
+						Composition
+					</p>
+					<div class="flex flex-wrap gap-2">
+						<button
+							type="button"
+							class="rounded-md border border-rule px-3 py-2 font-ui text-[13px] text-ink"
+							style="background: {(prefs.textAlign ?? 'left') === 'left'
+								? 'var(--color-newsprint, #ebe8e1)'
+								: 'transparent'}"
+							aria-pressed={(prefs.textAlign ?? 'left') === 'left'}
+							onclick={() => savePrefs({ textAlign: 'left' })}
+						>
+							Left
+						</button>
+						<button
+							type="button"
+							class="rounded-md border border-rule px-3 py-2 font-ui text-[13px] text-ink"
+							style="background: {prefs.textAlign === 'justify'
+								? 'var(--color-newsprint, #ebe8e1)'
+								: 'transparent'}"
+							aria-pressed={prefs.textAlign === 'justify'}
+							onclick={() => savePrefs({ textAlign: 'justify' })}
+						>
+							Justify
+						</button>
+						<button
+							type="button"
+							class="rounded-md border border-rule px-3 py-2 font-ui text-[13px] text-ink"
+							style="background: {prefs.hyphenate
+								? 'var(--color-newsprint, #ebe8e1)'
+								: 'transparent'}"
+							aria-pressed={!!prefs.hyphenate}
+							onclick={() => savePrefs({ hyphenate: !prefs!.hyphenate })}
+						>
+							Hyphenate
+						</button>
+					</div>
+				</div>
+
+				<label class="block font-ui text-xs text-ink-soft">
+					Brightness ·
+					<span class="tabular-nums text-ink">{Math.round((prefs.brightness ?? 1) * 100)}%</span>
+					<input
+						type="range"
+						min="0.55"
+						max="1"
+						step="0.05"
+						value={prefs.brightness ?? 1}
+						class="mt-2 w-full accent-ink"
+						oninput={(e) =>
+							savePrefs({ brightness: Number((e.currentTarget as HTMLInputElement).value) })}
+					/>
+				</label>
+
+				<label class="flex cursor-pointer items-center justify-between gap-3 font-ui text-sm text-ink">
+					<span>
+						Keep screen awake while reading
+						<span class="mt-0.5 block font-ui text-xs text-ink-soft"
+							>Requests a screen wake lock in the reader when supported</span
+						>
+					</span>
+					<input
+						type="checkbox"
+						class="h-4 w-4 shrink-0 accent-ink"
+						checked={!!prefs.keepAwake}
+						onchange={(e) =>
+							savePrefs({ keepAwake: (e.currentTarget as HTMLInputElement).checked })}
 					/>
 				</label>
 			</div>
@@ -186,12 +329,18 @@
 				<p class="font-ui text-[10px] uppercase tracking-[0.12em] opacity-70">Preview</p>
 				<p
 					class="mt-4 font-reading"
-					style="font-family: var(--font-reading); font-size: {prefs.fontSize}px; line-height: {prefs.lineHeight}; max-width: {prefs.measure}ch; font-variation-settings: 'opsz' 14"
+					lang="en"
+					style="font-family: {fontStack(prefs.fontFamily)}; font-size: {prefs.fontSize}px; line-height: {prefs.lineHeight}; letter-spacing: {(prefs.letterSpacing ??
+						0)}em; max-width: {prefs.measure}ch; text-align: {prefs.textAlign ??
+						'left'}; hyphens: {prefs.hyphenate
+						? 'auto'
+						: 'manual'}; font-variation-settings: 'opsz' 14"
 				>
 					{sample}
 				</p>
 				<p class="mt-4 font-ui text-[11px] opacity-70">
-					{previewTheme.label} · {prefs.fontSize}px · {prefs.measure}ch
+					{previewTheme.label} · {READING_FONTS.find((f) => f.id === prefs!.fontFamily)?.label ??
+						'Literata'} · {prefs!.fontSize}px · {prefs!.measure}ch
 				</p>
 			</div>
 		</section>
@@ -283,8 +432,8 @@
 
 	<section class="animate-plate-in stagger-3 font-ui text-xs leading-relaxed text-ink-mute">
 		<p>
-			No account required to read. In the reader: F focus, T contents, +/− size, arrows or J/K for
-			EPUB, Esc back.
+			No account required to read. In the reader: F focus, T contents, B bookmark, Shift+B marks, ,
+			type panel, +/− size, arrows or J/K for EPUB, Esc back.
 		</p>
 	</section>
 </div>
