@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { getPrefs, putPrefs } from '$lib/client/idb';
-	import { fetchSession, login, logout, pullLibrary, pushAll } from '$lib/client/sync';
+	import { fetchSession, logout, pullLibrary, pushAll } from '$lib/client/sync';
 	import {
 		fontStack,
 		READING_FONTS,
@@ -16,7 +16,6 @@
 
 	let prefs = $state<ReaderPrefs | null>(null);
 	let session = $state<SessionInfo | null>(null);
-	let passphrase = $state('');
 	let busy = $state(false);
 	let message = $state('');
 	let error = $state('');
@@ -41,21 +40,6 @@
 		if (!prefs) return;
 		prefs = { ...prefs, ...partial };
 		await putPrefs(prefs);
-	}
-
-	async function handleLogin() {
-		busy = true;
-		error = '';
-		message = '';
-		const res = await login(passphrase);
-		if (!res.ok) {
-			error = res.error || 'Login failed';
-		} else {
-			message = 'Signed in. You can push or pull your library.';
-			passphrase = '';
-			session = await fetchSession();
-		}
-		busy = false;
 	}
 
 	async function handleLogout() {
@@ -368,25 +352,14 @@
 					>
 				</div>
 			{:else}
-				<form
-					class="space-y-3"
-					onsubmit={(e) => {
-						e.preventDefault();
-						handleLogin();
-					}}
-				>
-					<label class="block font-ui text-xs text-ink-mute">
-						Passphrase
-						<input
-							type="password"
-							bind:value={passphrase}
-							autocomplete="current-password"
-							class="mt-1.5 w-full rounded-md border border-rule bg-newsprint px-3 py-2.5 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink-mute focus:outline-none"
-							placeholder="Deployment passphrase"
-						/>
-					</label>
-					<Button type="submit" disabled={busy || !passphrase}>Sign in</Button>
-				</form>
+				<div class="space-y-3">
+					<p class="type-body text-sm text-ink-soft">
+						Sign in on the dedicated page to push or pull this shelf.
+					</p>
+					<a href="/auth?next=/settings" class="inline-block no-underline">
+						<Button type="button" variant="secondary">Sign in to sync</Button>
+					</a>
+				</div>
 			{/if}
 		{:else}
 			<button

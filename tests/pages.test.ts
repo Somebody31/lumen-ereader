@@ -8,28 +8,55 @@ function read(rel: string) {
 	return readFileSync(join(root, rel), 'utf8');
 }
 
-describe('landing and extra pages (shipped routes)', () => {
-	test('root landing is the default entry with headline and CTAs', () => {
+describe('natural e-reader IA (shipped routes)', () => {
+	test('library is day-to-day home at /', () => {
 		const path = 'src/routes/+page.svelte';
 		expect(existsSync(join(root, path))).toBe(true);
 		const src = read(path);
-		expect(src).toContain('Welcome · Lumen');
-		expect(src).toContain('Read without the storefront');
-		expect(src).toContain('Open library');
-		expect(src).toContain('href="/library"');
-		expect(src).toContain('href="/about"');
-		expect(src).toContain('type-masthead');
-		expect(src).toContain('landing');
+		expect(src).toContain('Library · Lumen');
+		expect(src).toContain('Your shelf');
+		expect(src).toContain('continue-lead');
+		expect(src).toContain('continue-lead-title');
+		expect(src).toContain('ImportDropzone');
+		// sync door, not marketing landing
+		expect(src).toContain('/auth?next=/&intent=sync');
+		expect(src).not.toContain('Read without the storefront');
+		expect(src).not.toContain('class="landing');
 	});
 
-	test('legacy /welcome redirects to root landing', () => {
-		const path = 'src/routes/welcome/+page.ts';
+	test('legacy /library redirects to home shelf', () => {
+		const path = 'src/routes/library/+page.ts';
 		expect(existsSync(join(root, path))).toBe(true);
 		const src = read(path);
 		expect(src).toContain("redirect(308, '/')");
 	});
 
-	test('about page exists with keys and type system copy', () => {
+	test('welcome is product door with start + sync CTAs', () => {
+		const path = 'src/routes/welcome/+page.svelte';
+		expect(existsSync(join(root, path))).toBe(true);
+		const src = read(path);
+		expect(src).toContain('Welcome · Lumen');
+		expect(src).toContain('Start reading');
+		expect(src).toContain('href="/"');
+		expect(src).toContain('/auth?next=/&intent=sync');
+		expect(src).toContain('landing');
+		// no forced redirect file
+		expect(existsSync(join(root, 'src/routes/welcome/+page.ts'))).toBe(false);
+	});
+
+	test('auth page is dedicated sign-in for sync', () => {
+		const path = 'src/routes/auth/+page.svelte';
+		expect(existsSync(join(root, path))).toBe(true);
+		const src = read(path);
+		expect(src).toContain('Sign in · Lumen');
+		expect(src).toContain('fetchSession');
+		expect(src).toContain('login');
+		expect(src).toContain('Continue offline');
+		expect(src).toContain('safeNext');
+		expect(src).toContain('passphrase');
+	});
+
+	test('about page links to library home and auth', () => {
 		const path = 'src/routes/about/+page.svelte';
 		expect(existsSync(join(root, path))).toBe(true);
 		const src = read(path);
@@ -40,34 +67,46 @@ describe('landing and extra pages (shipped routes)', () => {
 		expect(src).toContain('Source Sans 3');
 		expect(src).toContain('Literata');
 		expect(src).toContain('type-masthead');
-		expect(src).toContain('href="/library"');
+		expect(src).toContain('href="/"');
+		expect(src).toContain('href="/auth"');
+		expect(src).not.toContain('href="/library"');
 	});
 
-	test('shell wires Library at /library, logo to home landing', () => {
+	test('shell: Library at /, primary nav Library|Settings, slim auth/welcome', () => {
 		const shell = read('src/lib/components/shell/AppShell.svelte');
-		expect(shell).toContain('href="/library"');
-		expect(shell).toContain('href="/settings"');
-		expect(shell).toContain('href="/about"');
 		expect(shell).toContain('href="/"');
+		expect(shell).toContain('href="/settings"');
 		expect(shell).toContain('Library');
 		expect(shell).toContain('Settings');
-		expect(shell).toContain('About');
-		expect(shell).toContain('aria-current');
-		expect(shell).toContain("path === '/library'");
-		// reader still chrome-free
+		expect(shell).toContain('isAuth');
+		expect(shell).toContain('isWelcome');
+		expect(shell).toContain('isSlim');
+		expect(shell).toContain("path === '/'");
 		expect(shell).toContain("path.startsWith('/read/')");
+		// Primary chip nav is Library + Settings only (About is footer)
+		const primaryNav = shell.match(
+			/aria-label="Primary"[\s\S]*?<\/nav>/
+		)?.[0];
+		expect(primaryNav).toBeTruthy();
+		expect(primaryNav).toContain('Library');
+		expect(primaryNav).toContain('/settings');
+		expect(primaryNav).not.toContain('/about');
 	});
 
-	test('library lives on /library (root is landing)', () => {
-		const library = read('src/routes/library/+page.svelte');
-		expect(library).toContain('Your shelf');
-		expect(library).toContain('Library · Lumen');
-		expect(library).toContain('continue-lead');
-		const landing = read('src/routes/+page.svelte');
-		expect(landing).toContain('landing');
-		expect(landing).toContain('href="/library"');
-		// shelf continue-lead block is library-only, not root marketing page structure
-		expect(landing).not.toContain('continue-lead-title');
+	test('settings delegates passphrase to /auth', () => {
+		const src = read('src/routes/settings/+page.svelte');
+		expect(src).toContain('/auth?next=/settings');
+		expect(src).toContain('Sign in to sync');
+		expect(src).not.toContain('handleLogin');
+		expect(src).not.toContain('bind:value={passphrase}');
+	});
+
+	test('reader back target is library home /', () => {
+		const src = read('src/routes/read/[id]/+page.svelte');
+		expect(src).toContain("goto('/')");
+		expect(src).toContain('href="/"');
+		expect(src).not.toContain("goto('/library')");
+		expect(src).not.toContain('href="/library"');
 	});
 });
 
@@ -91,7 +130,6 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('letter-spacing');
 		expect(src).toContain('hyphens');
 		expect(src).toContain('Newsreader');
-		// Bolder parity with text prose
 		expect(src).toContain("'h2 + p::first-letter'");
 		expect(src).toContain("'h1 + p'");
 		expect(src).toMatch(/border-left.*link|border-left.*\$\{link\}/);

@@ -8,10 +8,15 @@
 
 	const path = $derived(page.url.pathname);
 	const isReader = $derived(path.startsWith('/read/'));
-	const isLibrary = $derived(path === '/library' || path.startsWith('/library/'));
-	const isLanding = $derived(path === '/' || path === '/welcome' || path.startsWith('/welcome/'));
+	/** Library is day-to-day home at `/` */
+	const isLibrary = $derived(path === '/' || path === '');
+	const isWelcome = $derived(path === '/welcome' || path.startsWith('/welcome/'));
+	const isAuth = $derived(path === '/auth' || path.startsWith('/auth/'));
 	const isAbout = $derived(path === '/about' || path.startsWith('/about/'));
 	const isSettings = $derived(path.startsWith('/settings'));
+	/** Slim chrome: product door + sign-in — no Import pressure */
+	const isSlim = $derived(isWelcome || isAuth);
+	const showImport = $derived(!isSlim && !isAbout);
 
 	let importInput: HTMLInputElement | undefined = $state();
 	let importing = $state(false);
@@ -66,30 +71,35 @@
 			<div
 				class="mx-auto flex h-14 max-w-[1120px] items-center gap-2.5 px-4 sm:h-[3.75rem] sm:gap-4 sm:px-6"
 			>
-				<a href="/" class="group flex shrink-0 items-center no-underline" title="Home">
+				<a href="/" class="group flex shrink-0 items-center no-underline" title="Library">
 					<span class="type-chrome-title text-[1.35rem] leading-none text-ink sm:text-[1.5rem]"
 						>Lumen</span
 					>
 				</a>
 
-				<nav
-					class="flex min-w-0 items-center overflow-x-auto rounded-md border border-rule bg-paper p-0.5"
-					aria-label="Primary"
-				>
-					<a
-						href="/library"
-						class={navClass(isLibrary)}
-						aria-current={isLibrary ? 'page' : undefined}>Library</a
+				{#if !isSlim}
+					<nav
+						class="flex min-w-0 items-center overflow-x-auto rounded-md border border-rule bg-paper p-0.5"
+						aria-label="Primary"
 					>
-					<a
-						href="/settings"
-						class={navClass(isSettings)}
-						aria-current={isSettings ? 'page' : undefined}>Settings</a
-					>
-					<a href="/about" class={navClass(isAbout)} aria-current={isAbout ? 'page' : undefined}
-						>About</a
-					>
-				</nav>
+						<a href="/" class={navClass(isLibrary)} aria-current={isLibrary ? 'page' : undefined}
+							>Library</a
+						>
+						<a
+							href="/settings"
+							class={navClass(isSettings)}
+							aria-current={isSettings ? 'page' : undefined}>Settings</a
+						>
+					</nav>
+				{:else}
+					<nav class="flex min-w-0 items-center gap-1" aria-label="Primary">
+						<a
+							href="/"
+							class="type-nav rounded-md px-3 py-2 text-ink-soft no-underline hover:text-ink"
+							>Library</a
+						>
+					</nav>
+				{/if}
 
 				<div class="ml-auto flex shrink-0 items-center gap-2">
 					<input
@@ -100,7 +110,7 @@
 						class="sr-only"
 						onchange={onImportChange}
 					/>
-					{#if !isLanding}
+					{#if showImport}
 						<Button
 							variant="secondary"
 							type="button"
@@ -116,7 +126,7 @@
 		</header>
 
 		<main
-			class="relative z-10 mx-auto max-w-[1120px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 {isLanding
+			class="relative z-10 mx-auto max-w-[1120px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 {isSlim
 				? 'sm:pt-10'
 				: ''}"
 		>
@@ -127,23 +137,26 @@
 			<footer class="relative z-10 mx-auto max-w-[1120px] border-t border-rule px-4 py-6 sm:px-6">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<p class="type-micro text-ink-soft">Local-first · offline by default</p>
-					<nav class="flex gap-4" aria-label="Footer">
+					<nav class="flex flex-wrap gap-4" aria-label="Footer">
 						<a
 							href="/"
 							class="type-meta text-ink-mute no-underline hover:text-ink-soft"
-							aria-current={isLanding ? 'page' : undefined}>Home</a
-						>
-						<a
-							href="/library"
-							class="type-meta text-ink-mute no-underline hover:text-ink-soft"
 							aria-current={isLibrary ? 'page' : undefined}>Library</a
-						>
-						<a href="/about" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
-							>About</a
 						>
 						<a href="/settings" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
 							>Settings</a
 						>
+						<a href="/about" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+							>About</a
+						>
+						<a href="/welcome" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+							>Welcome</a
+						>
+						{#if !isAuth}
+							<a href="/auth" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+								>Sign in</a
+							>
+						{/if}
 					</nav>
 				</div>
 			</footer>
