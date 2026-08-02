@@ -2,8 +2,28 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import AppShell from '$lib/components/shell/AppShell.svelte';
+	import { onNavigate } from '$app/navigation';
 
 	let { children } = $props();
+
+	/**
+	 * Editorial page transitions (View Transitions API).
+	 * Progressive: no-op without startViewTransition; skipped for reduced motion.
+	 */
+	onNavigate((navigation) => {
+		if (typeof document === 'undefined') return;
+		if (!document.startViewTransition) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		// Same-URL or non-DOM navigations: leave alone
+		if (navigation.from?.url.href === navigation.to?.url.href) return;
+
+		return new Promise<void>((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 </script>
 
 <svelte:head>

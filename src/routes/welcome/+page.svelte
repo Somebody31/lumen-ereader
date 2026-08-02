@@ -8,13 +8,17 @@
 
 	let session = $state<SessionInfo | null>(null);
 	let welcomeEl = $state<HTMLElement | null>(null);
+	/** Live product stage theme — linked to theme swatches below */
+	let stageTheme = $state<'night' | 'paper' | 'sepia' | 'contrast'>('night');
 
 	const themes = [
-		{ id: 'night', label: 'Night', bg: '#0c0c0c', fg: '#f3f2ed' },
-		{ id: 'paper', label: 'Paper', bg: '#f7f5f0', fg: '#1a1c22' },
-		{ id: 'sepia', label: 'Sepia', bg: '#e8dcc8', fg: '#3d3428' },
-		{ id: 'contrast', label: 'Hi-con', bg: '#000000', fg: '#ffffff' }
+		{ id: 'night' as const, label: 'Night', bg: '#0c0c0c', fg: '#f3f2ed', progress: '#d4d0c8' },
+		{ id: 'paper' as const, label: 'Paper', bg: '#f7f5f0', fg: '#1a1c22', progress: '#5a5a56' },
+		{ id: 'sepia' as const, label: 'Sepia', bg: '#e8dcc8', fg: '#3d3428', progress: '#6b5e4e' },
+		{ id: 'contrast' as const, label: 'Hi-con', bg: '#000000', fg: '#ffffff', progress: '#ffffff' }
 	];
+
+	const activeStage = $derived(themes.find((t) => t.id === stageTheme) ?? themes[0]);
 
 	onMount(() => {
 		void fetchSession().then((s) => {
@@ -29,6 +33,10 @@
 
 		/* Gate CSS pre-hide so content stays visible without JS */
 		root.classList.add('welcome-scroll');
+		/* Scroll-timeline extras when supported (CSS does the rest) */
+		if (CSS.supports?.('animation-timeline', 'scroll()')) {
+			root.classList.add('welcome-scroll-drive');
+		}
 
 		const io = new IntersectionObserver(
 			(entries) => {
@@ -66,6 +74,11 @@
 </svelte:head>
 
 <div class="welcome" bind:this={welcomeEl}>
+	<!-- Scroll-linked ink hairline (CSS scroll-timeline when available) -->
+	<div class="welcome-scroll-meter" aria-hidden="true">
+		<div class="welcome-scroll-meter-fill"></div>
+	</div>
+
 	<!-- ——— Hero: focal “page opens” sequence (load) ——— -->
 	<section class="welcome-hero">
 		<div class="welcome-hero-copy">
@@ -100,7 +113,13 @@
 		</div>
 
 		<figure class="welcome-stage">
-			<div class="welcome-stage-reader stage-night" aria-hidden="true">
+			<div
+				class="welcome-stage-reader stage-{stageTheme}"
+				aria-hidden="true"
+				style:--stage-bg={activeStage.bg}
+				style:--stage-fg={activeStage.fg}
+				style:--stage-progress={activeStage.progress}
+			>
 				<div class="welcome-stage-progress">
 					<div class="welcome-stage-progress-fill" style="width: 34%"></div>
 					<span class="welcome-stage-progress-bead"></span>
@@ -123,7 +142,7 @@
 				<div class="welcome-stage-pct">34%</div>
 			</div>
 			<figcaption class="welcome-stage-caption type-meta text-ink-mute">
-				Preview of the reading view — your book fills the page, with progress and type you can adjust.
+				Live preview — try a theme below. Your book fills the page; progress and type stay adjustable.
 			</figcaption>
 		</figure>
 	</section>
@@ -162,23 +181,32 @@
 				data-welcome-scroll="feature"
 				style="--i: 0"
 			>
-				<div class="welcome-feature-visual welcome-feature-themes">
+				<div
+					class="welcome-feature-visual welcome-feature-themes"
+					role="group"
+					aria-label="Preview reading themes"
+				>
 					{#each themes as t (t.id)}
-						<div
+						<button
+							type="button"
 							class="welcome-theme-swatch"
+							class:is-active={stageTheme === t.id}
 							style="background: {t.bg}; color: {t.fg}; border-color: color-mix(in srgb, {t.fg} 18%, transparent)"
+							aria-pressed={stageTheme === t.id}
+							aria-label="Preview {t.label} theme"
+							onclick={() => (stageTheme = t.id)}
 						>
 							<span class="welcome-theme-line" style="background: {t.fg}"></span>
 							<span class="type-micro" style="color: {t.fg}">{t.label}</span>
-						</div>
+						</button>
 					{/each}
 				</div>
 				<div>
 					<h3 class="type-card-title text-lg text-ink">Comfortable for long sessions</h3>
 					<p class="type-body mt-2 text-ink-soft">
-						Choose Night, Paper, Sepia, or high contrast. Adjust font, size, spacing, and margins.
-						Hide the controls when you want a full page, keep your place with progress and bookmarks,
-						and use the table of contents in EPUBs.
+						Choose Night, Paper, Sepia, or high contrast — the stage above updates live. Adjust font,
+						size, spacing, and margins. Hide the controls when you want a full page, keep your place
+						with progress and bookmarks, and use the table of contents in EPUBs.
 					</p>
 				</div>
 			</article>

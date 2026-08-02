@@ -22,6 +22,11 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).toContain('/auth?next=/&intent=sync');
 		expect(src).not.toContain('Read without the storefront');
 		expect(src).not.toContain('class="landing');
+		// Overdrive: empty poster, press-frame drop, named cover VT
+		expect(src).toContain('lib-empty-poster');
+		expect(src).toContain('lib-drop-press');
+		expect(src).toContain('view-transition-name: lumen-book-');
+		expect(src).toContain('lib-masthead-title');
 	});
 
 	test('legacy /library redirects to home shelf', () => {
@@ -73,6 +78,14 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).toContain('data-welcome-scroll');
 		expect(src).toContain('IntersectionObserver');
 		expect(src).not.toContain('animate-plate-in');
+		// Overdrive: live theme stage + scroll meter + interactive swatches
+		expect(src).toContain('stageTheme');
+		expect(src).toContain('welcome-scroll-meter');
+		expect(src).toContain('welcome-theme-swatch');
+		expect(src).toContain('aria-pressed');
+		expect(css).toContain('welcome-scroll-meter');
+		expect(css).toContain('animation-timeline');
+		expect(css).toContain('welcome-stage-parallax');
 	});
 
 	test('auth page is dedicated sign-in for sync', () => {

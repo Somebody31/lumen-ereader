@@ -347,7 +347,7 @@
 	class="reader-stage relative h-[100dvh] overflow-hidden {stageClass} {focusMode
 		? 'is-focus'
 		: ''}"
-	style="background: var(--stage-bg); color: var(--stage-fg);"
+	style="background: var(--stage-bg); color: var(--stage-fg); view-transition-name: lumen-book-{id};"
 >
 	<!-- progress hairline + crimson bead (broadsheet meter) -->
 	<div

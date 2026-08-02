@@ -191,6 +191,14 @@ describe('editorial design system', () => {
 		const card = readFileSync(join(root, 'src/lib/components/library/BookCard.svelte'), 'utf8');
 		expect(card).toContain('lib-shelf-card');
 		expect(card).toContain('--i:');
+		// Overdrive: view transitions + empty poster + drop press
+		expect(layout).toContain('onNavigate');
+		expect(layout).toContain('startViewTransition');
+		expect(appCss).toContain('::view-transition-old(root)');
+		expect(appCss).toContain('lumen-vt-in');
+		expect(appCss).toContain('lib-empty-title');
+		expect(appCss).toContain('lib-drop-press');
+		expect(card).toContain('view-transition-name');
 	});
 
 	test('buttons use soft radius ink/crimson, not pill seals', () => {

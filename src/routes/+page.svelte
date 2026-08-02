@@ -161,13 +161,13 @@
 >
 	{#if pageDragging && books.length > 0}
 		<div
-			class="lib-drop-veil pointer-events-none fixed inset-0 z-[60] flex items-center justify-center bg-newsprint/70 backdrop-blur-[2px]"
+			class="lib-drop-veil pointer-events-none fixed inset-0 z-[60] flex items-center justify-center"
 			aria-hidden="true"
 		>
-			<div
-				class="lib-drop-pill rounded-lg border-2 border-dashed border-crimson bg-paper/90 px-10 py-8 font-ui text-sm text-ink"
-			>
-				Release to import
+			<div class="lib-drop-press">
+				<p class="lib-drop-press-kicker type-kicker text-crimson">Import</p>
+				<p class="lib-drop-press-title">Release to add to your shelf</p>
+				<p class="lib-drop-press-meta type-meta text-ink-mute">EPUB · Markdown · TXT</p>
 			</div>
 		</div>
 	{/if}
@@ -176,7 +176,7 @@
 		<div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
 			<div class="max-w-xl">
 				<p class="type-kicker text-crimson">Library</p>
-				<h1 class="type-masthead mt-2 text-[2.5rem] text-ink sm:text-[3.25rem]">Your shelf</h1>
+				<h1 class="type-masthead lib-masthead-title mt-2 text-ink">Your shelf</h1>
 				<p class="type-body mt-3 max-w-md text-ink-soft">
 					Books live in this browser first. Open anything you imported — even offline.
 				</p>
@@ -274,7 +274,15 @@
 			{/each}
 		</div>
 	{:else if books.length === 0}
-		<div class="animate-plate-in space-y-8">
+		<div class="lib-empty animate-plate-in">
+			<div class="lib-empty-poster">
+				<p class="type-kicker text-crimson">Empty shelf</p>
+				<h2 class="lib-empty-title type-masthead text-ink">Drop a book. Start reading.</h2>
+				<p class="type-body mt-3 max-w-md text-ink-soft">
+					Import an EPUB, Markdown, or plain text file from your device. It stays in this browser —
+					no account required.
+				</p>
+			</div>
 			<ImportDropzone onfiles={handleFiles} featured />
 			<div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-center">
 				<a
@@ -304,7 +312,10 @@
 				href="/read/{last.id}"
 				class="group continue-lead lib-lead no-underline"
 			>
-				<div class="continue-lead-cover lib-lead-cover">
+				<div
+					class="continue-lead-cover lib-lead-cover lumen-vt-cover"
+					style="view-transition-name: lumen-book-{last.id}"
+				>
 					<div class="cover-object cover-object-hero bezel w-full">
 						<div class="bezel-inner relative aspect-[2/3]">
 							<CoverPlate
@@ -347,14 +358,17 @@
 			<div class="lib-rule mt-2 h-px bg-rule sm:mt-6" aria-hidden="true"></div>
 		{/if}
 
-		{@const shelfBooks =
-			sparse && last && !query.trim()
-				? restShelf.filter((b) => b.id !== last!.id)
-				: query.trim()
-					? filtered
-					: restShelf.length
-						? restShelf
-						: filtered.filter((b) => !last || b.id !== last.id || filtered.length > 1)}
+		{@const shelfBooks = (() => {
+			// When continue-lead shows last, never also list it on the shelf
+			// (also keeps view-transition-name unique per book).
+			if (query.trim()) return filtered;
+			const continueId = last?.id;
+			const base = restShelf.length
+				? restShelf
+				: filtered.filter((b) => !continueId || b.id !== continueId || filtered.length > 1);
+			if (continueId) return base.filter((b) => b.id !== continueId);
+			return base;
+		})()}
 
 		{#if shelfBooks.length > 0 || query.trim()}
 			<div class="space-y-6">

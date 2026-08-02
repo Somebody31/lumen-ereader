@@ -30,7 +30,10 @@
 
 <article class="lib-shelf-card group relative" style="--i: {staggerI}">
 	<a href="/read/{book.id}" class="block no-underline">
-		<div class="cover-object bezel">
+		<div
+			class="cover-object bezel lumen-vt-cover"
+			style="view-transition-name: lumen-book-{book.id}"
+		>
 			<div class="bezel-inner relative aspect-[2/3]">
 				<CoverPlate title={book.title} author={book.author} coverDataUrl={book.coverDataUrl} />
 				{#if pct > 0}
@@ -43,7 +46,7 @@
 						aria-label="Reading progress"
 					>
 						<div
-							class="h-full origin-left bg-crimson transition-[width,transform] duration-300 ease-[var(--ease-editorial)]"
+							class="lib-shelf-progress h-full origin-left bg-crimson"
 							style="width: {pct}%"
 						></div>
 					</div>
