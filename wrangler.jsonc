@@ -1,0 +1,34 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "lumen-ereader",
+	"compatibility_date": "2026-08-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	// Create with: wrangler r2 bucket create lumen-books
+	// Then set bucket_name / preview bindings for deploy.
+	"r2_buckets": [
+		{
+			"binding": "BOOKS",
+			"bucket_name": "lumen-books",
+			"preview_bucket_name": "lumen-books-preview"
+		}
+	],
+	// Create with: wrangler kv namespace create lumen-meta
+	// Replace ids after creation.
+	"kv_namespaces": [
+		{
+			"binding": "META",
+			"id": "00000000000000000000000000000000",
+			"preview_id": "00000000000000000000000000000000"
+		}
+	],
+	// Set SESSION_SECRET via: wrangler secret put SESSION_SECRET
+	// Optional READER_PASSPHRASE for simple gate: wrangler secret put READER_PASSPHRASE
+	"vars": {
+		"APP_NAME": "Lumen"
+	}
+}
