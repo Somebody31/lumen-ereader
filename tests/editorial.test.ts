@@ -98,19 +98,15 @@ describe('editorial design system', () => {
 		// Chapter open: top hairline + drop cap
 		expect(appCss).toMatch(/\.reader-prose h2[\s\S]*?border-top:/);
 		expect(appCss).toMatch(/\.reader-prose h2 \+ p::first-letter/);
-		// Magazine progress + crimson tip bead (scaleX fill, fixed-size bead)
-		expect(appCss).toContain('.reader-progress');
-		expect(appCss).toContain('.reader-progress-fill');
-		expect(appCss).toContain('.reader-progress-bead');
-		expect(appCss).toMatch(/\.reader-progress-fill[\s\S]*?scaleX/);
-		expect(readerPage).toContain('reader-progress');
-		expect(readerPage).toContain('reader-progress-bead');
-		expect(readerPage).toContain('data-progress');
+		// Progress lives on the rail only (no top hairline bead)
+		expect(readerPage).not.toContain('reader-progress-bead');
+		expect(appCss).not.toContain('.reader-progress-bead');
 		// Rail as magazine spine: vertical title stamp + meter bead
 		expect(appCss).toContain('.reader-rail-spine');
 		expect(appCss).toContain('.reader-rail-meter-bead');
 		expect(readerPage).toContain('reader-rail-spine');
 		expect(readerPage).toContain('reader-rail-meter-bead');
+		expect(readerPage).toContain('reader-rail-pct');
 		// Type sample plate in drawer
 		expect(appCss).toContain('.reader-type-sample');
 		expect(readerPage).toContain('reader-type-sample');

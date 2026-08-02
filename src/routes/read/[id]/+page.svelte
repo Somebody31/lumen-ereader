@@ -400,21 +400,6 @@
 		: ''}"
 	style="background: var(--stage-bg); color: var(--stage-fg); view-transition-name: lumen-book-{id};"
 >
-	<!-- progress hairline + crimson bead (broadsheet meter) -->
-	<div
-		class="reader-progress"
-		role="progressbar"
-		aria-valuenow={pct}
-		aria-valuemin={0}
-		aria-valuemax={100}
-		aria-label="Reading progress"
-		data-progress={pct}
-		style="--reader-progress: {pct > 0 ? Math.max(fraction, 0.012) : 0}"
-	>
-		<div class="reader-progress-fill"></div>
-		<div class="reader-progress-bead" aria-hidden="true"></div>
-	</div>
-
 	{#if loading}
 		<div class="flex h-full items-center justify-center font-ui text-sm" style="color: var(--stage-muted)">
 			Opening…

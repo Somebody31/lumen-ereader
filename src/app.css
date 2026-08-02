@@ -640,50 +640,10 @@
 	padding-bottom: 0.5rem;
 }
 
-/* Top progress — magazine hairline + crimson tip bead (continue-lead language, full strength) */
-.reader-progress {
-	pointer-events: none;
-	position: absolute;
-	inset-inline: 0;
-	top: 0;
-	z-index: 50;
-	height: 2px;
-	background: color-mix(in srgb, var(--stage-fg) 14%, transparent);
-	--reader-progress: 0;
-}
-.reader-progress-fill {
-	height: 100%;
-	width: 100%;
-	min-width: 0;
-	background: var(--stage-progress);
-	transform: scaleX(var(--reader-progress, 0));
-	transform-origin: left center;
-	transition: transform 360ms var(--ease-editorial);
-	will-change: transform;
-}
-/* Bead outside the scaled fill so diameter stays fixed */
-.reader-progress-bead {
-	position: absolute;
-	top: 50%;
-	left: calc(var(--reader-progress, 0) * 100%);
-	width: 7px;
-	height: 7px;
-	border-radius: 50%;
-	background: var(--color-crimson);
-	transform: translate(-50%, -50%);
-	box-shadow: 0 0 0 3px var(--stage-bg);
-	opacity: 0;
-	transition:
-		left 360ms var(--ease-editorial),
-		opacity 220ms ease;
-}
-.reader-progress[data-progress]:not([data-progress='0']) .reader-progress-bead {
-	opacity: 1;
-}
-
 /*
  * Reader chrome — left rail as magazine spine (title stamp + meter + tools).
  * Not a floating SaaS island; hairline plate against the stage.
+ * Progress lives on the rail (pct + meter) — no top hairline bead.
  */
 .reader-rail {
 	position: absolute;
@@ -1219,11 +1179,6 @@
 		padding: 0;
 		margin: 0;
 		font-weight: inherit;
-	}
-	.reader-progress-fill,
-	.reader-progress-bead {
-		transition: none;
-		will-change: auto;
 	}
 }
 
