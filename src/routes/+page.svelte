@@ -8,6 +8,7 @@
 	import ImportDropzone from '$lib/components/library/ImportDropzone.svelte';
 	import BookCard from '$lib/components/library/BookCard.svelte';
 	import CoverPlate from '$lib/components/library/CoverPlate.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
 	import X from 'phosphor-svelte/lib/X';
 
@@ -19,6 +20,7 @@
 	let error = $state('');
 	let notice = $state('');
 	let importing = $state(false);
+	let pendingDelete = $state<BookListItem | null>(null);
 
 	const filtered = $derived.by(() => {
 		const q = query.trim().toLowerCase();
@@ -81,11 +83,15 @@
 		}
 	}
 
-	async function handleDelete(id: string) {
-		const book = books.find((b) => b.id === id);
+	function requestDelete(id: string) {
+		pendingDelete = books.find((b) => b.id === id) ?? null;
+	}
+
+	async function confirmDelete() {
+		const book = pendingDelete;
 		if (!book) return;
-		if (!confirm(`Remove “${book.title}” from this device?`)) return;
-		await deleteBook(id);
+		pendingDelete = null;
+		await deleteBook(book.id);
 		await refresh();
 	}
 
@@ -292,7 +298,7 @@
 							: 'lg:grid-cols-5'}"
 					>
 						{#each query.trim() ? filtered : shelfBooks as book, i (book.id)}
-							<BookCard {book} progress={progressMap[book.id]} ondelete={handleDelete} index={i} />
+							<BookCard {book} progress={progressMap[book.id]} ondelete={requestDelete} index={i} />
 						{/each}
 					</div>
 				{/if}
@@ -315,3 +321,16 @@
 		</section>
 	{/if}
 </div>
+
+<ConfirmDialog
+	open={!!pendingDelete}
+	title="Remove book"
+	message={pendingDelete
+		? `Remove “${pendingDelete.title}” from this device? Progress and bookmarks for it will be deleted.`
+		: ''}
+	confirmLabel="Remove"
+	cancelLabel="Keep"
+	danger
+	onconfirm={confirmDelete}
+	oncancel={() => (pendingDelete = null)}
+/>
