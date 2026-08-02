@@ -360,71 +360,84 @@
 			>
 		</div>
 	{:else if book && prefs}
-		<header
-			class="absolute inset-x-0 top-0 z-40 px-0 pt-[max(0.5rem,env(safe-area-inset-top))] transition-all duration-300 ease-[var(--ease-editorial)] {chromeVisible &&
-			!focusMode
-				? 'translate-y-0 opacity-100'
-				: 'pointer-events-none -translate-y-1 opacity-0'}"
+		<!-- Left rail: replaces top floating chrome -->
+		<aside
+			class="reader-rail {chromeVisible && !focusMode
+				? 'is-visible'
+				: 'is-hidden'}"
+			aria-label="Reading controls"
+			style="color: var(--stage-chrome-fg)"
 		>
-			<div
-				class="reader-chrome-bar mx-3 flex min-w-0 items-center gap-0.5 rounded-lg border px-2.5 py-2 backdrop-blur-md sm:mx-4"
-				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
+			<a
+				href="/"
+				class="reader-rail-btn"
+				style="color: var(--stage-chrome-mute)"
+				aria-label="Back to library"
+				title="Library (Esc)"
 			>
-				<a
-					href="/"
-					class="flex h-9 w-9 shrink-0 items-center justify-center no-underline transition-opacity hover:opacity-70 active:scale-95"
-					style="color: var(--stage-chrome-mute)"
-					aria-label="Back to library"
-				>
-					<ArrowLeft size={18} weight="light" />
-				</a>
-				<div class="min-w-0 flex-1 px-1.5">
-					<p
-						class="type-chrome-title truncate text-base sm:text-[1.05rem]"
-						style="color: var(--stage-chrome-fg)"
-					>
-						{formatDisplayTitle(book.title)}
-					</p>
-					<p class="type-meta truncate text-[11px]" style="color: var(--stage-chrome-mute)">
-						{subline}
-					</p>
-				</div>
+				<ArrowLeft size={18} weight="light" />
+			</a>
+
+			<div class="reader-rail-mid">
 				<button
 					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70 active:scale-95"
-					style="color: var(--stage-chrome-mute)"
-					aria-label="Save bookmark"
-					title="Bookmark (B)"
-					onclick={() => addBookmarkHere()}
-				>
-					<BookmarkSimple size={18} weight="light" />
-				</button>
-				<button
-					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70 active:scale-95"
-					style="color: var(--stage-chrome-mute)"
+					class="reader-rail-btn"
+					style="color: {tocOpen ? 'var(--stage-chrome-fg)' : 'var(--stage-chrome-mute)'}"
 					aria-label="Table of contents and bookmarks"
-					onclick={() => {
+					aria-pressed={tocOpen}
+					title="Contents (T)"
+					onclick={(e) => {
+						e.stopPropagation();
 						tocOpen = !tocOpen;
 						typeOpen = false;
+						if (tocOpen) tocTab = 'contents';
+						bumpChrome();
 					}}
 				>
 					<List size={18} weight="light" />
 				</button>
 				<button
 					type="button"
-					class="flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-70 active:scale-95"
-					style="color: var(--stage-chrome-mute)"
+					class="reader-rail-btn"
+					style="color: {typeOpen ? 'var(--stage-chrome-fg)' : 'var(--stage-chrome-mute)'}"
 					aria-label="Typography and theme"
-					onclick={() => {
+					aria-pressed={typeOpen}
+					title="Type (,)"
+					onclick={(e) => {
+						e.stopPropagation();
 						typeOpen = !typeOpen;
 						tocOpen = false;
+						bumpChrome();
 					}}
 				>
 					<TextAa size={18} weight="light" />
 				</button>
+				<button
+					type="button"
+					class="reader-rail-btn"
+					style="color: var(--stage-chrome-mute)"
+					aria-label="Save bookmark"
+					title="Bookmark (B)"
+					onclick={(e) => {
+						e.stopPropagation();
+						addBookmarkHere();
+						bumpChrome();
+					}}
+				>
+					<BookmarkSimple size={18} weight="light" />
+				</button>
 			</div>
-		</header>
+
+			<div class="reader-rail-foot" aria-hidden="true">
+				<span class="reader-rail-pct" style="color: var(--stage-chrome-mute)">{pct}%</span>
+				<span class="reader-rail-meter" style="background: color-mix(in srgb, var(--stage-fg) 12%, transparent)">
+					<span
+						class="reader-rail-meter-fill"
+						style="height: {Math.max(pct, 0)}%; background: var(--color-crimson)"
+					></span>
+				</span>
+			</div>
+		</aside>
 
 		<div class="relative z-[1] h-full w-full">
 			{#if book.format === 'epub'}
@@ -439,7 +452,7 @@
 				{#if !focusMode}
 					<button
 						type="button"
-						class="absolute bottom-16 left-0 top-16 z-20 w-12 opacity-0 transition-opacity duration-200 hover:opacity-100 sm:w-16"
+						class="absolute bottom-16 left-12 top-16 z-20 w-12 opacity-0 transition-opacity duration-200 hover:opacity-100 sm:left-14 sm:w-16"
 						style="color: var(--stage-muted)"
 						aria-label="Previous page"
 						onclick={(e) => {
@@ -496,38 +509,48 @@
 
 		{#if bookmarkFlash}
 			<div
-				class="pointer-events-none absolute bottom-16 left-1/2 z-40 -translate-x-1/2 rounded-full border px-3 py-1.5 font-ui text-[11px] backdrop-blur-md"
-				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
+				class="pointer-events-none absolute bottom-8 left-1/2 z-50 -translate-x-1/2 border px-3 py-1.5 font-ui text-[11px] backdrop-blur-md"
+				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule); border-radius: var(--radius-sm)"
 				role="status"
 			>
 				{bookmarkFlash}
 			</div>
 		{/if}
 
-		{#if chromeVisible && !focusMode && !typeOpen && !tocOpen}
-			<div
-				class="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full border px-4 py-1.5 font-ui text-[12px] font-medium tabular-nums tracking-wide shadow-sm backdrop-blur-md transition-opacity duration-300"
-				style="background: color-mix(in srgb, var(--stage-chrome) 94%, transparent); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
-			>
-				{pct}%
-			</div>
+		<!-- Scrim when a drawer is open -->
+		{#if typeOpen || tocOpen}
+			<button
+				type="button"
+				class="reader-drawer-scrim"
+				aria-label="Close panel"
+				onclick={() => {
+					typeOpen = false;
+					tocOpen = false;
+				}}
+			></button>
 		{/if}
 
 		{#if typeOpen}
 			<div
-				class="absolute bottom-4 left-1/2 z-40 flex max-h-[min(78dvh,36rem)] w-[min(100%-1.5rem,26rem)] -translate-x-1/2 flex-col overflow-hidden rounded-lg border backdrop-blur-md"
+				class="reader-drawer reader-drawer-left"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 				role="dialog"
+				aria-modal="true"
 				aria-label="Reading settings"
+				onclick={(e) => e.stopPropagation()}
 			>
-				<div
-					class="flex shrink-0 items-center justify-between border-b px-4 py-3"
-					style="border-color: var(--stage-rule)"
-				>
-					<p class="font-ui text-[11px] font-medium uppercase tracking-[0.12em]">Reading</p>
+				<div class="reader-drawer-head" style="border-color: var(--stage-rule)">
+					<div class="min-w-0 flex-1 pr-2">
+						<p class="type-kicker" style="color: var(--stage-chrome-mute)">Reading</p>
+						<p class="type-chrome-title mt-1 truncate text-[1.05rem]" style="color: var(--stage-chrome-fg)">
+							{formatDisplayTitle(book.title)}
+						</p>
+						<p class="type-meta mt-0.5 truncate" style="color: var(--stage-chrome-mute)">{subline}</p>
+					</div>
 					<button
 						type="button"
-						class="flex h-8 w-8 items-center justify-center transition-opacity hover:opacity-70"
+						class="reader-rail-btn shrink-0"
+						style="color: var(--stage-chrome-mute)"
 						aria-label="Close"
 						onclick={() => (typeOpen = false)}
 					>
@@ -545,7 +568,6 @@
 				</div>
 
 				<div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-4">
-					<!-- Theme -->
 					<div>
 						<p
 							class="mb-2 font-ui text-[10px] font-medium uppercase tracking-[0.1em]"
@@ -577,7 +599,6 @@
 						</div>
 					</div>
 
-					<!-- Font family -->
 					<div>
 						<p
 							class="mb-2 font-ui text-[10px] font-medium uppercase tracking-[0.1em]"
@@ -698,7 +719,6 @@
 						/>
 					</label>
 
-					<!-- Align + hyphen -->
 					<div class="flex flex-wrap items-center gap-2">
 						<p
 							class="w-full font-ui text-[10px] font-medium uppercase tracking-[0.1em]"
@@ -767,7 +787,8 @@
 					>
 						<span>
 							Keep screen awake
-							<span class="mt-0.5 block text-[10px] opacity-80">Uses the Wake Lock API when available</span
+							<span class="mt-0.5 block text-[10px] opacity-80"
+								>Uses the Wake Lock API when available</span
 							>
 						</span>
 						<input
@@ -792,41 +813,50 @@
 
 		{#if tocOpen}
 			<div
-				class="absolute bottom-0 right-0 top-0 z-40 flex w-[min(100%,20rem)] flex-col border-l backdrop-blur-md"
+				class="reader-drawer reader-drawer-right"
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 				role="dialog"
 				aria-modal="true"
 				aria-label="Contents and bookmarks"
+				onclick={(e) => e.stopPropagation()}
 			>
-				<div
-					class="flex items-center justify-between px-4 py-3"
-					style="border-bottom: 1px solid var(--stage-rule)"
-				>
-					<div class="flex gap-3">
-						<button
-							type="button"
-							class="font-ui text-[11px] font-medium uppercase tracking-[0.12em] transition-opacity"
-							style="color: {tocTab === 'contents'
-								? 'var(--stage-chrome-fg)'
-								: 'var(--stage-chrome-mute)'}"
-							onclick={() => (tocTab = 'contents')}
-						>
-							Contents
-						</button>
-						<button
-							type="button"
-							class="font-ui text-[11px] font-medium uppercase tracking-[0.12em] transition-opacity"
-							style="color: {tocTab === 'bookmarks'
-								? 'var(--stage-chrome-fg)'
-								: 'var(--stage-chrome-mute)'}"
-							onclick={() => (tocTab = 'bookmarks')}
-						>
-							Marks · {bookmarks.length}
-						</button>
+				<div class="reader-drawer-head" style="border-color: var(--stage-rule)">
+					<div class="min-w-0 flex-1">
+						<p class="type-kicker" style="color: var(--stage-chrome-mute)">Navigate</p>
+						<p class="type-chrome-title mt-1 truncate text-[1.05rem]" style="color: var(--stage-chrome-fg)">
+							{formatDisplayTitle(book.title)}
+						</p>
+						<div class="mt-3 flex gap-4">
+							<button
+								type="button"
+								class="font-ui text-[11px] font-medium uppercase tracking-[0.12em] transition-opacity"
+								style="color: {tocTab === 'contents'
+									? 'var(--stage-chrome-fg)'
+									: 'var(--stage-chrome-mute)'}; border-bottom: 1.5px solid {tocTab === 'contents'
+									? 'var(--color-crimson)'
+									: 'transparent'}; padding-bottom: 0.2rem"
+								onclick={() => (tocTab = 'contents')}
+							>
+								Contents
+							</button>
+							<button
+								type="button"
+								class="font-ui text-[11px] font-medium uppercase tracking-[0.12em] transition-opacity"
+								style="color: {tocTab === 'bookmarks'
+									? 'var(--stage-chrome-fg)'
+									: 'var(--stage-chrome-mute)'}; border-bottom: 1.5px solid {tocTab === 'bookmarks'
+									? 'var(--color-crimson)'
+									: 'transparent'}; padding-bottom: 0.2rem"
+								onclick={() => (tocTab = 'bookmarks')}
+							>
+								Marks · {bookmarks.length}
+							</button>
+						</div>
 					</div>
 					<button
 						type="button"
-						class="flex h-8 w-8 items-center justify-center transition-opacity hover:opacity-70"
+						class="reader-rail-btn shrink-0 self-start"
+						style="color: var(--stage-chrome-mute)"
 						aria-label="Close contents"
 						onclick={() => (tocOpen = false)}
 					>

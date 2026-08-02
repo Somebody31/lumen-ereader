@@ -64,7 +64,7 @@
 
 <div
 	bind:this={scroller}
-	class="reader-scroll h-full overflow-y-auto px-[max(var(--reader-margin,1.5rem),1rem)] pb-36 pt-[max(5.5rem,calc(env(safe-area-inset-top)+4.5rem))] sm:pb-40 sm:pt-28"
+	class="reader-scroll h-full overflow-y-auto pb-28 pl-[max(var(--reader-margin,1.5rem),3.75rem)] pr-[max(var(--reader-margin,1.5rem),1rem)] pt-[max(1.75rem,calc(env(safe-area-inset-top)+1.25rem))] sm:pb-32 sm:pt-10"
 	style:--reader-font={fontStack(prefs.fontFamily)}
 	style:--reader-size="{prefs.fontSize}px"
 	style:--reader-lh={prefs.lineHeight}

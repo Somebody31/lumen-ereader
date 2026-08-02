@@ -66,9 +66,15 @@ describe('editorial design system', () => {
 	});
 
 	test('reader chrome uses hairline editorial language, not pill islands', () => {
-		expect(readerPage).toContain('ease-editorial');
+		expect(appCss).toContain('ease-editorial');
 		expect(readerPage).toContain('border-color: var(--stage-rule)');
 		expect(readerPage).toContain('type-chrome-title');
+		// Side rail + drawers replace floating top chrome bar
+		expect(readerPage).toContain('reader-rail');
+		expect(readerPage).toContain('reader-drawer');
+		expect(appCss).toContain('.reader-rail');
+		expect(appCss).toContain('.reader-drawer');
+		expect(readerPage).not.toContain('reader-chrome-bar');
 		// Stage themes wired via stageClass + theme list
 		expect(readerPage).toContain("stage-${prefs?.theme ?? 'night'}");
 		expect(readerPage).toContain("id: 'night'");

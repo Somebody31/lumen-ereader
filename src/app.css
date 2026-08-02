@@ -618,11 +618,188 @@
 	opacity: 1;
 }
 
-/* Chrome bar — slightly more present when revealed */
-.reader-chrome-bar {
-	box-shadow:
-		0 1px 0 color-mix(in srgb, var(--stage-fg) 6%, transparent),
-		0 12px 32px color-mix(in srgb, var(--stage-bg) 55%, transparent);
+/* Reader chrome — slim left rail + full-height drawers (not a floating top bar) */
+.reader-rail {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	z-index: 40;
+	display: flex;
+	width: 3.25rem;
+	flex-direction: column;
+	align-items: center;
+	padding: max(0.55rem, env(safe-area-inset-top)) 0 max(0.75rem, env(safe-area-inset-bottom));
+	background: color-mix(in srgb, var(--stage-chrome) 96%, transparent);
+	border-right: 1px solid var(--stage-rule);
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	transition:
+		opacity 280ms var(--ease-editorial),
+		transform 280ms var(--ease-editorial);
+}
+.reader-rail.is-visible {
+	opacity: 1;
+	transform: translateX(0);
+	pointer-events: auto;
+}
+.reader-rail.is-hidden {
+	opacity: 0;
+	transform: translateX(-0.35rem);
+	pointer-events: none;
+}
+.reader-rail-mid {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+}
+.reader-rail-btn {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	border: 0;
+	background: transparent;
+	text-decoration: none;
+	transition:
+		background-color 160ms ease,
+		opacity 160ms ease,
+		color 160ms ease;
+}
+.reader-rail-btn:hover {
+	opacity: 0.85;
+	background: color-mix(in srgb, var(--stage-fg) 7%, transparent);
+}
+.reader-rail-btn:active {
+	transform: scale(0.96);
+}
+.reader-rail-btn[aria-pressed='true'] {
+	background: color-mix(in srgb, var(--stage-fg) 10%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stage-fg) 12%, transparent);
+}
+.reader-rail-foot {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.45rem;
+}
+.reader-rail-pct {
+	font-family: var(--font-ui);
+	font-size: 0.625rem;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	writing-mode: horizontal-tb;
+}
+.reader-rail-meter {
+	position: relative;
+	width: 2px;
+	height: 2.75rem;
+	overflow: hidden;
+	border-radius: 1px;
+}
+.reader-rail-meter-fill {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border-radius: 1px;
+	transition: height 320ms var(--ease-editorial);
+}
+
+.reader-drawer {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 45;
+	display: flex;
+	width: min(100%, 22rem);
+	flex-direction: column;
+	overflow: hidden;
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	animation-duration: 280ms;
+	animation-timing-function: var(--ease-editorial);
+	animation-fill-mode: both;
+}
+.reader-drawer-left {
+	left: 3.25rem;
+	border-right: 1px solid var(--stage-rule);
+	box-shadow: 12px 0 40px color-mix(in srgb, var(--stage-bg) 45%, transparent);
+	animation-name: reader-drawer-in;
+}
+.reader-drawer-right {
+	right: 0;
+	border-left: 1px solid var(--stage-rule);
+	box-shadow: -12px 0 40px color-mix(in srgb, var(--stage-bg) 45%, transparent);
+	animation-name: reader-drawer-in-right;
+}
+.reader-drawer-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.5rem;
+	border-bottom: 1px solid var(--stage-rule);
+	padding: max(0.85rem, env(safe-area-inset-top)) 0.85rem 0.9rem 1rem;
+}
+.reader-drawer-scrim {
+	position: absolute;
+	inset: 0;
+	z-index: 42;
+	border: 0;
+	background: color-mix(in srgb, var(--stage-bg) 35%, transparent);
+	cursor: default;
+	animation: reader-scrim-in 200ms ease both;
+}
+@keyframes reader-drawer-in {
+	from {
+		opacity: 0;
+		transform: translateX(-0.5rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes reader-drawer-in-right {
+	from {
+		opacity: 0;
+		transform: translateX(0.5rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes reader-scrim-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@media (max-width: 640px) {
+	.reader-drawer-left {
+		left: 0;
+		width: min(100%, 22rem);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.reader-rail,
+	.reader-rail-meter-fill {
+		transition: none;
+	}
+	.reader-drawer,
+	.reader-drawer-scrim {
+		animation: none;
+	}
 }
 
 /* Scroll pad — room under chrome, book-like end space */

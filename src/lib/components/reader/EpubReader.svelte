@@ -75,7 +75,8 @@
 		const hyphens = prefs.hyphenate ? 'auto' : 'manual';
 		const margin = prefs.margin ?? 24;
 		const measure = prefs.measure ?? 68;
-		const topPad = Math.max(margin + 28, 48);
+		/* Slim top inset — chrome is a left rail, not a floating header */
+		const topPad = Math.max(margin + 8, 28);
 		const bottomPad = Math.round(margin * 2.2);
 		const family = fontStack(prefs.fontFamily);
 		const display =
@@ -84,7 +85,9 @@
 		// Horizontal inset: at least user margin; when the view is wider than
 		// measure, center the column with equal side padding (no body max-width —
 		// max-width + margin:auto fights epubjs textWidth / iframe expand).
+		/* Extra left room so text clears the control rail (~3.25rem) */
 		const sidePad = `max(${margin}px, calc((100% - ${measure}ch) / 2))`;
+		const leftPad = `max(${margin + 36}px, calc((100% - ${measure}ch) / 2))`;
 
 		return `
 /* ——— Lumen reading chrome: layout reset ——— */
@@ -103,7 +106,7 @@ body {
 	max-width: 100% !important;
 	min-width: 0 !important;
 	margin: 0 !important;
-	padding: ${topPad}px ${sidePad} ${bottomPad}px !important;
+	padding: ${topPad}px ${sidePad} ${bottomPad}px ${leftPad} !important;
 	float: none !important;
 	position: static !important;
 	left: auto !important;
