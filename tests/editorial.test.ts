@@ -13,7 +13,7 @@ const readerPage = readFileSync(join(root, 'src/routes/read/[id]/+page.svelte'),
 const shell = readFileSync(join(root, 'src/lib/components/shell/AppShell.svelte'), 'utf8');
 const seed = readFileSync(join(root, 'src/lib/client/seedSample.ts'), 'utf8');
 const layout = readFileSync(join(root, 'src/routes/+layout.svelte'), 'utf8');
-const library = readFileSync(join(root, 'src/routes/+page.svelte'), 'utf8');
+const library = readFileSync(join(root, 'src/routes/library/+page.svelte'), 'utf8');
 const button = readFileSync(join(root, 'src/lib/components/ui/Button.svelte'), 'utf8');
 
 describe('editorial design system', () => {
@@ -97,7 +97,8 @@ describe('editorial design system', () => {
 		expect(shell).toContain('type-nav');
 		expect(shell).toContain('bg-paper');
 		expect(shell).toContain('/about');
-		expect(shell).toContain('/welcome');
+		expect(shell).toContain('/library');
+		expect(shell).toContain('href="/"');
 	});
 
 	test('library page uses editorial masthead composition', () => {

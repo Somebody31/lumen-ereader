@@ -8,8 +8,8 @@
 
 	const path = $derived(page.url.pathname);
 	const isReader = $derived(path.startsWith('/read/'));
-	const isLibrary = $derived(path === '/');
-	const isWelcome = $derived(path === '/welcome' || path.startsWith('/welcome/'));
+	const isLibrary = $derived(path === '/library' || path.startsWith('/library/'));
+	const isLanding = $derived(path === '/' || path === '/welcome' || path.startsWith('/welcome/'));
 	const isAbout = $derived(path === '/about' || path.startsWith('/about/'));
 	const isSettings = $derived(path.startsWith('/settings'));
 
@@ -66,7 +66,7 @@
 			<div
 				class="mx-auto flex h-14 max-w-[1120px] items-center gap-2.5 px-4 sm:h-[3.75rem] sm:gap-4 sm:px-6"
 			>
-				<a href="/welcome" class="group flex shrink-0 items-center no-underline" title="Welcome">
+				<a href="/" class="group flex shrink-0 items-center no-underline" title="Home">
 					<span class="type-chrome-title text-[1.35rem] leading-none text-ink sm:text-[1.5rem]"
 						>Lumen</span
 					>
@@ -76,8 +76,10 @@
 					class="flex min-w-0 items-center overflow-x-auto rounded-md border border-rule bg-paper p-0.5"
 					aria-label="Primary"
 				>
-					<a href="/" class={navClass(isLibrary)} aria-current={isLibrary ? 'page' : undefined}
-						>Library</a
+					<a
+						href="/library"
+						class={navClass(isLibrary)}
+						aria-current={isLibrary ? 'page' : undefined}>Library</a
 					>
 					<a
 						href="/settings"
@@ -98,7 +100,7 @@
 						class="sr-only"
 						onchange={onImportChange}
 					/>
-					{#if !isWelcome}
+					{#if !isLanding}
 						<Button
 							variant="secondary"
 							type="button"
@@ -114,7 +116,7 @@
 		</header>
 
 		<main
-			class="relative z-10 mx-auto max-w-[1120px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 {isWelcome
+			class="relative z-10 mx-auto max-w-[1120px] px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-12 {isLanding
 				? 'sm:pt-10'
 				: ''}"
 		>
@@ -127,9 +129,14 @@
 					<p class="type-micro text-ink-soft">Local-first · offline by default</p>
 					<nav class="flex gap-4" aria-label="Footer">
 						<a
-							href="/welcome"
+							href="/"
 							class="type-meta text-ink-mute no-underline hover:text-ink-soft"
-							aria-current={isWelcome ? 'page' : undefined}>Welcome</a
+							aria-current={isLanding ? 'page' : undefined}>Home</a
+						>
+						<a
+							href="/library"
+							class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+							aria-current={isLibrary ? 'page' : undefined}>Library</a
 						>
 						<a href="/about" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
 							>About</a

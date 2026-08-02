@@ -89,16 +89,16 @@
 	</section>
 
 	<section class="animate-plate-in stagger-3 flex flex-wrap gap-3">
-		<a href="/" class="no-underline">
+		<a href="/library" class="no-underline">
 			<span
 				class="inline-flex items-center justify-center rounded-md bg-crimson px-5 py-2.5 font-ui text-[13px] font-medium text-ink transition-colors hover:bg-crimson-soft"
 				>Library</span
 			>
 		</a>
-		<a href="/welcome" class="no-underline">
+		<a href="/" class="no-underline">
 			<span
 				class="inline-flex items-center justify-center rounded-md border border-rule bg-surface px-5 py-2.5 font-ui text-[13px] font-medium text-ink transition-colors hover:border-ink-mute"
-				>Welcome</span
+				>Home</span
 			>
 		</a>
 		<a href="/settings" class="no-underline">

@@ -257,7 +257,7 @@
 				typeOpen = false;
 				return;
 			}
-			goto('/');
+			goto('/library');
 			return;
 		}
 		if (e.key === 'f' || e.key === 'F') {
@@ -382,7 +382,7 @@
 		<div class="flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
 			<p class="font-ui text-sm" style="color: var(--stage-muted)">{error}</p>
 			<a
-				href="/"
+				href="/library"
 				class="inline-flex items-center justify-center border border-current bg-transparent px-5 py-2.5 font-ui text-[13px] font-medium tracking-tight no-underline transition-opacity hover:opacity-80 active:scale-[0.98]"
 				style="color: var(--stage-fg)"
 				>Back to library</a
@@ -400,7 +400,7 @@
 				style="background: var(--stage-chrome); color: var(--stage-chrome-fg); border-color: var(--stage-rule)"
 			>
 				<a
-					href="/"
+					href="/library"
 					class="flex h-9 w-9 shrink-0 items-center justify-center no-underline transition-opacity hover:opacity-70 active:scale-95"
 					style="color: var(--stage-chrome-mute)"
 					aria-label="Back to library"
