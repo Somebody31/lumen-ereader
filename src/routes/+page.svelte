@@ -4,7 +4,6 @@
 	import { importFiles } from '$lib/client/importBook';
 	import { ensureSampleBook } from '$lib/client/seedSample';
 	import { fetchSession } from '$lib/client/sync';
-	import { formatBytes, LARGE_SIZE_BYTES, WARN_SIZE_BYTES } from '$lib/client/textRender';
 	import { formatDisplayTitle } from '$lib/client/formatTitle';
 	import type { BookListItem, ProgressRecord, SessionInfo } from '$lib/client/types';
 	import ImportDropzone from '$lib/components/library/ImportDropzone.svelte';
@@ -107,15 +106,7 @@
 		notice = '';
 		try {
 			const list = Array.from(files);
-			const large = list.filter((f) => f.size >= WARN_SIZE_BYTES);
 			await importFiles(list);
-			if (large.length) {
-				const biggest = large.reduce((a, b) => (a.size > b.size ? a : b));
-				notice =
-					biggest.size >= LARGE_SIZE_BYTES
-						? `Imported large file (${formatBytes(biggest.size)}). Opening uses chunked rendering; first open may still take a moment.`
-						: `Imported ${formatBytes(biggest.size)} file. Large text is rendered in chunks for smoother scrolling.`;
-			}
 			await refresh();
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Import failed';

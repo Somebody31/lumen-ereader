@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { importFiles } from '$lib/client/importBook';
-	import { formatBytes, LARGE_SIZE_BYTES, WARN_SIZE_BYTES } from '$lib/client/textRender';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	let { children } = $props();
@@ -28,16 +27,7 @@
 		try {
 			const list = Array.from(t.files);
 			await importFiles(list);
-			const large = list.filter((f) => f.size >= WARN_SIZE_BYTES);
-			let notice = '';
-			if (large.length) {
-				const biggest = large.reduce((a, b) => (a.size > b.size ? a : b));
-				notice =
-					biggest.size >= LARGE_SIZE_BYTES
-						? `Imported large file (${formatBytes(biggest.size)}). Opening uses chunked rendering.`
-						: `Imported ${formatBytes(biggest.size)} file.`;
-			}
-			window.dispatchEvent(new CustomEvent('lumen:books-changed', { detail: { notice } }));
+			window.dispatchEvent(new CustomEvent('lumen:books-changed', { detail: { notice: '' } }));
 		} catch (err) {
 			window.dispatchEvent(
 				new CustomEvent('lumen:books-changed', {
