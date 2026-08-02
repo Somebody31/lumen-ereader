@@ -73,19 +73,35 @@ describe('editorial design system', () => {
 		expect(readerPage).not.toContain('ease-atelier');
 	});
 
-	test('shell masthead is editorial (display wordmark + hairline)', () => {
+	test('shell is a toolbar stamp + import CTA', () => {
 		expect(shell).toContain('display');
 		expect(shell).toContain('bg-newsprint');
 		expect(shell).toContain('border-rule');
 		expect(shell).toContain('Lumen');
+		expect(shell).toContain('Import');
+		expect(shell).toContain('importFiles');
 	});
 
 	test('library page uses editorial masthead composition', () => {
 		expect(library).toContain('kicker');
 		expect(library).toContain('font-display');
-		expect(library).toContain('border-rule');
 		expect(library).toContain('ImportDropzone');
 		expect(library).toContain('BookCard');
+		expect(library).toContain('formatDisplayTitle');
+		// paper search field, not naked underline input
+		expect(library).toContain('bg-paper');
+		expect(library).toContain('Search titles or authors');
+	});
+
+	test('continue lead is unboxed magazine spread with crimson CTA', () => {
+		expect(library).toContain('continue-lead');
+		expect(library).toContain('cover-object-hero');
+		expect(library).toContain('Continue reading');
+		expect(library).toContain('Resume reading');
+		expect(library).toContain('bg-crimson');
+		expect(library).toContain('cta-chevron');
+		// not a bordered dashboard card
+		expect(library).not.toMatch(/continue-lead[^>]*(border border-rule|bg-paper)/);
 	});
 
 	test('buttons use soft radius ink/crimson, not pill seals', () => {
@@ -134,5 +150,11 @@ describe('editorial design system', () => {
 		expect(readerPage).toContain('subline');
 		expect(readerPage).toContain('reader-stage');
 		expect(readerPage).toContain('sampleLine');
+	});
+
+	test('cover craft exaggerates object edges', () => {
+		expect(appCss).toContain('.cover-object::before');
+		expect(appCss).toContain('.cover-object::after');
+		expect(appCss).toContain('.cta-chevron');
 	});
 });

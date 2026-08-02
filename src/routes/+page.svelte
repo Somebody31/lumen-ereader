@@ -4,6 +4,7 @@
 	import { importFiles } from '$lib/client/importBook';
 	import { ensureSampleBook } from '$lib/client/seedSample';
 	import { formatBytes, LARGE_SIZE_BYTES, WARN_SIZE_BYTES } from '$lib/client/textRender';
+	import { formatDisplayTitle } from '$lib/client/formatTitle';
 	import type { BookListItem, ProgressRecord } from '$lib/client/types';
 	import ImportDropzone from '$lib/components/library/ImportDropzone.svelte';
 	import BookCard from '$lib/components/library/BookCard.svelte';
@@ -21,6 +22,7 @@
 	let notice = $state('');
 	let importing = $state(false);
 	let pendingDelete = $state<BookListItem | null>(null);
+	let pageDragging = $state(false);
 
 	const filtered = $derived.by(() => {
 		const q = query.trim().toLowerCase();
@@ -31,11 +33,13 @@
 	});
 
 	const inProgress = $derived(
-		filtered.filter((b) => (progressMap[b.id]?.fraction ?? 0) > 0.01 && (progressMap[b.id]?.fraction ?? 0) < 0.99)
+		filtered.filter(
+			(b) =>
+				(progressMap[b.id]?.fraction ?? 0) > 0.01 && (progressMap[b.id]?.fraction ?? 0) < 0.99
+		)
 	);
 	const restShelf = $derived.by(() => {
 		const ids = new Set(inProgress.map((b) => b.id));
-		// when sparse, avoid double-listing last in both continue + shelf if only 1 book
 		return filtered.filter((b) => !ids.has(b.id));
 	});
 
@@ -55,9 +59,19 @@
 		loading = false;
 	}
 
-	onMount(async () => {
-		await ensureSampleBook();
-		await refresh();
+	onMount(() => {
+		const onChanged = (e: Event) => {
+			const d = (e as CustomEvent<{ notice?: string; error?: string }>).detail;
+			if (d?.error) error = d.error;
+			if (d?.notice) notice = d.notice;
+			refresh();
+		};
+		window.addEventListener('lumen:books-changed', onChanged);
+		(async () => {
+			await ensureSampleBook();
+			await refresh();
+		})();
+		return () => window.removeEventListener('lumen:books-changed', onChanged);
 	});
 
 	async function handleFiles(files: FileList | File[]) {
@@ -97,8 +111,25 @@
 
 	function formatOpened(ts?: number) {
 		if (!ts) return '';
-		const d = new Date(ts);
-		return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+		return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+	}
+
+	function formatSize(n: number) {
+		return formatBytes(n);
+	}
+
+	function onPageDrag(e: DragEvent) {
+		e.preventDefault();
+		if (e.dataTransfer?.types?.includes('Files')) pageDragging = true;
+	}
+	function onPageDragLeave(e: DragEvent) {
+		// only clear when leaving the page root
+		if (e.currentTarget === e.target) pageDragging = false;
+	}
+	function onPageDrop(e: DragEvent) {
+		e.preventDefault();
+		pageDragging = false;
+		if (e.dataTransfer?.files?.length) handleFiles(e.dataTransfer.files);
 	}
 </script>
 
@@ -106,39 +137,59 @@
 	<title>Library · Lumen</title>
 </svelte:head>
 
-<div class="space-y-12 sm:space-y-14">
-	<!-- Masthead: no redundant kicker when library is the page -->
+<div
+	class="relative space-y-12 sm:space-y-16"
+	ondragenter={onPageDrag}
+	ondragover={onPageDrag}
+	ondragleave={onPageDragLeave}
+	ondrop={onPageDrop}
+	role="presentation"
+>
+	{#if pageDragging && books.length > 0}
+		<div
+			class="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center bg-newsprint/70 backdrop-blur-[2px]"
+			aria-hidden="true"
+		>
+			<div
+				class="rounded-lg border-2 border-dashed border-crimson bg-paper/90 px-10 py-8 font-ui text-sm text-ink"
+			>
+				Release to import
+			</div>
+		</div>
+	{/if}
+
 	<section class="animate-plate-in">
-		<div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-			<div class="max-w-2xl">
+		<div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
+			<div class="max-w-xl">
+				<p class="kicker text-crimson">Library</p>
 				<h1
-					class="font-display text-[2.75rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[3.5rem]"
+					class="mt-2 font-display text-[2.5rem] font-semibold leading-[0.98] tracking-[-0.03em] text-ink sm:text-[3.25rem]"
 					style="font-family: var(--font-display); font-variation-settings: 'opsz' 72"
 				>
 					Your shelf
 				</h1>
-				<p class="mt-4 max-w-md font-ui text-[15px] leading-relaxed text-ink-soft">
+				<p class="mt-3 max-w-md font-ui text-[15px] leading-relaxed text-ink-soft">
 					Books live in this browser first. Open anything you imported — even offline.
 				</p>
 			</div>
 			{#if books.length > 0}
-				<label class="relative block w-full sm:w-64">
+				<label class="relative block w-full sm:w-72">
 					<span class="sr-only">Search library</span>
 					<MagnifyingGlass
 						size={15}
 						weight="light"
-						class="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-ink-mute"
+						class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-mute"
 					/>
 					<input
 						type="search"
 						bind:value={query}
 						placeholder="Search titles or authors"
-						class="w-full border-0 border-b border-rule bg-transparent py-2.5 pl-7 pr-8 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink focus:outline-none"
+						class="w-full rounded-md border border-rule bg-paper py-2.5 pl-9 pr-9 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink-mute focus:outline-none"
 					/>
 					{#if query}
 						<button
 							type="button"
-							class="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-ink-mute hover:text-ink"
+							class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-ink-soft hover:text-ink"
 							aria-label="Clear search"
 							onclick={() => (query = '')}
 						>
@@ -148,7 +199,6 @@
 				</label>
 			{/if}
 		</div>
-		<div class="mt-8 h-px bg-rule"></div>
 	</section>
 
 	{#if error}
@@ -193,21 +243,20 @@
 			<ImportDropzone onfiles={handleFiles} featured />
 		</div>
 		{#if importing}
-			<p class="text-center font-ui text-sm text-ink-mute">Importing…</p>
+			<p class="font-ui text-sm text-ink-soft">Importing…</p>
 		{/if}
 	{:else}
 		{#if last && !query.trim()}
 			{@const p = Math.round((progressMap[last.id]?.fraction || 0) * 100)}
 			{@const opened = formatOpened(progressMap[last.id]?.updatedAt ?? last.updatedAt)}
-			<!-- Feature / continue — magazine lead -->
+			{@const displayTitle = formatDisplayTitle(last.title)}
+			<!-- Unboxed magazine lead — no card border -->
 			<a
 				href="/read/{last.id}"
-				class="group animate-plate-in stagger-1 grid gap-0 overflow-hidden rounded-lg border border-rule bg-paper no-underline transition-[border-color,box-shadow] duration-300 ease-[var(--ease-editorial)] hover:border-ink-mute hover:shadow-[var(--shadow-plate-hover)] sm:grid-cols-[minmax(10rem,38%)_1fr]"
+				class="group continue-lead animate-plate-in stagger-1 grid no-underline sm:grid-cols-[minmax(11rem,17rem)_minmax(0,1fr)] sm:items-end sm:gap-10 md:gap-14"
 			>
-				<div
-					class="flex items-center justify-center border-b border-rule bg-surface/60 p-6 sm:border-b-0 sm:border-r sm:p-8 md:p-10"
-				>
-					<div class="cover-object cover-object-hero bezel w-full max-w-[11rem] sm:max-w-[13.5rem]">
+				<div class="relative mx-auto w-full max-w-[15rem] sm:mx-0 sm:max-w-none">
+					<div class="cover-object cover-object-hero bezel w-full">
 						<div class="bezel-inner relative aspect-[2/3]">
 							<CoverPlate
 								title={last.title}
@@ -217,50 +266,60 @@
 						</div>
 					</div>
 				</div>
-				<div class="flex min-w-0 flex-col justify-center px-6 py-8 sm:px-10 sm:py-12">
-					<p class="font-ui text-[11px] font-medium uppercase tracking-[0.14em] text-crimson">
-						Continue reading
-					</p>
+				<div class="mt-8 min-w-0 sm:mt-0 sm:pb-1">
+					<p class="kicker text-crimson">Continue reading</p>
 					<p
-						class="mt-3 font-display text-[1.85rem] font-semibold leading-[1.08] tracking-tight text-ink sm:text-[2.35rem] md:text-[2.65rem]"
+						class="mt-3 font-display text-[2rem] font-semibold leading-[1.06] tracking-[-0.02em] text-ink sm:text-[2.5rem] md:text-[2.85rem]"
 						style="font-family: var(--font-display); font-variation-settings: 'opsz' 56"
 					>
-						{last.title}
+						{displayTitle}
 					</p>
-					<p class="mt-3 font-ui text-[15px] text-ink-soft">
-						{last.author}
-						{#if opened}
-							<span class="text-ink-mute"> · {opened}</span>
+					<p class="mt-3 font-ui text-[15px] italic text-ink-soft">
+						{last.author || 'Unknown author'}
+					</p>
+					<p class="mt-2 font-ui text-[13px] text-ink-mute">
+						{#if p > 0}
+							<span class="tabular-nums text-ink-soft">{p}%</span>
+							<span> · </span>
 						{/if}
+						{#if opened}
+							<span>{opened}</span>
+							<span> · </span>
+						{/if}
+						<span class="uppercase tracking-[0.06em]">{last.format}</span>
+						<span> · </span>
+						<span class="tabular-nums">{formatSize(last.sizeBytes)}</span>
 					</p>
 					{#if p > 0}
-						<div class="mt-7 flex max-w-sm items-center gap-3">
-							<div class="h-[3px] flex-1 bg-rule">
+						<div class="mt-6 flex max-w-xs items-center gap-3">
+							<div class="h-1 flex-1 rounded-full bg-surface">
 								<div
-									class="h-[3px] bg-ink transition-[width] duration-500 ease-[var(--ease-editorial)]"
+									class="h-1 rounded-full bg-crimson transition-[width] duration-500 ease-[var(--ease-editorial)]"
 									style="width: {p}%"
 								></div>
 							</div>
-							<span class="font-ui text-xs tabular-nums text-ink-mute">{p}%</span>
+							<span class="font-ui text-xs tabular-nums text-ink-soft">{p}%</span>
 						</div>
 					{/if}
 					<span
-						class="mt-7 inline-flex w-fit items-center gap-2 border-b border-ink pb-0.5 font-ui text-[13px] font-medium text-ink transition-opacity duration-200 group-hover:opacity-70"
+						class="mt-7 inline-flex w-fit items-center gap-2 rounded-md bg-crimson px-5 py-2.5 font-ui text-[13px] font-medium text-ink transition-[background-color,transform] duration-200 ease-[var(--ease-editorial)] group-hover:bg-crimson-soft group-active:scale-[0.98]"
 					>
 						Resume reading
-						<span aria-hidden="true">→</span>
+						<span class="cta-chevron" aria-hidden="true">→</span>
 					</span>
 				</div>
 			</a>
+			<div class="mt-2 h-px bg-rule sm:mt-4" aria-hidden="true"></div>
 		{/if}
 
-		{@const shelfBooks = sparse && last && !query.trim()
-			? restShelf.filter((b) => b.id !== last!.id)
-			: query.trim()
-				? filtered
-				: restShelf.length
-					? restShelf
-					: filtered.filter((b) => !last || b.id !== last.id || filtered.length > 1)}
+		{@const shelfBooks =
+			sparse && last && !query.trim()
+				? restShelf.filter((b) => b.id !== last!.id)
+				: query.trim()
+					? filtered
+					: restShelf.length
+						? restShelf
+						: filtered.filter((b) => !last || b.id !== last.id || filtered.length > 1)}
 
 		{#if shelfBooks.length > 0 || query.trim()}
 			<div class="animate-plate-in stagger-2 space-y-6">
@@ -278,23 +337,22 @@
 									: 'All books'}
 					</h2>
 					{#if !sparse || query.trim()}
-						<p class="font-ui text-xs tabular-nums text-ink-mute">
+						<p class="font-ui text-xs tabular-nums text-ink-soft">
 							{query.trim() ? filtered.length : shelfBooks.length}
 							{(query.trim() ? filtered.length : shelfBooks.length) === 1 ? 'title' : 'titles'}
 							{#if importing}
-								<span class="text-ink-mute"> · importing…</span>
+								<span> · importing…</span>
 							{/if}
 						</p>
 					{/if}
 				</div>
-				<div class="h-px bg-rule"></div>
 
 				{#if query.trim() && filtered.length === 0}
-					<p class="font-ui text-sm text-ink-mute">No titles match “{query}”.</p>
+					<p class="font-ui text-sm text-ink-soft">No titles match “{query}”.</p>
 				{:else}
 					<div
-						class="grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 md:grid-cols-4 {sparse
-							? 'lg:grid-cols-4'
+						class="grid grid-cols-2 gap-x-6 gap-y-11 sm:grid-cols-3 md:grid-cols-4 {sparse
+							? 'lg:grid-cols-3 lg:gap-x-10'
 							: 'lg:grid-cols-5'}"
 					>
 						{#each query.trim() ? filtered : shelfBooks as book, i (book.id)}
@@ -305,20 +363,10 @@
 			</div>
 		{/if}
 
-		<section class="animate-plate-in stagger-3 pt-2">
-			{#if !sparse}
-				<div class="mb-4">
-					<h2
-						class="font-display text-2xl font-semibold tracking-tight text-ink"
-						style="font-family: var(--font-display)"
-					>
-						Add more
-					</h2>
-					<div class="mt-3 h-px bg-rule"></div>
-				</div>
-			{/if}
-			<ImportDropzone onfiles={handleFiles} compact />
-		</section>
+		<!-- Quiet drop hint — Import lives in the toolbar -->
+		<p class="animate-plate-in stagger-3 pt-4 text-center font-ui text-[12px] text-ink-mute">
+			Drop a file anywhere to import · or use <span class="text-ink-soft">Import</span> in the bar
+		</p>
 	{/if}
 </div>
 
@@ -326,7 +374,7 @@
 	open={!!pendingDelete}
 	title="Remove book"
 	message={pendingDelete
-		? `Remove “${pendingDelete.title}” from this device? Progress and bookmarks for it will be deleted.`
+		? `Remove “${formatDisplayTitle(pendingDelete.title)}” from this device? Progress and bookmarks for it will be deleted.`
 		: ''}
 	confirmLabel="Remove"
 	cancelLabel="Keep"

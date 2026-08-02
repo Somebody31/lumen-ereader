@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { BookListItem, ProgressRecord } from '$lib/client/types';
+	import { formatDisplayTitle } from '$lib/client/formatTitle';
 	import CoverPlate from './CoverPlate.svelte';
 	import Trash from 'phosphor-svelte/lib/Trash';
 
@@ -18,6 +19,12 @@
 	const fraction = $derived(progress?.fraction ?? 0);
 	const pct = $derived(Math.round(fraction * 100));
 	const stagger = $derived(`stagger-${Math.min(5, (index % 5) + 1)}`);
+	const title = $derived(formatDisplayTitle(book.title));
+	const opened = $derived.by(() => {
+		const ts = progress?.updatedAt ?? book.updatedAt;
+		if (!ts) return '';
+		return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+	});
 </script>
 
 <article class="group relative animate-plate-in {stagger}">
@@ -27,7 +34,7 @@
 				<CoverPlate title={book.title} author={book.author} coverDataUrl={book.coverDataUrl} />
 				{#if pct > 0}
 					<div
-						class="absolute inset-x-0 bottom-0 z-[1] h-[3px] bg-black/15"
+						class="absolute inset-x-0 bottom-0 z-[1] h-[3px] bg-black/30"
 						role="progressbar"
 						aria-valuenow={pct}
 						aria-valuemin={0}
@@ -35,7 +42,7 @@
 						aria-label="Reading progress"
 					>
 						<div
-							class="h-full bg-ink transition-[width] duration-300 ease-[var(--ease-editorial)]"
+							class="h-full bg-crimson transition-[width] duration-300 ease-[var(--ease-editorial)]"
 							style="width: {pct}%"
 						></div>
 					</div>
@@ -47,16 +54,20 @@
 				class="line-clamp-2 font-display text-[15px] font-semibold leading-snug tracking-tight text-ink transition-colors duration-200 group-hover:text-ink-soft"
 				style="font-family: var(--font-display)"
 			>
-				{book.title}
+				{title}
 			</h3>
-			<p class="mt-1 truncate font-ui text-[12px] text-ink-soft">
+			<p class="mt-1 truncate font-ui text-[12px] italic text-ink-soft">
 				{book.author || 'Unknown author'}
 			</p>
-			<p class="mt-1.5 font-ui text-[11px] uppercase tracking-[0.1em] text-ink-mute">
-				{book.format}
+			<p class="mt-1.5 font-ui text-[11px] text-ink-mute">
+				<span class="uppercase tracking-[0.08em]">{book.format}</span>
 				{#if pct > 0}
-					<span class="mx-1 text-ink-mute">/</span>
-					<span class="tabular-nums normal-case tracking-normal text-ink-soft">{pct}%</span>
+					<span class="text-ink-mute"> · </span>
+					<span class="tabular-nums text-ink-soft">{pct}%</span>
+				{/if}
+				{#if opened}
+					<span class="text-ink-mute"> · </span>
+					<span class="text-ink-soft">{opened}</span>
 				{/if}
 			</p>
 		</div>
@@ -64,7 +75,7 @@
 	<button
 		type="button"
 		class="absolute right-1.5 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-paper text-ink-soft opacity-100 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-danger hover:text-danger active:scale-95 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-		aria-label="Delete {book.title}"
+		aria-label="Delete {title}"
 		onclick={(e) => {
 			e.preventDefault();
 			e.stopPropagation();

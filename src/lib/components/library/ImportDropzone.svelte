@@ -34,9 +34,9 @@
 <div
 	role="button"
 	tabindex="0"
-	class="import-frame relative border border-rule bg-paper outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink {dragging
-		? 'is-dragging'
-		: 'hover:border-ink/60'} {featured
+	class="import-frame relative border-2 border-dashed border-rule bg-paper outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink {dragging
+		? 'is-dragging border-crimson'
+		: 'hover:border-ink-mute'} {featured
 		? 'p-12 sm:p-16'
 		: compact
 			? 'p-6 sm:p-8'
