@@ -157,6 +157,7 @@
 		return () => {
 			clearTimeout(hideTimer);
 			clearTimeout(saveTimer);
+			clearTimeout(prefsSaveTimer);
 			document.removeEventListener('visibilitychange', onVis);
 			applyWakeLock(false);
 		};
@@ -180,12 +181,19 @@
 		}, 400);
 	}
 
-	async function updatePrefs(partial: Partial<ReaderPrefs>) {
+	/** Apply UI immediately; debounce IDB so range sliders stay real-time. */
+	let prefsSaveTimer: ReturnType<typeof setTimeout> | undefined;
+	function updatePrefs(partial: Partial<ReaderPrefs>) {
 		if (!prefs) return;
+		// New object so child props / $effect always see a change
 		prefs = { ...prefs, ...partial };
-		await putPrefs(prefs);
+		clearTimeout(prefsSaveTimer);
+		const toSave = prefs;
+		prefsSaveTimer = setTimeout(() => {
+			putPrefs(toSave).catch(() => {});
+		}, 180);
 		if ('keepAwake' in partial) {
-			await applyWakeLock(!!prefs.keepAwake);
+			applyWakeLock(!!prefs.keepAwake);
 		}
 	}
 

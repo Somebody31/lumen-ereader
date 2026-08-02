@@ -178,6 +178,10 @@ describe('book rendering surfaces', () => {
 		expect(src).toMatch(/padding:\s*0 \$\{rightPad\}px 0 \$\{leftPad\}px/);
 		expect(src).toMatch(/img[\s\S]*?max-width:\s*100%/);
 		expect(src).not.toContain('contentWidth(frameW)');
+		// Live type panel: displayReady is $state; prefs read before early return
+		expect(src).toContain('let displayReady = $state(false)');
+		expect(src).toContain('applyLivePrefs');
+		expect(src).toContain('buildFontFaceCss');
 		// Drop caps float-none — floats break reflow
 		expect(src).toMatch(/p::first-letter[\s\S]*?float:\s*none/);
 		expect(src).toContain("spread: 'none'");

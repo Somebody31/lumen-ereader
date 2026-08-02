@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { fontStack, type ReaderPrefs } from '$lib/client/types';
+	/* Absolute URLs so @font-face works inside epubjs iframes (parent page fonts do not) */
+	import literataWoff2 from '@fontsource-variable/literata/files/literata-latin-opsz-normal.woff2?url';
+	import literataItalicWoff2 from '@fontsource-variable/literata/files/literata-latin-opsz-italic.woff2?url';
+	import newsreaderWoff2 from '@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2?url';
+	import newsreaderItalicWoff2 from '@fontsource-variable/newsreader/files/newsreader-latin-opsz-italic.woff2?url';
+	import sourceSansWoff2 from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
+	import sourceSansItalicWoff2 from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-italic.woff2?url';
 
 	let {
 		blob,
@@ -24,13 +31,17 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let rendition: any = null;
 	let loadError = $state('');
-	/** Theme/resize effects must not run until first successful display. */
-	let displayReady = false;
+	/**
+	 * Must be $state so the prefs $effect re-runs when the book finishes opening.
+	 * Plain let + early return meant prefs were never tracked → sliders did nothing.
+	 */
+	let displayReady = $state(false);
 	let resizeObserver: ResizeObserver | null = null;
 	let lastResizeW = 0;
 	let lastResizeH = 0;
 	let resizeTimer: ReturnType<typeof setTimeout> | null = null;
 	let wheelCleanup: (() => void) | null = null;
+	let prefsApplyTimer: ReturnType<typeof setTimeout> | null = null;
 
 	const themeStyles = $derived.by(() => {
 		const map: Record<
@@ -69,6 +80,54 @@
 		return map[prefs.theme] || map.night;
 	});
 
+	/** @font-face for iframe documents — parent-loaded fontsource faces are not inherited. */
+	function buildFontFaceCss(): string {
+		return `
+@font-face {
+	font-family: 'Literata Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 200 900;
+	src: url('${literataWoff2}') format('woff2-variations');
+}
+@font-face {
+	font-family: 'Literata Variable';
+	font-style: italic;
+	font-display: swap;
+	font-weight: 200 900;
+	src: url('${literataItalicWoff2}') format('woff2-variations');
+}
+@font-face {
+	font-family: 'Newsreader Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 200 800;
+	src: url('${newsreaderWoff2}') format('woff2-variations');
+}
+@font-face {
+	font-family: 'Newsreader Variable';
+	font-style: italic;
+	font-display: swap;
+	font-weight: 200 800;
+	src: url('${newsreaderItalicWoff2}') format('woff2-variations');
+}
+@font-face {
+	font-family: 'Source Sans 3 Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 200 900;
+	src: url('${sourceSansWoff2}') format('woff2-variations');
+}
+@font-face {
+	font-family: 'Source Sans 3 Variable';
+	font-style: italic;
+	font-display: swap;
+	font-weight: 200 900;
+	src: url('${sourceSansItalicWoff2}') format('woff2-variations');
+}
+`;
+	}
+
 	/**
 	 * Serialized CSS with !important so publisher sheets cannot win.
 	 * Matches TextReader: measure (ch) column, margin padding, rail clearance.
@@ -92,6 +151,7 @@
 			'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif';
 
 		return `
+${buildFontFaceCss()}
 *, *::before, *::after {
 	box-sizing: border-box !important;
 }
@@ -378,6 +438,7 @@ pre {
 		}
 	}
 
+	/** Write theme CSS into every open iframe (and seed epubjs themes for new sections). */
 	function injectThemeIntoContents() {
 		if (!rendition) return;
 		const css = buildThemeCss();
@@ -391,13 +452,45 @@ pre {
 		try {
 			const contents = rendition.getContents?.() || [];
 			for (const c of contents) {
+				// Prefer epubjs API; also stamp style#lumen-theme so updates always stick
 				c.addStylesheetCss?.(css, 'lumen-theme');
+				try {
+					const doc = c.document as Document | undefined;
+					if (doc?.head) {
+						let el = doc.getElementById('lumen-theme') as HTMLStyleElement | null;
+						if (!el) {
+							el = doc.createElement('style');
+							el.id = 'lumen-theme';
+							doc.head.appendChild(el);
+						}
+						if (el.textContent !== css) {
+							el.textContent = css;
+						}
+					}
+				} catch {
+					/* */
+				}
 				clampMediaInContents(c);
 			}
 		} catch {
 			/* */
 		}
 		lockStageWidth();
+	}
+
+	/** Apply type panel prefs immediately (theme, size, measure, margin, …). */
+	function applyLivePrefs() {
+		if (!rendition || !displayReady) return;
+		injectThemeIntoContents();
+		// Debounce expand slightly so range sliders stay smooth while still live
+		if (prefsApplyTimer) clearTimeout(prefsApplyTimer);
+		prefsApplyTimer = setTimeout(() => {
+			prefsApplyTimer = null;
+			if (!rendition || !displayReady) return;
+			reexpandViews();
+			lockStageWidth();
+			void fillContinuous();
+		}, 40);
 	}
 
 	function resizeToHost(force = false) {
@@ -851,32 +944,37 @@ pre {
 			wheelCleanup = null;
 			if (resizeTimer) clearTimeout(resizeTimer);
 			resizeTimer = null;
+			if (prefsApplyTimer) clearTimeout(prefsApplyTimer);
+			prefsApplyTimer = null;
 			resizeObserver?.disconnect();
 			resizeObserver = null;
 		};
 	});
 
+	/**
+	 * Live type-panel prefs. Dependencies MUST be read before any early return —
+	 * otherwise Svelte never subscribes and sliders appear broken.
+	 */
 	$effect(() => {
-		if (!rendition || !displayReady) return;
-		void prefs.theme;
-		void prefs.fontFamily;
-		void prefs.fontSize;
-		void prefs.lineHeight;
-		void prefs.letterSpacing;
-		void prefs.paragraphSpacing;
-		void prefs.measure;
-		void prefs.margin;
-		void prefs.textAlign;
-		void prefs.hyphenate;
-		injectThemeIntoContents();
-		// Theme / measure / margin reflow — re-expand heights, keep stage width locked.
-		requestAnimationFrame(() => {
-			requestAnimationFrame(() => {
-				reexpandViews();
-				lockStageWidth();
-				void fillContinuous();
-			});
-		});
+		// Track every visual preference (do not early-return before these reads)
+		const snapshot = {
+			theme: prefs.theme,
+			fontFamily: prefs.fontFamily,
+			fontSize: prefs.fontSize,
+			lineHeight: prefs.lineHeight,
+			letterSpacing: prefs.letterSpacing,
+			paragraphSpacing: prefs.paragraphSpacing,
+			measure: prefs.measure,
+			margin: prefs.margin,
+			textAlign: prefs.textAlign,
+			hyphenate: prefs.hyphenate
+		};
+		const ready = displayReady;
+		// Keep snapshot referenced so nothing strips the reads
+		void snapshot;
+
+		if (!ready || !rendition) return;
+		applyLivePrefs();
 	});
 
 	onDestroy(() => {
@@ -885,6 +983,8 @@ pre {
 		wheelCleanup = null;
 		if (resizeTimer) clearTimeout(resizeTimer);
 		resizeTimer = null;
+		if (prefsApplyTimer) clearTimeout(prefsApplyTimer);
+		prefsApplyTimer = null;
 		resizeObserver?.disconnect();
 		resizeObserver = null;
 		try {
