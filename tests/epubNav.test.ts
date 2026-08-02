@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
+	activeTocIndex,
 	basename,
 	buildReaderToc,
 	flattenToc,
@@ -7,6 +8,7 @@ import {
 	hrefCandidates,
 	labelFromHref,
 	matchSpineHref,
+	pathMatches,
 	pathOnly,
 	resolveTocTarget,
 	type BookLike
@@ -174,5 +176,54 @@ describe('resolveTocTarget', () => {
 	test('hrefCandidates includes decode variants', () => {
 		const c = hrefCandidates('Text/Chapter%201.xhtml');
 		expect(c.some((x) => x.includes('Chapter'))).toBe(true);
+	});
+});
+
+describe('activeTocIndex / pathMatches', () => {
+	const toc = [
+		{ href: 'cover.xhtml', label: 'Cover' },
+		{ href: 'Text/ch1.xhtml', label: 'Chapter 1' },
+		{ href: 'Text/ch2.xhtml', label: 'Chapter 2' },
+		{ href: 'Text/ch2.xhtml#part-b', label: 'Part B' },
+		{ href: 'Text/ch3.xhtml', label: 'Chapter 3' }
+	];
+
+	function mockBook(hrefs: string[]): BookLike {
+		const spineItems = hrefs.map((href, index) => ({ href, index }));
+		return {
+			spine: {
+				spineItems,
+				get(target: string | number) {
+					if (typeof target === 'number') return spineItems[target] || null;
+					const path = String(target).split('#')[0];
+					const idx = spineItems.findIndex((s) => s.href === path || s.href.endsWith(path));
+					return idx >= 0 ? spineItems[idx] : null;
+				}
+			}
+		};
+	}
+
+	test('pathMatches ignores prefixes and fragments', () => {
+		expect(pathMatches('OEBPS/Text/ch1.xhtml', 'Text/ch1.xhtml')).toBe(true);
+		expect(pathMatches('ch2.xhtml#x', 'Text/ch2.xhtml')).toBe(true);
+		expect(pathMatches('a.xhtml', 'b.xhtml')).toBe(false);
+	});
+
+	test('selects last TOC entry at or before current spine index', () => {
+		const book = mockBook(['cover.xhtml', 'Text/ch1.xhtml', 'Text/ch2.xhtml', 'Text/ch3.xhtml']);
+		expect(activeTocIndex(toc, { href: 'Text/ch2.xhtml', index: 2 }, book)).toBe(3);
+		expect(activeTocIndex(toc, { href: 'Text/ch1.xhtml', index: 1 }, book)).toBe(1);
+		expect(activeTocIndex(toc, { href: 'cover.xhtml', index: 0 }, book)).toBe(0);
+	});
+
+	test('path-only fallback when no book spine', () => {
+		expect(activeTocIndex(toc, { href: 'OEBPS/Text/ch3.xhtml' })).toBe(4);
+		expect(activeTocIndex(toc, { href: 'Text/ch2.xhtml' })).toBe(3);
+	});
+
+	test('returns -1 when empty or unknown', () => {
+		expect(activeTocIndex([], { href: 'x.xhtml' })).toBe(-1);
+		expect(activeTocIndex(toc, null)).toBe(-1);
+		expect(activeTocIndex(toc, { href: 'missing.xhtml' })).toBe(-1);
 	});
 });

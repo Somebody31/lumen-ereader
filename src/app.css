@@ -975,6 +975,41 @@
 .reader-toc-row:focus-visible {
 	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-crimson) 55%, transparent);
 }
+
+/* Current chapter — crimson plate so the open section is obvious */
+.reader-toc-item-current {
+	background: color-mix(in srgb, var(--color-crimson) 11%, transparent);
+	border-color: color-mix(in srgb, var(--color-crimson) 42%, var(--stage-rule));
+	box-shadow: inset 3px 0 0 0 var(--color-crimson);
+}
+.reader-toc-item-current.reader-toc-item-nested {
+	background: color-mix(in srgb, var(--color-crimson) 8%, transparent);
+	border-left-color: color-mix(in srgb, var(--color-crimson) 55%, transparent);
+	box-shadow: none;
+}
+.reader-toc-item-current .reader-toc-row {
+	background: transparent;
+}
+.reader-toc-item-current .reader-toc-label {
+	color: var(--stage-chrome-fg, #f3f2ed);
+	font-weight: 600;
+}
+.reader-toc-item-current .reader-toc-index {
+	color: var(--color-crimson);
+	opacity: 1;
+}
+.reader-toc-now {
+	display: inline-block;
+	margin-top: 0.28rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-crimson);
+	opacity: 0.92;
+}
+.reader-toc-item-current .reader-toc-row:hover,
+.reader-toc-item-current .reader-toc-row:focus-visible {
+	background: color-mix(in srgb, var(--color-crimson) 8%, transparent);
+}
 /* Crimson index — primary scan cue */
 .reader-toc-index {
 	flex: 0 0 auto;

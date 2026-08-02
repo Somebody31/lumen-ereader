@@ -21,7 +21,12 @@
 		blob: Blob;
 		prefs: ReaderPrefs;
 		initialLocation?: string;
-		onprogress: (fraction: number, location: string, label?: string) => void;
+		onprogress: (
+			fraction: number,
+			location: string,
+			label?: string,
+			meta?: { href?: string; index?: number }
+		) => void;
 		ontoc?: (items: { label: string; href: string; depth?: number }[]) => void;
 		onerror?: (message: string) => void;
 	} = $props();
@@ -1447,13 +1452,24 @@ pre {
 				let relocateTimer: ReturnType<typeof setTimeout> | null = null;
 				rendition.on(
 					'relocated',
-					(location: { start: { cfi: string; percentage?: number }; atEnd?: boolean }) => {
+					(location: {
+						start: {
+							cfi: string;
+							percentage?: number;
+							href?: string;
+							index?: number;
+						};
+						atEnd?: boolean;
+					}) => {
 						const fraction = location.start.percentage ?? (location.atEnd ? 1 : 0);
 						const cfi = location.start.cfi;
+						const href = location.start.href || '';
+						const index =
+							typeof location.start.index === 'number' ? location.start.index : undefined;
 						if (relocateTimer) clearTimeout(relocateTimer);
 						relocateTimer = setTimeout(() => {
 							relocateTimer = null;
-							onprogress(fraction, cfi);
+							onprogress(fraction, cfi, undefined, { href, index });
 						}, 120);
 					}
 				);

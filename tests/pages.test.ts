@@ -165,6 +165,17 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(css).toContain('.reader-toc-index');
 		expect(css).toContain('.reader-toc-break');
 		expect(css).toContain('reader-toc-break-bead');
+		// Current chapter highlight + scroll into view on open
+		expect(src).toContain('activeTocIndex');
+		expect(src).toContain('currentTocIndex');
+		expect(src).toContain('scrollTocToCurrent');
+		expect(src).toContain('openContents');
+		expect(src).toContain('reader-toc-item-current');
+		expect(src).toContain('aria-current');
+		expect(src).toContain('data-toc-current');
+		expect(src).toContain('currentHref');
+		expect(css).toContain('.reader-toc-item-current');
+		expect(css).toContain('.reader-toc-now');
 	});
 });
 

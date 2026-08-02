@@ -14,6 +14,7 @@
 	} from '$lib/client/idb';
 	import { pushProgress } from '$lib/client/sync';
 	import { formatDisplayTitle } from '$lib/client/formatTitle';
+	import { activeTocIndex } from '$lib/client/epubNav';
 	import {
 		fontStack,
 		READING_FONTS,
@@ -33,6 +34,7 @@
 	import TextAa from 'phosphor-svelte/lib/TextAa';
 	import Trash from 'phosphor-svelte/lib/Trash';
 	import X from 'phosphor-svelte/lib/X';
+	import { tick } from 'svelte';
 
 	let book = $state<BookRecord | null>(null);
 	let prefs = $state<ReaderPrefs | null>(null);
@@ -50,6 +52,9 @@
 	let bookmarks = $state<BookmarkRecord[]>([]);
 	let fraction = $state(0);
 	let progressLabel = $state('');
+	/** Live epubjs spine position for contents highlight */
+	let currentHref = $state('');
+	let currentSpineIndex = $state<number | undefined>(undefined);
 	let epubRef: {
 		next: () => Promise<void>;
 		prev: () => Promise<void>;
@@ -57,6 +62,7 @@
 		applyPrefs: (next?: ReaderPrefs) => void;
 	} | undefined = $state();
 	let bookmarkFlash = $state('');
+	let tocScrollEl = $state<HTMLElement | null>(null);
 
 	let hideTimer: ReturnType<typeof setTimeout> | undefined;
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -168,9 +174,16 @@
 		};
 	});
 
-	function scheduleSave(frac: number, location: string, label?: string) {
+	function scheduleSave(
+		frac: number,
+		location: string,
+		label?: string,
+		meta?: { href?: string; index?: number }
+	) {
 		fraction = frac;
 		lastLocation = location;
+		if (meta?.href) currentHref = meta.href;
+		if (typeof meta?.index === 'number') currentSpineIndex = meta.index;
 		if (label) progressLabel = label;
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(async () => {
@@ -184,6 +197,42 @@
 			});
 			pushProgress(book.id).catch(() => {});
 		}, 400);
+	}
+
+	/** Highlighted contents row for the section currently on screen */
+	const currentTocIndex = $derived(
+		activeTocIndex(toc, { href: currentHref, index: currentSpineIndex })
+	);
+
+	/** Keep contents list scrolled to the current chapter when the drawer opens. */
+	async function scrollTocToCurrent() {
+		if (tocTab !== 'contents' || currentTocIndex < 0) return;
+		await tick();
+		// Double-rAF so drawer layout + list paint settle before scroll
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				const root = tocScrollEl;
+				const el = root?.querySelector?.(
+					`[data-toc-index="${currentTocIndex}"]`
+				) as HTMLElement | null;
+				if (!el || !root) return;
+				const reduce =
+					typeof window !== 'undefined' &&
+					window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+				el.scrollIntoView({
+					block: 'center',
+					inline: 'nearest',
+					behavior: reduce ? 'auto' : 'smooth'
+				});
+			});
+		});
+	}
+
+	function openContents() {
+		tocOpen = true;
+		typeOpen = false;
+		tocTab = 'contents';
+		void scrollTocToCurrent();
 	}
 
 	/** Apply UI immediately; debounce IDB so range sliders stay real-time. */
@@ -278,9 +327,11 @@
 			return;
 		}
 		if (e.key === 't' || e.key === 'T') {
-			tocOpen = !tocOpen;
-			typeOpen = false;
-			if (tocOpen) tocTab = 'contents';
+			if (tocOpen && tocTab === 'contents') {
+				tocOpen = false;
+			} else {
+				openContents();
+			}
 			return;
 		}
 		if (e.key === 'b' || e.key === 'B') {
@@ -416,9 +467,11 @@
 					title="Contents (T)"
 					onclick={(e) => {
 						e.stopPropagation();
-						tocOpen = !tocOpen;
-						typeOpen = false;
-						if (tocOpen) tocTab = 'contents';
+						if (tocOpen && tocTab === 'contents') {
+							tocOpen = false;
+						} else {
+							openContents();
+						}
 						bumpChrome();
 					}}
 				>
@@ -479,7 +532,7 @@
 					blob={book.blob}
 					{prefs}
 					{initialLocation}
-					onprogress={(f, loc, label) => scheduleSave(f, loc, label)}
+					onprogress={(f, loc, label, meta) => scheduleSave(f, loc, label, meta)}
 					ontoc={(items) => (toc = items)}
 				/>
 				{#if !focusMode}
@@ -865,7 +918,10 @@
 									: 'var(--stage-chrome-mute)'}; border-bottom: 1.5px solid {tocTab === 'contents'
 									? 'var(--color-crimson)'
 									: 'transparent'}; padding-bottom: 0.2rem"
-								onclick={() => (tocTab = 'contents')}
+								onclick={() => {
+									tocTab = 'contents';
+									void scrollTocToCurrent();
+								}}
 							>
 								Contents
 							</button>
@@ -893,7 +949,7 @@
 						<X size={16} weight="light" />
 					</button>
 				</div>
-				<div class="reader-toc-scroll flex-1 overflow-y-auto">
+				<div class="reader-toc-scroll flex-1 overflow-y-auto" bind:this={tocScrollEl}>
 					{#if tocTab === 'contents'}
 						{#if toc.length === 0}
 							<p class="px-4 py-6 font-ui text-sm" style="color: var(--stage-chrome-mute)">
@@ -906,6 +962,7 @@
 								{#each toc as item, i (i)}
 									{@const depth = Math.min(item.depth ?? 0, 4)}
 									{@const isTop = depth === 0}
+									{@const isCurrent = i === currentTocIndex}
 									{@const prevDepth = i > 0 ? Math.min(toc[i - 1]?.depth ?? 0, 4) : -1}
 									{@const nextDepth = i < toc.length - 1 ? Math.min(toc[i + 1]?.depth ?? 0, 4) : -1}
 									{@const nextIsTop = nextDepth === 0}
@@ -919,12 +976,16 @@
 										class:reader-toc-item-nested={!isTop}
 										class:reader-toc-item-after-nested={isTop && prevDepth > 0}
 										class:reader-toc-item-has-break={showBreak}
+										class:reader-toc-item-current={isCurrent}
 										style="--toc-depth: {depth}"
+										data-toc-index={i}
+										data-toc-current={isCurrent ? 'true' : undefined}
 									>
 										<button
 											type="button"
 											class="reader-toc-row"
 											aria-label="Go to {item.label}"
+											aria-current={isCurrent ? 'location' : undefined}
 											onclick={() => {
 												const href = item.href;
 												tocOpen = false;
@@ -937,6 +998,9 @@
 											</span>
 											<span class="reader-toc-body">
 												<span class="reader-toc-label">{item.label}</span>
+												{#if isCurrent}
+													<span class="reader-toc-now type-micro">Reading</span>
+												{/if}
 											</span>
 										</button>
 										{#if showBreak}

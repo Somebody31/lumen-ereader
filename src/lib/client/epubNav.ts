@@ -272,6 +272,78 @@ export function matchSpineHref(
 }
 
 /**
+ * Whether two resource paths refer to the same spine document
+ * (nav vs OPF path prefixes, basename fallback).
+ */
+export function pathMatches(a: string, b: string): boolean {
+	const pa = pathOnly(a).replace(/^\//, '');
+	const pb = pathOnly(b).replace(/^\//, '');
+	if (!pa || !pb) return false;
+	if (pa === pb) return true;
+	if (pa.endsWith(pb) || pb.endsWith(pa)) return true;
+	const ba = basename(pa);
+	const bb = basename(pb);
+	return Boolean(ba && bb && ba === bb && ba.length >= 3);
+}
+
+export type LocationHint = {
+	/** Current spine document href from epubjs location.start.href */
+	href?: string;
+	/** Current spine index from location.start.index */
+	index?: number;
+};
+
+/**
+ * Index of the TOC entry that represents the current reading position.
+ * Prefer last entry whose resolved spine index is ≤ current index
+ * (standard “current chapter” walk). Fallback: last path match on href.
+ * Returns -1 when nothing matches.
+ */
+export function activeTocIndex(
+	toc: Array<{ href: string }>,
+	loc: LocationHint | null | undefined,
+	book?: BookLike | null
+): number {
+	if (!toc?.length || !loc) return -1;
+
+	const hasIndex = typeof loc.index === 'number' && loc.index >= 0;
+	const curHref = (loc.href || '').trim();
+
+	// 1) Spine-order walk: last TOC item at or before current spine position
+	if (hasIndex) {
+		let best = -1;
+		let bestIdx = -1;
+		for (let i = 0; i < toc.length; i++) {
+			const resolved = resolveTocTarget(toc[i].href, book);
+			const ti =
+				typeof resolved?.index === 'number'
+					? resolved.index
+					: // Fallback: match path against current for same-document entries
+						curHref && pathMatches(toc[i].href, curHref)
+						? loc.index!
+						: undefined;
+			if (typeof ti !== 'number') continue;
+			if (ti <= loc.index! && ti >= bestIdx) {
+				bestIdx = ti;
+				best = i;
+			}
+		}
+		if (best >= 0) return best;
+	}
+
+	// 2) Path-only: last TOC entry whose document matches the current href
+	if (curHref) {
+		let best = -1;
+		for (let i = 0; i < toc.length; i++) {
+			if (pathMatches(toc[i].href, curHref)) best = i;
+		}
+		if (best >= 0) return best;
+	}
+
+	return -1;
+}
+
+/**
  * Resolve a TOC href (or CFI / spine index string) to a rendition.display target.
  */
 export function resolveTocTarget(raw: string, book?: BookLike | null): ResolvedTarget | null {
