@@ -350,19 +350,27 @@
 
 /*
  * Title plate — continue-lead display strength on the page.
- * One decisive masthead: huge Newsreader + short crimson rule (not a full hairline).
+ * First h1 opens the piece; later h1s are mid-stream chapter breaks with top air + rule.
  */
 .reader-prose h1 {
 	font-size: clamp(2.45rem, 6.2vw, 3.65rem);
 	font-weight: 600;
 	letter-spacing: -0.032em;
 	line-height: 0.94;
-	margin-top: 0.35em;
-	margin-bottom: 0.45em;
+	margin-top: 3.25em;
+	margin-bottom: 0.55em;
+	padding-top: 1.35em;
 	padding-bottom: 0;
+	border-top: 1px solid color-mix(in srgb, var(--stage-fg) 16%, transparent);
 	border-bottom: none;
 	font-variation-settings: 'opsz' 72;
 	max-width: 18ch;
+	clear: both;
+}
+.reader-prose h1:first-child {
+	margin-top: 0.35em;
+	padding-top: 0.2em;
+	border-top: none;
 }
 .reader-prose h1::after {
 	content: '';
@@ -373,22 +381,55 @@
 	background: var(--color-crimson);
 	border-radius: 1px;
 }
+/* Crimson bead above chapter titles that are not the document open */
+.reader-prose h1:not(:first-child)::before {
+	content: '';
+	display: block;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--color-crimson);
+	margin: 0 0 1.15em 0;
+	box-shadow:
+		0 0 0 4px var(--stage-bg),
+		0 0 0 5px color-mix(in srgb, var(--stage-fg) 18%, transparent);
+}
 
-/* Chapter heads — magazine section open: air above, thin rule, display opsz */
+/* Chapter heads — magazine section open: generous air, hairline, display opsz */
 .reader-prose h2 {
 	font-size: clamp(1.55rem, 3.2vw, 2.05rem);
 	letter-spacing: -0.03em;
 	line-height: 1.08;
 	font-variation-settings: 'opsz' 48;
-	margin-top: 2.85em;
-	padding-top: 0.85em;
-	border-top: 1px solid color-mix(in srgb, var(--stage-fg) 14%, transparent);
+	margin-top: 3.35em;
+	margin-bottom: 0.65em;
+	padding-top: 1.15em;
+	border-top: 1px solid color-mix(in srgb, var(--stage-fg) 16%, transparent);
+	clear: both;
+}
+.reader-prose h2:first-child {
+	margin-top: 0.5em;
+	padding-top: 0.25em;
+	border-top: none;
+}
+.reader-prose h2:not(:first-child)::before {
+	content: '';
+	display: block;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--color-crimson);
+	margin: 0 0 1em 0;
+	box-shadow:
+		0 0 0 4px var(--stage-bg),
+		0 0 0 5px color-mix(in srgb, var(--stage-fg) 18%, transparent);
 }
 .reader-prose h3 {
 	font-size: 1.32em;
 	letter-spacing: -0.022em;
 	font-variation-settings: 'opsz' 36;
-	margin-top: 2.35em;
+	margin-top: 2.65em;
+	padding-top: 0.35em;
 }
 .reader-prose h4 {
 	font-size: 1.1em;
@@ -406,8 +447,9 @@
 	margin-bottom: 0;
 }
 
-/* Byline under title — italic display plate, not body Literata */
-.reader-prose h1 + p {
+/* Deck under title — italic display plate, hard rule into body */
+.reader-prose h1 + p,
+.reader-prose h2 + p {
 	font-family: var(--font-display);
 	font-style: italic;
 	font-size: 1.08em;
@@ -415,23 +457,22 @@
 	line-height: 1.42;
 	color: var(--stage-muted);
 	letter-spacing: 0.004em;
-	margin-top: 0.55em;
-	margin-bottom: 2.35em;
-	padding-bottom: 1.55em;
+	margin-top: 0.65em;
+	margin-bottom: 2.65em;
+	padding-bottom: 1.65em;
 	border-bottom: 1px solid color-mix(in srgb, var(--stage-fg) 16%, transparent);
 	font-variation-settings: 'opsz' 22;
 	font-optical-sizing: auto;
 	max-width: 36ch;
 }
 
-/* First paragraph after a chapter head sits tighter + drop cap */
-.reader-prose h2 + p,
 .reader-prose h3 + p,
 .reader-prose h4 + p {
 	margin-top: 0.35em;
 }
 
-/* Drop cap — broadsheet initial, full display opsz */
+/* Drop cap — broadsheet initial after chapter heads */
+.reader-prose h1 + p::first-letter,
 .reader-prose h2 + p::first-letter {
 	font-family: var(--font-display);
 	font-weight: 600;
@@ -444,6 +485,7 @@
 	color: var(--stage-fg);
 	font-optical-sizing: auto;
 	font-variation-settings: 'opsz' 72;
+	font-style: normal;
 }
 
 .reader-prose a {
@@ -484,14 +526,15 @@
 	margin-bottom: 0.65em;
 }
 
-/* Section break — rule with crimson center bead (same language as progress tip) */
+/* Section / scene break — rule with crimson center bead */
 .reader-prose hr {
 	border: 0;
 	height: 0;
-	margin: 3em auto;
-	max-width: 7.5rem;
+	margin: 3.75em auto;
+	max-width: 8.5rem;
 	position: relative;
 	background: transparent;
+	overflow: visible;
 }
 .reader-prose hr::before {
 	content: '';
@@ -509,7 +552,7 @@
 	border-radius: 50%;
 	background: var(--color-crimson);
 	transform: translate(-50%, -50%);
-	box-shadow: 0 0 0 4px var(--stage-bg);
+	box-shadow: 0 0 0 5px var(--stage-bg);
 }
 
 .reader-prose ul,

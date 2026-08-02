@@ -164,8 +164,11 @@
 		/* Left rail (~3.5rem) must clear chrome; TextReader uses max(margin, 3.75rem) */
 		const leftPad = Math.max(margin, 56);
 		const rightPad = Math.max(margin, 16);
-		const topPad = Math.max(margin, 20);
-		const bottomPad = Math.max(Math.round(margin * 2.2), 48);
+		/* Continuous spine stacks: generous vertical air so chapters do not abut */
+		const topPad = Math.max(margin, 36);
+		const bottomPad = Math.max(Math.round(margin * 3.2), 88);
+		const sectionPadTop = Math.max(Math.round(margin * 1.4), 28);
+		const sectionPadBottom = Math.max(Math.round(margin * 2.4), 56);
 		const family = fontStack(p.fontFamily);
 		const display =
 			'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif';
@@ -192,6 +195,7 @@ html {
 /*
  * Reading column — same model as .reader-prose:
  * max-width: measure (ch), centered, padding = margin + rail on the left.
+ * Extra block padding separates stacked continuous chapters.
  */
 body {
 	box-sizing: border-box !important;
@@ -204,7 +208,7 @@ body {
 	margin-bottom: ${bottomPad}px !important;
 	margin-left: auto !important;
 	margin-right: auto !important;
-	padding: 0 ${rightPad}px 0 ${leftPad}px !important;
+	padding: ${sectionPadTop}px ${rightPad}px ${sectionPadBottom}px ${leftPad}px !important;
 	float: none !important;
 	position: static !important;
 	left: auto !important;
@@ -229,6 +233,26 @@ body {
 	font-optical-sizing: auto;
 	font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
 	text-rendering: optimizeLegibility;
+}
+/*
+ * Chapter close plate at the foot of every spine section so the next
+ * continuous view (next chapter open) does not feel welded to prior prose.
+ * Asterism: hairline · crimson bead · hairline.
+ */
+body::after {
+	content: '' !important;
+	display: block !important;
+	clear: both !important;
+	width: 7.5rem !important;
+	height: 8px !important;
+	margin: 3.25em auto 0.35em !important;
+	border: 0 !important;
+	opacity: 1 !important;
+	pointer-events: none !important;
+	background:
+		linear-gradient(${rule}, ${rule}) left center / calc(50% - 10px) 1px no-repeat,
+		linear-gradient(${rule}, ${rule}) right center / calc(50% - 10px) 1px no-repeat,
+		radial-gradient(circle, ${link} 0 3px, transparent 3.5px) center / 8px 8px no-repeat !important;
 }
 /* Block wrappers stay inside the measure column (not image scrollWidth) */
 div, section, article, main, header, footer, aside, nav,
@@ -301,18 +325,25 @@ h1, h2, h3, h4, h5, h6 {
 	margin-bottom: 0.55em !important;
 	color: ${fg} !important;
 	float: none !important;
+	clear: both !important;
 }
-/* Title plate — broadsheet display + short crimson rule (matches .reader-prose) */
+/*
+ * Title / chapter plate — broadsheet display.
+ * Mid-stream h1 (same file): heavy top air + hairline so chapters do not run on.
+ */
 h1 {
 	font-size: 2.55em !important;
 	letter-spacing: -0.032em;
 	line-height: 0.94;
-	margin-top: 0.35em !important;
-	margin-bottom: 0.45em !important;
+	margin-top: 3.5em !important;
+	margin-bottom: 0.55em !important;
+	padding-top: 1.35em !important;
 	padding-bottom: 0 !important;
 	max-width: 18ch !important;
+	border-top: 1px solid ${rule} !important;
 	border-bottom: none !important;
 }
+/* Crimson underline rule under the title */
 h1::after {
 	content: '' !important;
 	display: block !important;
@@ -322,21 +353,61 @@ h1::after {
 	background: ${link} !important;
 	border-radius: 1px !important;
 }
+/* Chapter-II style heads — magazine open with air + top rule */
 h2 {
-	font-size: 1.55em !important;
+	font-size: 1.65em !important;
 	letter-spacing: -0.03em;
 	line-height: 1.08;
-	margin-top: 2.85em !important;
-	padding-top: 0.85em !important;
+	margin-top: 3.35em !important;
+	margin-bottom: 0.65em !important;
+	padding-top: 1.15em !important;
 	border-top: 1px solid ${rule} !important;
 }
-h3 { font-size: 1.32em !important; margin-top: 2.35em !important; }
+h3 { font-size: 1.32em !important; margin-top: 2.65em !important; padding-top: 0.35em !important; }
 h4 { font-size: 1.1em !important; }
+/*
+ * First head of a spine section = chapter open for continuous stack.
+ * Drop the double hairline (section already has end-mark above); keep crimson plate.
+ */
+body > h1:first-child,
+body > h2:first-child,
+body > header:first-child > h1:first-child,
+body > header:first-child > h2:first-child,
+body > section:first-child > h1:first-child,
+body > section:first-child > h2:first-child,
+body > div:first-child > h1:first-child,
+body > div:first-child > h2:first-child,
+body > .chapter:first-child > h1:first-child,
+body > .chapter:first-child > h2:first-child {
+	margin-top: 0.15em !important;
+	padding-top: 0.35em !important;
+	border-top: none !important;
+}
+/* Crimson bead above the chapter title (section opener) */
+body > h1:first-child::before,
+body > h2:first-child::before,
+body > header:first-child > h1:first-child::before,
+body > header:first-child > h2:first-child::before,
+body > section:first-child > h1:first-child::before,
+body > section:first-child > h2:first-child::before,
+body > div:first-child > h1:first-child::before,
+body > div:first-child > h2:first-child::before {
+	content: '' !important;
+	display: block !important;
+	width: 5px !important;
+	height: 5px !important;
+	border-radius: 50% !important;
+	background: ${link} !important;
+	margin: 0.15em 0 1.25em 0 !important;
+	box-shadow: 0 0 0 4px ${bg}, 0 0 0 5px ${rule} !important;
+	pointer-events: none !important;
+}
 /* Drop cap after chapter — display initial (no float: epubjs continuous height) */
+h1 + p::first-letter,
 h2 + p::first-letter {
 	font-family: ${display} !important;
 	font-weight: 600 !important;
-	font-size: 1.65em !important;
+	font-size: 1.75em !important;
 	line-height: 1 !important;
 	color: ${fg} !important;
 	float: none !important;
@@ -349,16 +420,24 @@ h2 + p::first-letter {
 	font-weight: 600 !important;
 	font-size: 1.65em !important;
 }
-h1 + p {
+/* Deck / first graf under chapter title — italic plate then hard break into body */
+h1 + p,
+h2 + p {
 	font-family: ${display} !important;
 	font-style: italic !important;
-	font-size: 1.08em !important;
+	font-size: 1.06em !important;
 	color: ${mute} !important;
-	margin-top: 0.55em !important;
-	margin-bottom: 2.35em !important;
-	padding-bottom: 1.55em !important;
+	margin-top: 0.65em !important;
+	margin-bottom: 2.65em !important;
+	padding-bottom: 1.65em !important;
 	border-bottom: 1px solid ${rule} !important;
 	max-width: 36ch !important;
+	line-height: 1.42 !important;
+}
+/* If the book uses a bare chapter class wrapper, give it the same open air */
+.chapter, section.chapter, div.chapter, [class*="Chapter"] {
+	margin-top: 1.5em !important;
+	padding-top: 0.5em !important;
 }
 a { color: ${link} !important; text-underline-offset: 0.22em; }
 blockquote {
@@ -371,12 +450,33 @@ blockquote {
 	font-size: 1.12em;
 	line-height: 1.45;
 }
+/* In-chapter scene break — asterism-lite (rule + bead space via box-shadow) */
 hr {
 	border: 0 !important;
+	height: 0 !important;
+	margin: 3.75em auto !important;
+	max-width: 8.5rem !important;
+	position: relative !important;
+	background: transparent !important;
+	overflow: visible !important;
+}
+hr::before {
+	content: '' !important;
+	display: block !important;
 	height: 1px !important;
-	margin: 3em auto !important;
-	max-width: 7.5rem !important;
 	background: ${rule} !important;
+}
+hr::after {
+	content: '' !important;
+	position: absolute !important;
+	left: 50% !important;
+	top: 50% !important;
+	width: 6px !important;
+	height: 6px !important;
+	border-radius: 50% !important;
+	background: ${link} !important;
+	transform: translate(-50%, -50%) !important;
+	box-shadow: 0 0 0 5px ${bg} !important;
 }
 ul, ol {
 	margin-bottom: ${para}em !important;
@@ -408,8 +508,12 @@ pre {
 		const measure = Math.max(20, Math.min(120, p.measure ?? 68));
 		const leftPad = Math.max(margin, 56);
 		const rightPad = Math.max(margin, 16);
-		const topPad = Math.max(margin, 20);
-		const bottomPad = Math.max(Math.round(margin * 2.2), 48);
+		/* Match buildThemeCss — continuous chapters need this air; zero padding
+		 * made stacked spine sections feel welded (inline !important beats theme). */
+		const topPad = Math.max(margin, 36);
+		const bottomPad = Math.max(Math.round(margin * 3.2), 88);
+		const sectionPadTop = Math.max(Math.round(margin * 1.4), 28);
+		const sectionPadBottom = Math.max(Math.round(margin * 2.4), 56);
 		const align = p.textAlign ?? 'left';
 		const tracking = p.letterSpacing ?? 0;
 		const hyphens = p.hyphenate ? 'auto' : 'manual';
@@ -444,8 +548,8 @@ pre {
 		body.style.setProperty('margin-bottom', `${bottomPad}px`, 'important');
 		body.style.setProperty('padding-left', `${leftPad}px`, 'important');
 		body.style.setProperty('padding-right', `${rightPad}px`, 'important');
-		body.style.setProperty('padding-top', '0', 'important');
-		body.style.setProperty('padding-bottom', '0', 'important');
+		body.style.setProperty('padding-top', `${sectionPadTop}px`, 'important');
+		body.style.setProperty('padding-bottom', `${sectionPadBottom}px`, 'important');
 		body.style.setProperty('overflow-x', 'hidden', 'important');
 		body.style.setProperty('overflow-y', 'visible', 'important');
 

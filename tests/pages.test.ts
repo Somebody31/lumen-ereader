@@ -178,6 +178,11 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('Newsreader');
 		expect(src).toContain('h1 + p');
 		expect(src).toMatch(/border-left.*\$\{link\}/);
+		// Chapter separation in continuous scroll (air + end-mark + open bead)
+		expect(src).toContain('body::after');
+		expect(src).toContain('body > h1:first-child');
+		expect(src).toMatch(/margin-top:\s*3\.5em/);
+		expect(src).toContain('radial-gradient'); // chapter-close asterism
 		// Continuous + scrolled stacks spine sections (default only paints cover)
 		expect(src).toContain("manager: 'continuous'");
 		expect(src).toContain("flow: 'scrolled'");
@@ -189,7 +194,13 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('clampMediaInContents');
 		expect(src).toContain('lockStageWidth');
 		expect(src).toMatch(/max-width:\s*\$\{measure\}ch/);
-		expect(src).toMatch(/padding:\s*0 \$\{rightPad\}px 0 \$\{leftPad\}px/);
+		// Vertical section air (not zero) so stacked chapters do not abut
+		expect(src).toMatch(
+			/padding:\s*\$\{sectionPadTop\}px \$\{rightPad\}px \$\{sectionPadBottom\}px \$\{leftPad\}px/
+		);
+		expect(src).toContain('sectionPadBottom');
+		expect(src).toContain("padding-top', `${sectionPadTop}px`");
+		expect(src).toContain("padding-bottom', `${sectionPadBottom}px`");
 		expect(src).toMatch(/img[\s\S]*?max-width:\s*100%/);
 		expect(src).not.toContain('contentWidth(frameW)');
 		// Live type panel: displayReady is $state; activePrefs + format patch after size() wipe
