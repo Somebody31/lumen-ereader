@@ -147,9 +147,11 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).toContain('reader-toc-index');
 		expect(src).toContain('reader-toc-item-top');
 		expect(src).toContain('reader-toc-item-nested');
+		expect(src).toContain('reader-toc-break');
 		expect(css).toContain('.reader-toc-item-top');
 		expect(css).toContain('.reader-toc-index');
-		expect(css).toContain('reader-toc-item-section-end');
+		expect(css).toContain('.reader-toc-break');
+		expect(css).toContain('reader-toc-break-bead');
 	});
 });
 

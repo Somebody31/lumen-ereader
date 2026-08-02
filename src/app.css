@@ -861,59 +861,72 @@
 
 /* —— Contents list: magazine TOC, scannable chapters —— */
 .reader-toc-scroll {
-	padding: 0.35rem 0 1.25rem;
+	padding: 0.5rem 0.65rem 1.5rem;
 }
 .reader-toc-list {
 	margin: 0;
 	padding: 0;
 	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
 }
 .reader-toc-item {
 	--toc-depth: 0;
 	position: relative;
 	margin: 0;
-	border-bottom: 1px solid color-mix(in srgb, var(--stage-rule) 50%, transparent);
+	/* Each top chapter sits as its own plate */
+	border-radius: 2px;
 }
-.reader-toc-item:last-child {
-	border-bottom: none;
+.reader-toc-item-top {
+	background: color-mix(in srgb, var(--stage-fg) 3.2%, transparent);
+	border: 1px solid color-mix(in srgb, var(--stage-rule) 72%, transparent);
+	margin-top: 0.35rem;
 }
-/* Extra breath between adjacent top-level chapters */
-.reader-toc-item-section-end {
-	margin-bottom: 0.4rem;
-	border-bottom-width: 1px;
-	border-bottom-color: color-mix(in srgb, var(--stage-rule) 90%, transparent);
-	padding-bottom: 0.2rem;
+.reader-toc-item-top:first-child {
+	margin-top: 0;
 }
-/* Stronger break when a new top chapter follows nested sections */
+/* Nested rows cluster under the parent plate, no outer border */
+.reader-toc-item-nested {
+	background: transparent;
+	border: 0;
+	margin-left: 0.15rem;
+	border-left: 1px solid color-mix(in srgb, var(--stage-rule) 55%, transparent);
+}
+.reader-toc-item-nested + .reader-toc-item-nested {
+	/* Keep nested stack tight */
+	margin-top: 0;
+}
+/* Soft lead-in when a top chapter follows a nested cluster */
 .reader-toc-item-after-nested {
-	margin-top: 0.5rem;
-	border-top: 1px solid color-mix(in srgb, var(--stage-rule) 75%, transparent);
-	padding-top: 0.2rem;
+	margin-top: 0.55rem;
 }
 .reader-toc-row {
 	display: flex;
 	align-items: baseline;
-	gap: 0.75rem;
+	gap: 0.8rem;
 	width: 100%;
 	margin: 0;
 	border: 0;
 	background: transparent;
-	padding: 0.78rem 1.15rem 0.78rem calc(0.95rem + (var(--toc-depth) * 0.9rem));
+	padding: 0.85rem 1rem 0.85rem calc(0.85rem + (var(--toc-depth) * 0.85rem));
 	text-align: left;
 	cursor: pointer;
 	color: inherit;
+	border-radius: inherit;
 	transition:
 		background-color 160ms var(--ease-editorial),
 		color 160ms var(--ease-editorial);
 }
 .reader-toc-item-nested .reader-toc-row {
 	position: relative;
-	padding-top: 0.52rem;
-	padding-bottom: 0.52rem;
+	padding-top: 0.48rem;
+	padding-bottom: 0.48rem;
+	padding-left: calc(1.15rem + (var(--toc-depth) * 0.85rem));
 }
 .reader-toc-row:hover,
 .reader-toc-row:focus-visible {
-	background: color-mix(in srgb, var(--stage-fg) 5.5%, transparent);
+	background: color-mix(in srgb, var(--stage-fg) 6.5%, transparent);
 	outline: none;
 }
 .reader-toc-row:focus-visible {
@@ -922,19 +935,19 @@
 /* Crimson index — primary scan cue */
 .reader-toc-index {
 	flex: 0 0 auto;
-	min-width: 1.55rem;
+	min-width: 1.6rem;
 	font-family: var(--font-ui);
 	font-size: 0.625rem;
 	font-weight: 500;
-	letter-spacing: 0.08em;
+	letter-spacing: 0.1em;
 	line-height: 1.25;
 	font-variant-numeric: tabular-nums;
 	color: var(--color-crimson);
-	opacity: 0.92;
+	opacity: 0.95;
 }
 .reader-toc-item-nested .reader-toc-index {
 	font-size: 0.5625rem;
-	opacity: 0.5;
+	opacity: 0.48;
 	color: var(--stage-chrome-mute);
 }
 .reader-toc-body {
@@ -947,7 +960,6 @@
 	min-width: 0;
 	line-height: 1.35;
 	overflow-wrap: anywhere;
-	/* Fallback so entries stay visible if hierarchy classes miss */
 	font-family: var(--font-display);
 	font-size: 0.95rem;
 	font-weight: 500;
@@ -956,7 +968,7 @@
 /* Top chapters: display face, ink — read as section heads */
 .reader-toc-item-top .reader-toc-label {
 	font-family: var(--font-display);
-	font-size: 1rem;
+	font-size: 1.02rem;
 	font-weight: 600;
 	letter-spacing: -0.02em;
 	font-optical-sizing: auto;
@@ -978,13 +990,43 @@
 .reader-toc-item-nested .reader-toc-row::before {
 	content: '';
 	position: absolute;
-	left: calc(0.5rem + (var(--toc-depth) * 0.9rem) - 0.2rem);
+	left: calc(0.55rem + (var(--toc-depth) * 0.85rem));
 	top: 50%;
-	width: 0.4rem;
+	width: 0.45rem;
 	height: 1px;
-	background: color-mix(in srgb, var(--color-crimson) 50%, var(--stage-rule));
+	background: color-mix(in srgb, var(--color-crimson) 45%, var(--stage-rule));
 	transform: translateY(-50%);
 	pointer-events: none;
+}
+/* Chapter break — rule · crimson bead · rule (asterism-lite) */
+.reader-toc-break {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.45rem;
+	padding: 0.7rem 1.1rem 0.55rem;
+	pointer-events: none;
+}
+.reader-toc-item-has-break .reader-toc-row {
+	/* Keep button padding above the break mark */
+	padding-bottom: 0.65rem;
+}
+.reader-toc-break-rule {
+	display: block;
+	flex: 1 1 auto;
+	max-width: 3.25rem;
+	height: 1px;
+	background: color-mix(in srgb, var(--stage-rule) 88%, transparent);
+}
+.reader-toc-break-bead {
+	display: block;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: var(--color-crimson);
+	opacity: 0.72;
+	flex: 0 0 auto;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-crimson) 12%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
 	.reader-toc-row {

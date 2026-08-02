@@ -907,13 +907,18 @@
 									{@const depth = Math.min(item.depth ?? 0, 4)}
 									{@const isTop = depth === 0}
 									{@const prevDepth = i > 0 ? Math.min(toc[i - 1]?.depth ?? 0, 4) : -1}
-									{@const nextIsTop = i < toc.length - 1 && (toc[i + 1]?.depth ?? 0) === 0}
+									{@const nextDepth = i < toc.length - 1 ? Math.min(toc[i + 1]?.depth ?? 0, 4) : -1}
+									{@const nextIsTop = nextDepth === 0}
+									{@const isLast = i === toc.length - 1}
+									<!-- Break after a chapter block: top followed by top, or last nested before next top / end -->
+									{@const showBreak =
+										!isLast && ((isTop && nextIsTop) || (!isTop && nextIsTop))}
 									<li
 										class="reader-toc-item"
 										class:reader-toc-item-top={isTop}
 										class:reader-toc-item-nested={!isTop}
-										class:reader-toc-item-section-end={isTop && nextIsTop}
 										class:reader-toc-item-after-nested={isTop && prevDepth > 0}
+										class:reader-toc-item-has-break={showBreak}
 										style="--toc-depth: {depth}"
 									>
 										<button
@@ -934,6 +939,13 @@
 												<span class="reader-toc-label">{item.label}</span>
 											</span>
 										</button>
+										{#if showBreak}
+											<div class="reader-toc-break" aria-hidden="true">
+												<span class="reader-toc-break-rule"></span>
+												<span class="reader-toc-break-bead"></span>
+												<span class="reader-toc-break-rule"></span>
+											</div>
+										{/if}
 									</li>
 								{/each}
 							</ul>
