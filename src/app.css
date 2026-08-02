@@ -858,6 +858,134 @@
 	cursor: default;
 	animation: reader-scrim-in 220ms ease both;
 }
+
+/* —— Contents list: magazine TOC, scannable chapters —— */
+.reader-toc-scroll {
+	padding: 0.35rem 0 1.25rem;
+}
+.reader-toc-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.reader-toc-item {
+	--toc-depth: 0;
+	position: relative;
+	margin: 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--stage-rule) 50%, transparent);
+}
+.reader-toc-item:last-child {
+	border-bottom: none;
+}
+/* Extra breath between adjacent top-level chapters */
+.reader-toc-item-section-end {
+	margin-bottom: 0.4rem;
+	border-bottom-width: 1px;
+	border-bottom-color: color-mix(in srgb, var(--stage-rule) 90%, transparent);
+	padding-bottom: 0.2rem;
+}
+/* Stronger break when a new top chapter follows nested sections */
+.reader-toc-item-after-nested {
+	margin-top: 0.5rem;
+	border-top: 1px solid color-mix(in srgb, var(--stage-rule) 75%, transparent);
+	padding-top: 0.2rem;
+}
+.reader-toc-row {
+	display: flex;
+	align-items: baseline;
+	gap: 0.75rem;
+	width: 100%;
+	margin: 0;
+	border: 0;
+	background: transparent;
+	padding: 0.78rem 1.15rem 0.78rem calc(0.95rem + (var(--toc-depth) * 0.9rem));
+	text-align: left;
+	cursor: pointer;
+	color: inherit;
+	transition:
+		background-color 160ms var(--ease-editorial),
+		color 160ms var(--ease-editorial);
+}
+.reader-toc-item-nested .reader-toc-row {
+	position: relative;
+	padding-top: 0.52rem;
+	padding-bottom: 0.52rem;
+}
+.reader-toc-row:hover,
+.reader-toc-row:focus-visible {
+	background: color-mix(in srgb, var(--stage-fg) 5.5%, transparent);
+	outline: none;
+}
+.reader-toc-row:focus-visible {
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-crimson) 55%, transparent);
+}
+/* Crimson index — primary scan cue */
+.reader-toc-index {
+	flex: 0 0 auto;
+	min-width: 1.55rem;
+	font-family: var(--font-ui);
+	font-size: 0.625rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	line-height: 1.25;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-crimson);
+	opacity: 0.92;
+}
+.reader-toc-item-nested .reader-toc-index {
+	font-size: 0.5625rem;
+	opacity: 0.5;
+	color: var(--stage-chrome-mute);
+}
+.reader-toc-body {
+	position: relative;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.reader-toc-label {
+	display: block;
+	min-width: 0;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+/* Top chapters: display face, ink — read as section heads */
+.reader-toc-item-top .reader-toc-label {
+	font-family: var(--font-display);
+	font-size: 1rem;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+	font-optical-sizing: auto;
+	font-variation-settings: 'opsz' 28;
+	color: var(--stage-chrome-fg);
+}
+/* Nested: quieter UI face, indented + lead hairline */
+.reader-toc-item-nested .reader-toc-label {
+	font-family: var(--font-ui);
+	font-size: 0.8125rem;
+	font-weight: 400;
+	letter-spacing: -0.005em;
+	color: var(--stage-chrome-mute);
+}
+.reader-toc-item-nested .reader-toc-row:hover .reader-toc-label,
+.reader-toc-item-nested .reader-toc-row:focus-visible .reader-toc-label {
+	color: var(--stage-chrome-fg);
+}
+.reader-toc-item-nested .reader-toc-row::before {
+	content: '';
+	position: absolute;
+	left: calc(0.5rem + (var(--toc-depth) * 0.9rem) - 0.2rem);
+	top: 50%;
+	width: 0.4rem;
+	height: 1px;
+	background: color-mix(in srgb, var(--color-crimson) 50%, var(--stage-rule));
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.reader-toc-row {
+		transition: none;
+	}
+}
 @keyframes reader-drawer-in {
 	from {
 		opacity: 0;

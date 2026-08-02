@@ -139,6 +139,18 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).not.toContain("goto('/library')");
 		expect(src).not.toContain('href="/library"');
 	});
+
+	test('contents list differentiates chapters (index + hierarchy)', () => {
+		const src = read('src/routes/read/[id]/+page.svelte');
+		const css = read('src/app.css');
+		expect(src).toContain('reader-toc-list');
+		expect(src).toContain('reader-toc-index');
+		expect(src).toContain('reader-toc-item-top');
+		expect(src).toContain('reader-toc-item-nested');
+		expect(css).toContain('.reader-toc-item-top');
+		expect(css).toContain('.reader-toc-index');
+		expect(css).toContain('reader-toc-item-section-end');
+	});
 });
 
 describe('book rendering surfaces', () => {

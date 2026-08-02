@@ -22,7 +22,7 @@
 		prefs: ReaderPrefs;
 		initialLocation?: string;
 		onprogress: (fraction: number, location: string, label?: string) => void;
-		ontoc?: (items: { label: string; href: string }[]) => void;
+		ontoc?: (items: { label: string; href: string; depth?: number }[]) => void;
 		onerror?: (message: string) => void;
 	} = $props();
 
@@ -1270,9 +1270,10 @@ pre {
 				try {
 					const nav = await book.loaded.navigation;
 					// Flatten nested nav/NCX trees so every chapter is clickable
-					const toc = flattenToc(nav.toc || []).map(({ label, href }) => ({
+					const toc = flattenToc(nav.toc || []).map(({ label, href, depth }) => ({
 						label,
-						href
+						href,
+						depth
 					}));
 					ontoc?.(toc);
 				} catch {

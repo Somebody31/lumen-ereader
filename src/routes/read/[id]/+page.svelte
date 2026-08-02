@@ -46,7 +46,7 @@
 	let tocOpen = $state(false);
 	let typeOpen = $state(false);
 	let tocTab = $state<'contents' | 'bookmarks'>('contents');
-	let toc = $state<{ label: string; href: string }[]>([]);
+	let toc = $state<{ label: string; href: string; depth?: number }[]>([]);
 	let bookmarks = $state<BookmarkRecord[]>([]);
 	let fraction = $state(0);
 	let progressLabel = $state('');
@@ -893,22 +893,33 @@
 						<X size={16} weight="light" />
 					</button>
 				</div>
-				<div class="flex-1 overflow-y-auto p-2">
+				<div class="reader-toc-scroll flex-1 overflow-y-auto">
 					{#if tocTab === 'contents'}
 						{#if toc.length === 0}
-							<p class="px-2 py-4 font-ui text-sm" style="color: var(--stage-chrome-mute)">
+							<p class="px-4 py-6 font-ui text-sm" style="color: var(--stage-chrome-mute)">
 								{book.format === 'epub'
 									? 'No table of contents in this file.'
 									: 'Scroll the text document freely.'}
 							</p>
 						{:else}
-							<ul class="space-y-0">
+							<ul class="reader-toc-list" role="list">
 								{#each toc as item, i (i)}
-									<li>
+									{@const depth = Math.min(item.depth ?? 0, 4)}
+									{@const isTop = depth === 0}
+									{@const prevDepth = i > 0 ? Math.min(toc[i - 1]?.depth ?? 0, 4) : -1}
+									{@const nextIsTop = i < toc.length - 1 && (toc[i + 1]?.depth ?? 0) === 0}
+									<li
+										class="reader-toc-item"
+										class:reader-toc-item-top={isTop}
+										class:reader-toc-item-nested={!isTop}
+										class:reader-toc-item-section-end={isTop && nextIsTop}
+										class:reader-toc-item-after-nested={isTop && prevDepth > 0}
+										style="--toc-depth: {depth}"
+									>
 										<button
 											type="button"
-											class="w-full border-b px-3 py-2.5 text-left font-ui text-sm transition-opacity hover:opacity-70"
-											style="color: var(--stage-chrome-mute); border-color: color-mix(in srgb, var(--stage-rule) 70%, transparent)"
+											class="reader-toc-row"
+											aria-label="Go to {item.label}"
 											onclick={() => {
 												const href = item.href;
 												tocOpen = false;
@@ -916,7 +927,12 @@
 												void epubRef?.goTo(href);
 											}}
 										>
-											{item.label}
+											<span class="reader-toc-index" aria-hidden="true">
+												{String(i + 1).padStart(2, '0')}
+											</span>
+											<span class="reader-toc-body">
+												<span class="reader-toc-label">{item.label}</span>
+											</span>
 										</button>
 									</li>
 								{/each}
