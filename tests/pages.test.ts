@@ -164,5 +164,10 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain("'h2 + p::first-letter'");
 		expect(src).toContain("'h1 + p'");
 		expect(src).toMatch(/border-left.*link|border-left.*\$\{link\}/);
+		// Open zip via ArrayBuffer (object URLs request META-INF from site origin)
+		expect(src).toContain('arrayBuffer');
+		expect(src).toContain('resolveEpub');
+		expect(src).toContain('book.ready');
+		expect(src).not.toContain('createObjectURL');
 	});
 });

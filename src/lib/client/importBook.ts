@@ -170,18 +170,24 @@ export async function importFile(file: File): Promise<BookRecord> {
 		coverDataUrl = textCover(title, author);
 	}
 
+	// Normalize to a typed Blob so IDB restore + epubjs ArrayBuffer open stay reliable.
+	// Storing the raw File can lose type/name across browsers after IDB round-trip.
+	const mimeType = file.type || mimeFor(format);
+	const bytes = await file.arrayBuffer();
+	const blob = new Blob([bytes], { type: mimeType });
+
 	const book: BookRecord = {
 		id: uid(),
 		title,
 		author,
 		format,
-		mimeType: file.type || mimeFor(format),
+		mimeType,
 		fileName: file.name,
 		coverDataUrl,
 		addedAt: now,
 		updatedAt: now,
-		sizeBytes: file.size,
-		blob: file
+		sizeBytes: blob.size,
+		blob
 	};
 
 	await putBook(book);

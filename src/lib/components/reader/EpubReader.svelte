@@ -7,13 +7,15 @@
 		prefs,
 		initialLocation = '',
 		onprogress,
-		ontoc
+		ontoc,
+		onerror
 	}: {
 		blob: Blob;
 		prefs: ReaderPrefs;
 		initialLocation?: string;
 		onprogress: (fraction: number, location: string, label?: string) => void;
 		ontoc?: (items: { label: string; href: string }[]) => void;
+		onerror?: (message: string) => void;
 	} = $props();
 
 	let host: HTMLDivElement | undefined = $state();
@@ -21,7 +23,7 @@
 	let book: any = null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let rendition: any = null;
-	let objectUrl = '';
+	let loadError = $state('');
 
 	const themeStyles = $derived.by(() => {
 		const map: Record<
@@ -86,8 +88,8 @@
 				'font-optical-sizing': 'auto',
 				'font-feature-settings': '"liga" 1, "kern" 1, "calt" 1',
 				'text-rendering': 'optimizeLegibility',
-				'orphans': '3',
-				'widows': '3'
+				orphans: '3',
+				widows: '3'
 			},
 			p: {
 				'margin-top': '0',
@@ -187,6 +189,21 @@
 		};
 	}
 
+	/** epubjs CJS/ESM interop: default may be nested one level. */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function resolveEpub(mod: any): (input: ArrayBuffer | string, options?: object) => any {
+		const candidates = [mod?.default?.default, mod?.default, mod];
+		for (const c of candidates) {
+			if (typeof c === 'function') return c;
+		}
+		throw new Error('EPUB engine failed to load (epubjs export missing).');
+	}
+
+	function fail(message: string) {
+		loadError = message;
+		onerror?.(message);
+	}
+
 	export async function next() {
 		await rendition?.next();
 	}
@@ -201,40 +218,69 @@
 		let cancelled = false;
 
 		(async () => {
-			const ePub = (await import('epubjs')).default;
-			if (cancelled || !host) return;
-
-			objectUrl = URL.createObjectURL(blob);
-			book = ePub(objectUrl);
-			rendition = book.renderTo(host, {
-				width: '100%',
-				height: '100%',
-				flow: 'scrolled-doc',
-				manager: 'continuous'
-			});
-
-			rendition.themes.default(bodyTheme());
-
-			const start = initialLocation || undefined;
-			await rendition.display(start);
-
-			rendition.on(
-				'relocated',
-				(location: { start: { cfi: string; percentage?: number }; atEnd?: boolean }) => {
-					const fraction = location.start.percentage ?? (location.atEnd ? 1 : 0);
-					onprogress(fraction, location.start.cfi);
-				}
-			);
-
 			try {
-				const nav = await book.loaded.navigation;
-				const toc = (nav.toc || []).map((t: { label: string; href: string }) => ({
-					label: t.label,
-					href: t.href
-				}));
-				ontoc?.(toc);
-			} catch {
-				/* no toc */
+				if (!blob || blob.size === 0) {
+					fail('This EPUB file is empty or missing from storage.');
+					return;
+				}
+
+				const mod = await import('epubjs');
+				if (cancelled || !host) return;
+
+				const ePub = resolveEpub(mod);
+
+				// ArrayBuffer open: reliable with IDB-restored Blobs.
+				// Object URLs often make epubjs request META-INF from the site origin (404).
+				const data = await blob.arrayBuffer();
+				if (cancelled || !host) return;
+				if (data.byteLength < 64) {
+					fail('This EPUB looks corrupt or incomplete.');
+					return;
+				}
+
+				book = ePub(data);
+				await book.ready;
+				if (cancelled || !host) return;
+
+				rendition = book.renderTo(host, {
+					width: '100%',
+					height: '100%',
+					flow: 'scrolled-doc',
+					manager: 'continuous',
+					allowScriptedContent: false
+				});
+
+				rendition.themes.default(bodyTheme());
+
+				const start = initialLocation || undefined;
+				await rendition.display(start);
+
+				rendition.on(
+					'relocated',
+					(location: { start: { cfi: string; percentage?: number }; atEnd?: boolean }) => {
+						const fraction = location.start.percentage ?? (location.atEnd ? 1 : 0);
+						onprogress(fraction, location.start.cfi);
+					}
+				);
+
+				try {
+					const nav = await book.loaded.navigation;
+					const toc = (nav.toc || []).map((t: { label: string; href: string }) => ({
+						label: t.label,
+						href: t.href
+					}));
+					ontoc?.(toc);
+				} catch {
+					/* no toc */
+				}
+			} catch (e) {
+				if (cancelled) return;
+				const msg =
+					e instanceof Error
+						? e.message
+						: 'Could not open this EPUB. The file may be DRM-protected or corrupt.';
+				console.error('[EpubReader]', e);
+				fail(msg);
 			}
 		})();
 
@@ -260,21 +306,45 @@
 
 	onDestroy(() => {
 		try {
+			rendition?.destroy?.();
+		} catch {
+			/* */
+		}
+		try {
 			book?.destroy?.();
 		} catch {
 			/* */
 		}
-		if (objectUrl) URL.revokeObjectURL(objectUrl);
+		rendition = null;
+		book = null;
 	});
 </script>
 
-<div class="epub-host h-full w-full" bind:this={host}></div>
+{#if loadError}
+	<div
+		class="flex h-full min-h-[50dvh] flex-col items-center justify-center gap-3 px-6 text-center"
+		role="alert"
+	>
+		<p class="font-ui text-sm font-medium" style="color: var(--stage-fg)">Couldn’t open this book</p>
+		<p class="max-w-sm font-ui text-[13px] leading-relaxed" style="color: var(--stage-muted)">
+			{loadError}
+		</p>
+	</div>
+{:else}
+	<div class="epub-host h-full w-full" bind:this={host}></div>
+{/if}
 
 <style>
 	.epub-host {
 		min-height: 100%;
+		height: 100%;
+		width: 100%;
 	}
 	.epub-host :global(.epub-container) {
 		height: 100% !important;
+		width: 100% !important;
+	}
+	.epub-host :global(iframe) {
+		border: 0;
 	}
 </style>
