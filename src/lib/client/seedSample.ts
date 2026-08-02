@@ -15,7 +15,7 @@ export async function ensureSampleBook(): Promise<void> {
 	}
 
 	try {
-		const res = await fetch('/samples/the-star-room.md');
+		const res = await fetch('/samples/the-star-room.txt');
 		if (!res.ok) return;
 		const text = await res.text();
 		const blob = new Blob([text], { type: 'text/markdown' });
@@ -26,7 +26,7 @@ export async function ensureSampleBook(): Promise<void> {
 			author: 'Lumen Samples',
 			format: 'markdown',
 			mimeType: 'text/markdown',
-			fileName: 'the-star-room.md',
+			fileName: 'the-star-room.txt',
 			coverDataUrl: undefined,
 			addedAt: now,
 			updatedAt: now,
