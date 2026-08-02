@@ -31,17 +31,29 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).toContain("redirect(308, '/')");
 	});
 
-	test('welcome is product door with start + sync CTAs', () => {
+	test('welcome is a product showcase with stage, features, and CTAs', () => {
 		const path = 'src/routes/welcome/+page.svelte';
 		expect(existsSync(join(root, path))).toBe(true);
 		const src = read(path);
 		expect(src).toContain('Welcome · Lumen');
-		expect(src).toContain('Start reading');
+		expect(src).toContain('welcome-hero');
+		expect(src).toContain('welcome-stage-reader');
+		expect(src).toContain('Open your library');
 		expect(src).toContain('href="/"');
 		expect(src).toContain('/auth?next=/&intent=sync');
-		expect(src).toContain('landing');
+		// Shows what the product is, not empty slogans only
+		expect(src).toContain('EPUB');
+		expect(src).toContain('local-first');
+		expect(src).toContain('CoverPlate');
+		expect(src).toContain('The Star Room');
+		expect(src).toContain('Literata');
+		expect(src).toContain('Newsreader');
+		expect(src).toContain('welcome-path');
 		// no forced redirect file
 		expect(existsSync(join(root, 'src/routes/welcome/+page.ts'))).toBe(false);
+		const css = read('src/app.css');
+		expect(css).toContain('.welcome-hero');
+		expect(css).toContain('.welcome-stage-reader');
 	});
 
 	test('auth page is dedicated sign-in for sync', () => {
