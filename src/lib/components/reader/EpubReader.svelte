@@ -71,9 +71,8 @@
 
 	/**
 	 * Serialized CSS with !important so publisher sheets cannot win.
-	 * Width is locked to the iframe (stage), never to intrinsic image size.
-	 * overflow-x hidden + overflow-y visible: clips wide media without
-	 * collapsing continuous textHeight (which needs vertical overflow visible).
+	 * Matches TextReader: measure (ch) column, margin padding, rail clearance.
+	 * Stage width is the host — never the intrinsic size of the largest image.
 	 */
 	function buildThemeCss(): string {
 		const { bg, fg, mute, link, rule } = themeStyles;
@@ -81,11 +80,13 @@
 		const tracking = prefs.letterSpacing ?? 0;
 		const para = prefs.paragraphSpacing ?? 1;
 		const hyphens = prefs.hyphenate ? 'auto' : 'manual';
-		const margin = prefs.margin ?? 24;
-		/* Clear the left control rail (~52px) plus user margin */
-		const leftPad = margin + 52;
+		const margin = Math.max(0, prefs.margin ?? 24);
+		const measure = Math.max(20, Math.min(120, prefs.measure ?? 68));
+		/* Left rail (~3.25rem) must clear chrome; TextReader uses max(margin, 3.75rem) */
+		const leftPad = Math.max(margin, 52);
+		const rightPad = Math.max(margin, 16);
 		const topPad = Math.max(margin, 20);
-		const bottomPad = Math.round(margin * 2.2);
+		const bottomPad = Math.max(Math.round(margin * 2.2), 48);
 		const family = fontStack(prefs.fontFamily);
 		const display =
 			'"Newsreader Variable", Newsreader, Georgia, "Times New Roman", serif';
@@ -101,20 +102,29 @@ html {
 	max-width: 100% !important;
 	min-width: 0 !important;
 	height: auto !important;
-	/* x clip keeps large cover art from widening the stage; y must stay open for textHeight */
+	/* x clip: large cover art must not widen the stage; y open for textHeight */
 	overflow-x: hidden !important;
 	overflow-y: visible !important;
+	background: ${bg} !important;
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
 }
+/*
+ * Reading column — same model as .reader-prose:
+ * max-width: measure (ch), centered, padding = margin + rail on the left.
+ */
 body {
 	box-sizing: border-box !important;
+	display: block !important;
 	width: 100% !important;
-	max-width: 100% !important;
+	max-width: ${measure}ch !important;
 	min-width: 0 !important;
 	min-height: 0 !important;
-	margin: 0 !important;
-	padding: ${topPad}px ${margin}px ${bottomPad}px ${leftPad}px !important;
+	margin-top: ${topPad}px !important;
+	margin-bottom: ${bottomPad}px !important;
+	margin-left: auto !important;
+	margin-right: auto !important;
+	padding: 0 ${rightPad}px 0 ${leftPad}px !important;
 	float: none !important;
 	position: static !important;
 	left: auto !important;
@@ -122,8 +132,9 @@ body {
 	transform: none !important;
 	overflow-x: hidden !important;
 	overflow-y: visible !important;
-	overflow-wrap: break-word !important;
+	overflow-wrap: anywhere !important;
 	word-wrap: break-word !important;
+	word-break: break-word !important;
 	column-count: auto !important;
 	columns: auto !important;
 	background: ${bg} !important;
@@ -139,13 +150,20 @@ body {
 	font-feature-settings: "liga" 1, "kern" 1, "calt" 1;
 	text-rendering: optimizeLegibility;
 }
-/* Intrinsic image/SVG size must never set the column width */
+/* Block wrappers stay inside the measure column (not image scrollWidth) */
+div, section, article, main, header, footer, aside, nav,
+figure, p, table, ul, ol, li, blockquote, pre,
+h1, h2, h3, h4, h5, h6 {
+	max-width: 100% !important;
+	min-width: 0 !important;
+}
 img, svg, video, canvas, object, embed, picture, image {
 	max-width: 100% !important;
 	width: auto !important;
 	height: auto !important;
 	object-fit: contain !important;
 	box-sizing: border-box !important;
+	display: block !important;
 }
 img[width], img[height], svg[width], svg[height] {
 	width: auto !important;
@@ -154,13 +172,13 @@ img[width], img[height], svg[width], svg[height] {
 }
 figure, picture, .cover, .cover-image, [class*="cover"], [class*="image"] {
 	max-width: 100% !important;
-	width: auto !important;
+	width: 100% !important;
 	margin-left: 0 !important;
 	margin-right: 0 !important;
 }
 table {
 	max-width: 100% !important;
-	width: auto !important;
+	width: 100% !important;
 	border-collapse: collapse;
 	display: block;
 	overflow-x: auto;
@@ -260,41 +278,44 @@ pre {
 	}
 
 	/**
-	 * Force media to the iframe width. max-width:100% alone fails when the
-	 * containing block grows with the image (publisher width attrs / fixed px).
+	 * Strip publisher fixed widths / image attrs so the measure column stays stable.
+	 * Do NOT call contentWidth(px) — that forces body to full stage width and kills measure.
 	 */
 	function clampMediaInContents(contents: {
 		document?: Document;
 		window?: Window;
-		contentWidth?: (w?: number) => number;
 		addStylesheetCss?: (css: string, key: string) => void;
 	}) {
 		try {
 			const doc = contents.document;
 			if (!doc) return;
 
-			// Pin body to the iframe viewport width so % media has a stable basis.
-			const frameW =
-				contents.window?.innerWidth ||
-				doc.documentElement?.clientWidth ||
-				0;
-			if (frameW > 8 && typeof contents.contentWidth === 'function') {
-				try {
-					contents.contentWidth(frameW);
-				} catch {
-					/* */
-				}
-			}
+			const measure = Math.max(20, Math.min(120, prefs.measure ?? 68));
+			const margin = Math.max(0, prefs.margin ?? 24);
+			const leftPad = Math.max(margin, 52);
+			const rightPad = Math.max(margin, 16);
+			const topPad = Math.max(margin, 20);
+			const bottomPad = Math.max(Math.round(margin * 2.2), 48);
 
 			const root = doc.documentElement;
 			const body = doc.body;
+			// Clear any inline width epubjs may have stamped (kills measure)
+			body?.style.removeProperty('width');
 			root?.style.setProperty('max-width', '100%', 'important');
 			root?.style.setProperty('min-width', '0', 'important');
 			root?.style.setProperty('overflow-x', 'hidden', 'important');
-			body?.style.setProperty('max-width', '100%', 'important');
-			body?.style.setProperty('min-width', '0', 'important');
+			// Mirror theme column — inline !important beats late publisher rules
+			body?.style.setProperty('max-width', `${measure}ch`, 'important');
 			body?.style.setProperty('width', '100%', 'important');
+			body?.style.setProperty('min-width', '0', 'important');
+			body?.style.setProperty('margin-left', 'auto', 'important');
+			body?.style.setProperty('margin-right', 'auto', 'important');
+			body?.style.setProperty('margin-top', `${topPad}px`, 'important');
+			body?.style.setProperty('margin-bottom', `${bottomPad}px`, 'important');
+			body?.style.setProperty('padding-left', `${leftPad}px`, 'important');
+			body?.style.setProperty('padding-right', `${rightPad}px`, 'important');
 			body?.style.setProperty('overflow-x', 'hidden', 'important');
+			body?.style.setProperty('box-sizing', 'border-box', 'important');
 
 			const media = doc.querySelectorAll(
 				'img, svg, video, canvas, object, embed, picture, figure, image'
@@ -306,29 +327,51 @@ pre {
 				el.style.setProperty('height', 'auto', 'important');
 				el.style.setProperty('object-fit', 'contain', 'important');
 				if (el instanceof HTMLImageElement) {
-					// HTML width/height attributes beat max-width:100% in some engines
 					el.removeAttribute('width');
 					el.removeAttribute('height');
 				}
 			}
 
-			// Fixed-width wrappers (common on cover pages) still blow the column out
+			// Publisher fixed-px wrappers (common on cover XHTML)
 			const wide = doc.querySelectorAll('[style*="width"], [width]');
 			for (const node of wide) {
 				const el = node as HTMLElement;
 				if (el.tagName === 'BODY' || el.tagName === 'HTML') continue;
-				const attrW = el.getAttribute('width');
-				if (attrW && /^\d+$/.test(attrW) && Number(attrW) > frameW && frameW > 8) {
-					el.removeAttribute('width');
-				}
+				el.removeAttribute('width');
 				const sw = el.style?.width;
 				if (sw && /px$/i.test(sw)) {
-					const px = parseFloat(sw);
-					if (frameW > 8 && px > frameW) {
-						el.style.setProperty('max-width', '100%', 'important');
-						el.style.setProperty('width', '100%', 'important');
-					}
+					el.style.setProperty('max-width', '100%', 'important');
+					el.style.setProperty('width', '100%', 'important');
 				}
+			}
+		} catch {
+			/* */
+		}
+	}
+
+	/** Keep every continuous view/iframe at host width — never image scrollWidth. */
+	function lockStageWidth() {
+		if (!host) return;
+		const w = host.clientWidth;
+		if (w < 8) return;
+		try {
+			const views = host.querySelectorAll('.epub-view');
+			for (const view of views) {
+				const el = view as HTMLElement;
+				el.style.setProperty('width', `${w}px`, 'important');
+				el.style.setProperty('max-width', '100%', 'important');
+				el.style.setProperty('min-width', '0', 'important');
+				const iframe = el.querySelector('iframe') as HTMLIFrameElement | null;
+				if (iframe) {
+					iframe.style.setProperty('width', `${w}px`, 'important');
+					iframe.style.setProperty('max-width', '100%', 'important');
+					iframe.style.setProperty('min-width', '0', 'important');
+				}
+			}
+			const container = host.querySelector('.epub-container') as HTMLElement | null;
+			if (container) {
+				container.style.setProperty('width', `${w}px`, 'important');
+				container.style.setProperty('max-width', '100%', 'important');
 			}
 		} catch {
 			/* */
@@ -354,6 +397,7 @@ pre {
 		} catch {
 			/* */
 		}
+		lockStageWidth();
 	}
 
 	function resizeToHost(force = false) {
@@ -362,7 +406,10 @@ pre {
 		const h = host.clientHeight;
 		if (w < 8 || h < 8) return;
 		// Continuous trims/destroys views when resize races with 0 or noisy sub-pixel changes.
-		if (!force && Math.abs(w - lastResizeW) < 2 && Math.abs(h - lastResizeH) < 2) return;
+		if (!force && Math.abs(w - lastResizeW) < 2 && Math.abs(h - lastResizeH) < 2) {
+			lockStageWidth();
+			return;
+		}
 		lastResizeW = w;
 		lastResizeH = h;
 		try {
@@ -370,6 +417,7 @@ pre {
 		} catch {
 			/* */
 		}
+		lockStageWidth();
 	}
 
 	function scheduleResize() {
@@ -386,14 +434,24 @@ pre {
 			const views = rendition?.manager?.views?.all?.() || [];
 			for (const v of views) {
 				try {
-					v.expand?.();
+					// Vertical lock: width is stage, height follows text — never image scrollWidth
+					if (typeof v.lock === 'function' && host) {
+						v.lock('width', host.clientWidth, host.clientHeight);
+					} else {
+						v.expand?.();
+					}
 				} catch {
-					/* */
+					try {
+						v.expand?.();
+					} catch {
+						/* */
+					}
 				}
 			}
 		} catch {
 			/* */
 		}
+		lockStageWidth();
 	}
 
 	/** Continuous fill appends following spine sections under the current view. */
@@ -713,19 +771,14 @@ pre {
 				reexpandViews();
 				await fillContinuous();
 
-				// Cover art often loads late — re-clamp width, re-expand, fill chapters.
+				// Cover art often loads late — re-apply measure/margin, re-expand, fill.
 				await waitForIframeImages();
 				if (cancelled || !host) return;
-				try {
-					for (const c of rendition.getContents?.() || []) {
-						clampMediaInContents(c);
-					}
-				} catch {
-					/* */
-				}
+				injectThemeIntoContents();
 				reexpandViews();
 				await fillContinuous();
 				resizeToHost(true);
+				lockStageWidth();
 
 				// If still empty after restore + resize, force first spine item.
 				if (!hasDisplayedContent()) {
@@ -816,10 +869,11 @@ pre {
 		void prefs.textAlign;
 		void prefs.hyphenate;
 		injectThemeIntoContents();
-		// Theme reflow: expand views first; avoid resize storms that blank continuous.
+		// Theme / measure / margin reflow — re-expand heights, keep stage width locked.
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
 				reexpandViews();
+				lockStageWidth();
 				void fillContinuous();
 			});
 		});
@@ -887,15 +941,20 @@ pre {
 		-webkit-overflow-scrolling: touch;
 	}
 	.epub-host :global(.epub-view) {
-		/* Height from expand(); width never exceeds the host */
+		/* Height from expand(); width always = host (lockStageWidth also sets px) */
 		min-height: 0;
+		width: 100% !important;
 		max-width: 100% !important;
+		min-width: 0 !important;
 		box-sizing: border-box !important;
+		overflow: hidden;
 	}
 	.epub-host :global(iframe) {
 		border: 0;
-		/* Cap width to host; leave height to expand() px values */
+		width: 100% !important;
 		max-width: 100% !important;
+		min-width: 0 !important;
+		/* Height left to expand() px values */
 		max-height: none;
 		box-sizing: border-box !important;
 	}

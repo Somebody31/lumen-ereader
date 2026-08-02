@@ -171,9 +171,13 @@ describe('book rendering surfaces', () => {
 		expect(src).toContain('waitForHostSize');
 		expect(src).toContain('fillContinuous');
 		expect(src).toContain('attachWheelChain');
-		// Stage width is host-bound, not largest image
+		// Stage width host-bound; measure (ch) + margin prefs applied to body column
 		expect(src).toContain('clampMediaInContents');
+		expect(src).toContain('lockStageWidth');
+		expect(src).toMatch(/max-width:\s*\$\{measure\}ch/);
+		expect(src).toMatch(/padding:\s*0 \$\{rightPad\}px 0 \$\{leftPad\}px/);
 		expect(src).toMatch(/img[\s\S]*?max-width:\s*100%/);
+		expect(src).not.toContain('contentWidth(frameW)');
 		// Drop caps float-none — floats break reflow
 		expect(src).toMatch(/p::first-letter[\s\S]*?float:\s*none/);
 		expect(src).toContain("spread: 'none'");
