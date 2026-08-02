@@ -114,10 +114,6 @@
 		return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 	}
 
-	function formatSize(n: number) {
-		return formatBytes(n);
-	}
-
 	function onPageDrag(e: DragEvent) {
 		e.preventDefault();
 		if (e.dataTransfer?.types?.includes('Files')) pageDragging = true;
