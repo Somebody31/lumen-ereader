@@ -9,13 +9,20 @@
 		book,
 		progress,
 		ondelete,
-		index = 0
+		index = 0,
+		transitionName
 	}: {
 		book: BookListItem;
 		progress?: ProgressRecord;
 		ondelete: (id: string) => void;
 		index?: number;
+		/** Omit when this cover already has the name on the continue-lead */
+		transitionName?: string | null;
 	} = $props();
+
+	const coverTransition = $derived(
+		transitionName === null ? undefined : (transitionName ?? `lumen-book-${book.id}`)
+	);
 
 	const fraction = $derived(progress?.fraction ?? 0);
 	const pct = $derived(Math.round(fraction * 100));
@@ -34,7 +41,7 @@
 	<a href="/read/{book.id}" class="block no-underline">
 		<div
 			class="cover-object bezel lumen-vt-cover"
-			style="view-transition-name: lumen-book-{book.id}"
+			style={coverTransition ? `view-transition-name: ${coverTransition}` : undefined}
 		>
 			<div class="bezel-inner relative aspect-[2/3]">
 				<CoverPlate title={book.title} author={book.author} coverDataUrl={book.coverDataUrl} />

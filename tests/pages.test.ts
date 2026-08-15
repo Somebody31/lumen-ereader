@@ -17,6 +17,9 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).toContain('Your shelf');
 		expect(src).toContain('continue-lead');
 		expect(src).toContain('continue-lead-title');
+		// Continue-lead is a highlight, not a replacement — every book stays on the shelf
+		expect(src).toContain('{#each filtered as book, i (book.id)}');
+		expect(src).not.toContain('never also list it on the shelf');
 		expect(src).toContain('ImportDropzone');
 		// sync door, not marketing landing
 		expect(src).toContain('/auth?next=/&intent=sync');

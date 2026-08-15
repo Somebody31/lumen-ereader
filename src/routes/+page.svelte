@@ -11,6 +11,7 @@
 	import CoverPlate from '$lib/components/library/CoverPlate.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass';
+	import Trash from 'phosphor-svelte/lib/Trash';
 	import X from 'phosphor-svelte/lib/X';
 
 	const ONBOARD_KEY = 'lumen:onboarded';
@@ -35,17 +36,6 @@
 		return books.filter(
 			(b) => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q)
 		);
-	});
-
-	const inProgress = $derived(
-		filtered.filter(
-			(b) =>
-				(progressMap[b.id]?.fraction ?? 0) > 0.01 && (progressMap[b.id]?.fraction ?? 0) < 0.99
-		)
-	);
-	const restShelf = $derived.by(() => {
-		const ids = new Set(inProgress.map((b) => b.id));
-		return filtered.filter((b) => !ids.has(b.id));
 	});
 
 	const sparse = $derived(books.length > 0 && books.length <= 3 && !query.trim());
@@ -120,7 +110,7 @@
 	}
 
 	function requestDelete(id: string) {
-		pendingDelete = books.find((b) => b.id === id) ?? null;
+		pendingDelete = books.find((b) => b.id === id) ?? (last?.id === id ? last : null);
 	}
 
 	async function confirmDelete() {
@@ -306,32 +296,40 @@
 		{/if}
 	{:else}
 		{#if last && !query.trim()}
-			{@const p = Math.round((progressMap[last.id]?.fraction || 0) * 100)}
-			{@const opened = formatOpened(progressMap[last.id]?.updatedAt ?? last.updatedAt)}
+			{@const continueId = last.id}
+			{@const p = Math.round((progressMap[continueId]?.fraction || 0) * 100)}
+			{@const opened = formatOpened(progressMap[continueId]?.updatedAt ?? last.updatedAt)}
 			{@const displayTitle = formatDisplayTitle(last.title)}
 			{@const authorLine = last.author?.trim() || 'Unknown'}
 			{@const continueMeta = [authorLine, opened].filter(Boolean).join(', ')}
 			<!-- Unboxed magazine spread — cover seats, title unmasks, progress draws -->
-			<a
-				href="/read/{last.id}"
-				class="group continue-lead lib-lead no-underline"
-			>
+			<div class="group continue-lead lib-lead">
 				<div
-					class="continue-lead-cover lib-lead-cover lumen-vt-cover"
-					style="view-transition-name: lumen-book-{last.id}"
+					class="continue-lead-cover lib-lead-cover lumen-vt-cover relative"
+					style="view-transition-name: lumen-book-{continueId}"
 				>
-					<div class="cover-object cover-object-hero bezel w-full">
-						<div class="bezel-inner relative aspect-[2/3]">
-							<CoverPlate
-								title={last.title}
-								author={last.author}
-								coverDataUrl={last.coverDataUrl}
-							/>
+					<a href="/read/{continueId}" class="block no-underline">
+						<div class="cover-object cover-object-hero bezel w-full">
+							<div class="bezel-inner relative aspect-[2/3]">
+								<CoverPlate
+									title={last.title}
+									author={last.author}
+									coverDataUrl={last.coverDataUrl}
+								/>
+							</div>
 						</div>
-					</div>
+					</a>
+					<button
+						type="button"
+						class="absolute right-1.5 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-paper text-ink-soft shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-danger hover:text-danger active:scale-95"
+						aria-label="Delete {displayTitle}"
+						onclick={() => requestDelete(continueId)}
+					>
+						<Trash size={15} weight="light" />
+					</button>
 				</div>
 				<div class="continue-lead-spine lib-lead-spine" aria-hidden="true"></div>
-				<div class="continue-lead-copy lib-lead-copy">
+				<a href="/read/{continueId}" class="continue-lead-copy lib-lead-copy no-underline">
 					<p class="continue-lead-eyebrow">
 						Continuing{#if continueMeta}{' '}– {continueMeta}{/if}
 					</p>
@@ -357,39 +355,21 @@
 						Resume reading
 						<span class="cta-chevron" aria-hidden="true">→</span>
 					</span>
-				</div>
-			</a>
+				</a>
+			</div>
 			<div class="lib-rule mt-2 h-px bg-rule sm:mt-6" aria-hidden="true"></div>
 		{/if}
 
-		{@const shelfBooks = (() => {
-			// When continue-lead shows last, never also list it on the shelf
-			// (also keeps view-transition-name unique per book).
-			if (query.trim()) return filtered;
-			const continueId = last?.id;
-			const base = restShelf.length
-				? restShelf
-				: filtered.filter((b) => !continueId || b.id !== continueId || filtered.length > 1);
-			if (continueId) return base.filter((b) => b.id !== continueId);
-			return base;
-		})()}
-
-		{#if shelfBooks.length > 0 || query.trim()}
+		{#if filtered.length > 0 || query.trim()}
 			<div class="space-y-6">
 				<div class="lib-masthead flex items-baseline justify-between gap-4" style="animation-delay: 180ms">
 					<h2 class="type-section text-2xl text-ink sm:text-[1.75rem]">
-						{query.trim()
-							? 'Matches'
-							: inProgress.length && !sparse
-								? 'Also on the shelf'
-								: sparse
-									? 'On the shelf'
-									: 'All books'}
+						{query.trim() ? 'Matches' : sparse ? 'On the shelf' : 'All books'}
 					</h2>
 					{#if !sparse || query.trim()}
 						<p class="type-meta tabular-nums text-ink-soft">
-							{query.trim() ? filtered.length : shelfBooks.length}
-							{(query.trim() ? filtered.length : shelfBooks.length) === 1 ? 'title' : 'titles'}
+							{filtered.length}
+							{filtered.length === 1 ? 'title' : 'titles'}
 							{#if importing}
 								<span> · importing…</span>
 							{/if}
@@ -405,8 +385,16 @@
 							? 'lg:grid-cols-3 lg:gap-x-10'
 							: 'lg:grid-cols-5'}"
 					>
-						{#each query.trim() ? filtered : shelfBooks as book, i (book.id)}
-							<BookCard {book} progress={progressMap[book.id]} ondelete={requestDelete} index={i} />
+						{#each filtered as book, i (book.id)}
+							<BookCard
+								{book}
+								progress={progressMap[book.id]}
+								ondelete={requestDelete}
+								index={i}
+								transitionName={last && !query.trim() && book.id === last.id
+									? null
+									: undefined}
+							/>
 						{/each}
 					</div>
 				{/if}

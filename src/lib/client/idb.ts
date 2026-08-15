@@ -81,8 +81,10 @@ function stripBlob(book: BookRecord): BookListItem {
 /** Shelf listing without file blobs (keeps library scroll light). */
 export async function listBooks(): Promise<BookListItem[]> {
 	const db = await getDb();
-	const all = await db.getAllFromIndex('books', 'by-updated');
-	return all.reverse().map(stripBlob);
+	// getAll (not the updatedAt index) so a book missing that key still appears.
+	const all = await db.getAll('books');
+	all.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+	return all.map(stripBlob);
 }
 
 export async function getBook(id: string): Promise<BookRecord | undefined> {
@@ -200,11 +202,11 @@ export async function putPrefs(prefs: ReaderPrefs): Promise<void> {
 export async function getLastOpened(): Promise<BookListItem | undefined> {
 	const db = await getDb();
 	const progresses = await db.getAll('progress');
-	if (!progresses.length) {
-		const books = await listBooks();
-		return books[0];
-	}
 	progresses.sort((a, b) => b.updatedAt - a.updatedAt);
-	const full = await getBook(progresses[0].bookId);
-	return full ? stripBlob(full) : undefined;
+	for (const row of progresses) {
+		const full = await getBook(row.bookId);
+		if (full) return stripBlob(full);
+	}
+	const books = await listBooks();
+	return books[0];
 }
