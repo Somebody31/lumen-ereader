@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
+	applyReaderEdit,
 	exportGlossaryJson,
 	findGlossaryMatch,
 	mergeGlossaryUpdates,
@@ -72,9 +73,24 @@ describe('glossary merge', () => {
 			entry({ source: '内力', preferred: 'internal force', category: 'term', showInReader: false })
 		]);
 		expect(items).toHaveLength(1);
-		expect(items[0]).toEqual({ source: '林动', preferred: 'Lin Dong', category: 'name' });
+		expect(items[0].source).toBe('林动');
+		expect(items[0].preferred).toBe('Lin Dong');
+		expect(items[0].category).toBe('name');
+		expect(items[0].id).toBeTruthy();
 		expect(JSON.stringify(items)).not.toContain('MC');
 		expect(JSON.stringify(items)).not.toContain('locked');
+	});
+
+	test('reader edit updates preferred and locks for later chapters', () => {
+		const existing = [entry({ id: 'n1', source: '林动', preferred: 'Lin Dong', locked: false })];
+		const next = applyReaderEdit(existing, 'n1', { preferred: 'Lin Tung' }, 99);
+		expect(next[0].preferred).toBe('Lin Tung');
+		expect(next[0].locked).toBe(true);
+		expect(next[0].updatedAt).toBe(99);
+		const afterModel = mergeGlossaryUpdates(next, [
+			{ source: '林动', preferred: 'Forest Motion' }
+		], 'b1');
+		expect(afterModel[0].preferred).toBe('Lin Tung');
 	});
 
 	test('import/export round-trips source and preferred', () => {

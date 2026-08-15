@@ -2891,6 +2891,20 @@ button:hover .cta-chevron {
 	font-size: 0.75rem;
 	opacity: 0.7;
 }
+.glossary-reader-input {
+	width: 100%;
+	margin: 0;
+	padding: 0.1rem 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	outline: none;
+}
+.glossary-reader-input:focus {
+	border-bottom: 1px solid var(--stage-rule);
+	opacity: 1;
+}
 
 .reader-lang-toggle {
 	position: absolute;

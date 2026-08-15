@@ -100,6 +100,7 @@ export interface GlossaryUpdate {
 }
 
 export interface ReaderGlossaryItem {
+	id: string;
 	source: string;
 	preferred: string;
 	category: GlossaryCategory;

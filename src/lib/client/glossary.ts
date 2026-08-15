@@ -57,11 +57,28 @@ export function readerGlossary(entries: GlossaryEntry[]): ReaderGlossaryItem[] {
 	return entries
 		.filter((e) => e.showInReader !== false)
 		.map((e) => ({
+			id: e.id,
 			source: e.source,
 			preferred: e.preferred,
 			category: e.category
 		}))
 		.sort((a, b) => a.preferred.localeCompare(b.preferred));
+}
+
+/** Reader edit writes the same store the translator uses, and locks the term for later chapters. */
+export function applyReaderEdit(
+	entries: GlossaryEntry[],
+	id: string,
+	patch: { preferred?: string; source?: string },
+	now = Date.now()
+): GlossaryEntry[] {
+	return entries.map((e) => {
+		if (e.id !== id) return e;
+		const preferred = patch.preferred !== undefined ? patch.preferred.trim() : e.preferred;
+		const source = patch.source !== undefined ? patch.source.trim() : e.source;
+		if (!preferred || !source) return e;
+		return { ...e, preferred, source, locked: true, updatedAt: now };
+	});
 }
 
 export function glossaryForPrompt(entries: GlossaryEntry[]): Array<{

@@ -97,8 +97,8 @@
 		<div>
 			<h2 class="type-section text-xl text-ink">Glossary</h2>
 			<p class="type-meta mt-1 text-ink-soft">
-				Sent to DeepSeek on every chapter. Locked terms cannot be overwritten. Reader panel hides
-				notes and locks.
+				Sent to DeepSeek on every chapter. Edits in the reader lock the English for later chapters.
+				Locked terms cannot be overwritten.
 			</p>
 		</div>
 		<div class="flex flex-wrap gap-2">

@@ -159,6 +159,7 @@ describe('natural e-reader IA (shipped routes)', () => {
 	test('reader has glossary drawer and ZH/EN toggle', () => {
 		const src = read('src/routes/read/[id]/+page.svelte');
 		expect(src).toContain('GlossaryDrawer');
+		expect(src).toContain('saveGlossaryEdit');
 		expect(src).toContain('glossaryOpen');
 		expect(src).toContain("e.key === 'g'");
 		expect(src).toContain('switchLanguage');

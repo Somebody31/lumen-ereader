@@ -8,6 +8,7 @@
 		getPrefs,
 		listBookmarks,
 		listGlossary,
+		putGlossaryEntries,
 		putBook,
 		putBookmark,
 		putPrefs,
@@ -17,13 +18,14 @@
 	import { pushProgress } from '$lib/client/sync';
 	import { formatDisplayTitle } from '$lib/client/formatTitle';
 	import { activeTocIndex } from '$lib/client/epubNav';
-	import { readerGlossary } from '$lib/client/glossary';
+	import { applyReaderEdit, readerGlossary } from '$lib/client/glossary';
 	import {
 		fontStack,
 		READING_FONTS,
 		type BookLang,
 		type BookmarkRecord,
 		type BookRecord,
+		type GlossaryEntry,
 		type ReaderGlossaryItem,
 		type ReaderPrefs,
 		type ReadingFont,
@@ -57,6 +59,7 @@
 	let glossaryOpen = $state(false);
 	let readLang = $state<BookLang>('zh');
 	let glossaryItems = $state<ReaderGlossaryItem[]>([]);
+	let glossaryEntries = $state<GlossaryEntry[]>([]);
 	let tocTab = $state<'contents' | 'bookmarks'>('contents');
 	let toc = $state<{ label: string; href: string; depth?: number }[]>([]);
 	let bookmarks = $state<BookmarkRecord[]>([]);
@@ -173,7 +176,8 @@
 			lastLocation = prog.location;
 			progressLabel = prog.label || '';
 		}
-		glossaryItems = readerGlossary(await listGlossary(id));
+		glossaryEntries = await listGlossary(id);
+		glossaryItems = readerGlossary(glossaryEntries);
 		if (b.format === 'text' || b.format === 'markdown') {
 			textRaw = await b.blob.text();
 		}
@@ -181,6 +185,15 @@
 		if (prefs.keepAwake) await applyWakeLock(true);
 		loading = false;
 		bumpChrome();
+	}
+
+	async function saveGlossaryEdit(entryId: string, patch: { preferred?: string; source?: string }) {
+		if (!id) return;
+		const latest = await listGlossary(id);
+		const next = applyReaderEdit(latest, entryId, patch);
+		await putGlossaryEntries(next);
+		glossaryEntries = next;
+		glossaryItems = readerGlossary(next);
 	}
 
 	onMount(() => {
@@ -195,7 +208,8 @@
 			if (!id) return;
 			const b = await getBook(id);
 			if (b) book = b;
-			glossaryItems = readerGlossary(await listGlossary(id));
+			glossaryEntries = await listGlossary(id);
+			glossaryItems = readerGlossary(glossaryEntries);
 		};
 		document.addEventListener('visibilitychange', onVis);
 		window.addEventListener('lumen:translate-progress', onTranslate);
@@ -1196,6 +1210,7 @@
 			<GlossaryDrawer
 				items={glossaryItems}
 				onclose={() => (glossaryOpen = false)}
+				onsave={saveGlossaryEdit}
 				onedit={() => {
 					const bid = book?.id;
 					if (bid) void goto(`/translate/${bid}`);

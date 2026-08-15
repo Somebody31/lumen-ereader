@@ -5,14 +5,30 @@
 	let {
 		items,
 		onclose,
-		onedit
+		onedit,
+		onsave
 	}: {
 		items: ReaderGlossaryItem[];
 		onclose: () => void;
 		onedit?: () => void;
+		onsave?: (id: string, patch: { preferred?: string; source?: string }) => void;
 	} = $props();
 
 	let query = $state('');
+	let draft = $state<Record<string, { preferred: string; source: string }>>({});
+
+	function rowDraft(item: ReaderGlossaryItem) {
+		return draft[item.id] ?? { preferred: item.preferred, source: item.source };
+	}
+
+	function commit(item: ReaderGlossaryItem) {
+		const next = rowDraft(item);
+		const preferred = next.preferred.trim();
+		const source = next.source.trim();
+		if (!preferred || !source) return;
+		if (preferred === item.preferred && source === item.source) return;
+		onsave?.(item.id, { preferred, source });
+	}
 
 	const filtered = $derived.by(() => {
 		const q = query.trim().toLowerCase();
@@ -48,6 +64,9 @@
 			<p class="type-kicker" style="color: var(--stage-chrome-mute)">Glossary</p>
 			<p class="type-chrome-title mt-1 text-[1.05rem]" style="color: var(--stage-chrome-fg)">
 				Names &amp; terms
+			</p>
+			<p class="type-meta mt-1" style="color: var(--stage-chrome-mute)">
+				Edits save to the translator list for later chapters.
 			</p>
 		</div>
 		<button
@@ -89,10 +108,32 @@
 					{cat}
 				</p>
 				<ul class="glossary-reader-list" role="list">
-					{#each rows as item (`${item.source}:${item.preferred}`)}
+					{#each rows as item (item.id)}
 						<li class="glossary-reader-row">
-							<span class="glossary-reader-en">{item.preferred}</span>
-							<span class="glossary-reader-zh">{item.source}</span>
+							<label class="sr-only" for="gloss-en-{item.id}">English</label>
+							<input
+								id="gloss-en-{item.id}"
+								class="glossary-reader-en glossary-reader-input"
+								value={rowDraft(item).preferred}
+								oninput={(e) => {
+									const preferred = (e.currentTarget as HTMLInputElement).value;
+									draft = { ...draft, [item.id]: { ...rowDraft(item), preferred } };
+								}}
+								onchange={() => commit(item)}
+								onblur={() => commit(item)}
+							/>
+							<label class="sr-only" for="gloss-zh-{item.id}">Chinese</label>
+							<input
+								id="gloss-zh-{item.id}"
+								class="glossary-reader-zh glossary-reader-input"
+								value={rowDraft(item).source}
+								oninput={(e) => {
+									const source = (e.currentTarget as HTMLInputElement).value;
+									draft = { ...draft, [item.id]: { ...rowDraft(item), source } };
+								}}
+								onchange={() => commit(item)}
+								onblur={() => commit(item)}
+							/>
 						</li>
 					{/each}
 				</ul>
