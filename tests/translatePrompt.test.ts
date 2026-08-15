@@ -15,6 +15,8 @@ describe('translate prompt contract', () => {
 		expect(TRANSLATE_SYSTEM).toContain('Change text nodes only');
 		expect(TRANSLATE_SYSTEM).toContain('Locked terms are mandatory');
 		expect(TRANSLATE_SYSTEM).toContain('Do not localize setting flavor');
+		expect(TRANSLATE_SYSTEM).toContain('no markdown code fences');
+		expect(TRANSLATE_SYSTEM).toContain('same tag structure');
 	});
 
 	test('packs title, glossary, and html', () => {
