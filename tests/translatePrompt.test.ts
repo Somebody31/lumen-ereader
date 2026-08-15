@@ -10,6 +10,8 @@ describe('translate prompt contract', () => {
 	test('system prompt requires JSON keys and tag preservation', () => {
 		expect(TRANSLATE_SYSTEM).toContain('html');
 		expect(TRANSLATE_SYSTEM).toContain('glossaryUpdates');
+		expect(TRANSLATE_SYSTEM).toContain('ONE complete chapter');
+		expect(TRANSLATE_SYSTEM).toContain('THIS chapter only');
 		expect(TRANSLATE_SYSTEM).toContain('Preserve every HTML');
 		expect(TRANSLATE_SYSTEM).toContain('Locked terms');
 	});

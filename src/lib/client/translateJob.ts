@@ -6,7 +6,7 @@ import {
 	putGlossaryEntries,
 	putTranslationJob
 } from './idb';
-import { extractTranslatableChapters, extractBodyInner, patchEpubChapters, readEpubChapter, replaceBodyInner, splitHtmlChunks } from './epubTranslate';
+import { extractTranslatableChapters, extractBodyInner, patchEpubChapters, readEpubChapter, replaceBodyInner } from './epubTranslate';
 import { glossaryForPrompt, mergeGlossaryUpdates } from './glossary';
 import type {
 	EpubSpineChapter
@@ -191,38 +191,46 @@ export async function updateSelection(bookId: string, selectedHrefs: string[]): 
 	return job;
 }
 
+/** One chapter → one POST. Glossary in the request is honored; new terms come back on the same response. */
+export function chapterRequestBody(
+	title: string,
+	chapterHtml: string,
+	glossary: GlossaryEntry[]
+): { title: string; html: string; glossary: ReturnType<typeof glossaryForPrompt>; hasBody: boolean } {
+	const { inner, hasBody } = extractBodyInner(chapterHtml);
+	return {
+		title,
+		html: inner,
+		glossary: glossaryForPrompt(glossary),
+		hasBody
+	};
+}
+
 async function translateHtml(
 	html: string,
 	title: string,
 	glossary: GlossaryEntry[]
 ): Promise<{ html: string; glossaryUpdates: Parameters<typeof mergeGlossaryUpdates>[1] }> {
-	const { inner, hasBody } = extractBodyInner(html);
-	const chunks = splitHtmlChunks(inner);
-	const out: string[] = [];
-	let updates: Parameters<typeof mergeGlossaryUpdates>[1] = [];
-	for (const chunk of chunks) {
-		const res = await fetch('/api/translate/chapter', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				title,
-				html: chunk,
-				glossary: glossaryForPrompt(glossary)
-			})
-		});
-		const data = (await res.json().catch(() => ({}))) as {
-			html?: string;
-			glossaryUpdates?: Parameters<typeof mergeGlossaryUpdates>[1];
-			error?: string;
-		};
-		if (!res.ok || !data.html) {
-			throw new Error(data.error || `Translation failed (${res.status})`);
-		}
-		out.push(data.html);
-		if (data.glossaryUpdates?.length) updates = updates.concat(data.glossaryUpdates);
+	const payload = chapterRequestBody(title, html, glossary);
+	const res = await fetch('/api/translate/chapter', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			title: payload.title,
+			html: payload.html,
+			glossary: payload.glossary
+		})
+	});
+	const data = (await res.json().catch(() => ({}))) as {
+		html?: string;
+		glossaryUpdates?: Parameters<typeof mergeGlossaryUpdates>[1];
+		error?: string;
+	};
+	if (!res.ok || !data.html) {
+		throw new Error(data.error || `Translation failed (${res.status})`);
 	}
-	const stitched = out.join('');
-	return { html: hasBody ? replaceBodyInner(html, stitched) : stitched, glossaryUpdates: updates };
+	const translated = payload.hasBody ? replaceBodyInner(html, data.html) : data.html;
+	return { html: translated, glossaryUpdates: data.glossaryUpdates ?? [] };
 }
 
 async function runLoop(bookId: string, signal: AbortSignal): Promise<void> {

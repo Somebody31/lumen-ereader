@@ -2,16 +2,16 @@ import type { GlossaryUpdate } from '$lib/client/types';
 
 export const DEEPSEEK_MODEL = 'deepseek-v4-flash';
 export const DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
-export const MAX_CHAPTER_HTML = 100_000;
+export const MAX_CHAPTER_HTML = 400_000;
 
 export const TRANSLATE_SYSTEM = `You are a literary translator for Chinese webnovels (xianxia, xuanhuan, urban, romance).
-Translate the user HTML from Chinese to natural, publishable English.
+The user message is ONE complete chapter. Translate all of it in this single response.
 
 Rules:
 - Return a JSON object with keys "html" and "glossaryUpdates" only.
-- "html" is the translated markup. Preserve every HTML/XML tag, attribute, entity, and structure. Translate text nodes only. Do not add or remove tags. Do not wrap the result in markdown fences.
+- "html" is the translated markup for the whole chapter. Preserve every HTML/XML tag, attribute, entity, and structure. Translate text nodes only. Do not add or remove tags. Do not wrap the result in markdown fences. Do not omit later paragraphs.
 - Honor the glossary exactly: use each entry's "preferred" English for that source term and its aliases. Locked terms are mandatory.
-- "glossaryUpdates" is an array of NEW proper nouns, place names, titles, or cultivation/setting terms that are not already in the glossary. Do not restate existing entries. Each item: { "source", "preferred", "category", "notes"?, "aliases"? } where category is name|place|title|term|other.
+- "glossaryUpdates" is new terms found in THIS chapter only that are not already in the glossary: proper nouns, place names, titles, cultivation/setting terms. Do not restate existing entries. Each item: { "source", "preferred", "category", "notes"?, "aliases"? } where category is name|place|title|term|other.
 - Keep honorifics and register consistent. Do not localize setting names unless the glossary says to.
 - If the input is already English, return it unchanged with an empty glossaryUpdates array.`;
 

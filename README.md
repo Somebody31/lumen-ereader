@@ -32,7 +32,7 @@ echo 'DEEPSEEK_API_KEY=sk-...' >> .env
 bunx wrangler secret put DEEPSEEK_API_KEY
 ```
 
-Then open **Translate**, drop the EPUB, check the chapters you want, and start. The English copy lives on the same library card; press **L** or the ZH/EN control in the reader. **G** opens the glossary.
+Then open **Translate**, drop the EPUB, check the chapters you want, and start. Each selected chapter is one DeepSeek call; the same response returns English HTML and any new glossary terms. The English copy lives on the same library card; press **L** or the ZH/EN control in the reader. **G** opens the glossary.
 
 ```bash
 bun run check   # types

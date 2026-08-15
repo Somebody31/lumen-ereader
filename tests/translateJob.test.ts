@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
 	applyChapterSelection,
+	chapterRequestBody,
 	jobMeta,
 	nextPendingChapter,
 	selectionError
@@ -58,6 +59,35 @@ describe('chapter selection', () => {
 		const next = applyChapterSelection(done, []);
 		expect(next[0].status).toBe('done');
 		expect(next[0].selected).toBe(true);
+	});
+
+	test('one chapter is one request body (no chunk split)', () => {
+		const long = `<html><body>${'<p>林动站在青石上。</p>'.repeat(400)}</body></html>`;
+		const payload = chapterRequestBody('第一章', long, [
+			{
+				id: '1',
+				bookId: 'b',
+				source: '林动',
+				preferred: 'Lin Dong',
+				category: 'name',
+				locked: true,
+				showInReader: true,
+				createdAt: 1,
+				updatedAt: 1
+			}
+		]);
+		expect(payload.html.includes('<p>林动站在青石上。</p>')).toBe(true);
+		expect(payload.html.split('<p>').length - 1).toBe(400);
+		expect(payload.glossary).toEqual([
+			{
+				source: '林动',
+				preferred: 'Lin Dong',
+				category: 'name',
+				locked: true,
+				notes: undefined
+			}
+		]);
+		expect(payload.hasBody).toBe(true);
 	});
 
 	test('job meta counts selection not whole spine', () => {
