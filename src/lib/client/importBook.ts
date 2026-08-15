@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import type { BookFormat, BookRecord } from './types';
 import { putBook } from './idb';
+import { resolvePath } from './epubTranslate';
 
 function uid(): string {
 	return crypto.randomUUID();
@@ -110,18 +111,6 @@ async function parseEpubMeta(file: File): Promise<{ title: string; author: strin
 	}
 
 	return { title, author, coverDataUrl };
-}
-
-function resolvePath(base: string, rel: string): string {
-	if (rel.startsWith('/')) return rel.slice(1);
-	const parts = (base + rel).split('/');
-	const out: string[] = [];
-	for (const p of parts) {
-		if (p === '' || p === '.') continue;
-		if (p === '..') out.pop();
-		else out.push(p);
-	}
-	return out.join('/');
 }
 
 async function parseTextMeta(file: File, format: BookFormat): Promise<{ title: string; author: string }> {

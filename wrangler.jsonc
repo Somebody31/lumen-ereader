@@ -28,6 +28,7 @@
 	],
 	// Set SESSION_SECRET via: wrangler secret put SESSION_SECRET
 	// Optional READER_PASSPHRASE for simple gate: wrangler secret put READER_PASSPHRASE
+	// Translation: wrangler secret put DEEPSEEK_API_KEY
 	"vars": {
 		"APP_NAME": "Lumen"
 	}

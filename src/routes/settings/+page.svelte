@@ -10,9 +10,11 @@
 		type ReadingTheme,
 		type SessionInfo
 	} from '$lib/client/types';
+	import { fetchTranslateStatus } from '$lib/client/translateJob';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Cloud from 'phosphor-svelte/lib/Cloud';
 	import CloudSlash from 'phosphor-svelte/lib/CloudSlash';
+	import Translate from 'phosphor-svelte/lib/Translate';
 
 	let prefs = $state<ReaderPrefs | null>(null);
 	let session = $state<SessionInfo | null>(null);
@@ -20,6 +22,8 @@
 	let message = $state('');
 	let error = $state('');
 	let showSyncHelp = $state(false);
+	let translateConfigured = $state<boolean | null>(null);
+	let translateModel = $state('deepseek-v4-flash');
 
 	const themes: { id: ReadingTheme; label: string; bg: string; fg: string; line: string }[] = [
 		{ id: 'night', label: 'Night', bg: '#0c0c0c', fg: '#f3f2ed', line: '#9a9a94' },
@@ -34,6 +38,9 @@
 	onMount(async () => {
 		prefs = await getPrefs();
 		session = await fetchSession();
+		const tr = await fetchTranslateStatus();
+		translateConfigured = tr.configured;
+		translateModel = tr.model;
 	});
 
 	async function savePrefs(partial: Partial<ReaderPrefs>) {
@@ -383,6 +390,32 @@
 		{#if error}
 			<p class="font-ui text-sm text-danger" role="alert">{error}</p>
 		{/if}
+	</section>
+
+	<section class="animate-plate-in stagger-3 space-y-5 rounded-lg border border-rule bg-paper p-6 sm:p-8">
+		<div class="flex items-start gap-3.5">
+			<span class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-newsprint">
+				<Translate size={17} weight="light" class="text-ink" />
+			</span>
+			<div>
+				<h2 class="type-section text-xl text-ink">Translation</h2>
+				<p class="type-body mt-1 text-ink-soft">
+					{#if translateConfigured}
+						DeepSeek {translateModel} is configured. The API key stays on the server.
+					{:else if translateConfigured === false}
+						Not configured. Set <code class="text-ink">DEEPSEEK_API_KEY</code> in
+						<code class="text-ink">.env</code> or as a Wrangler secret, then restart the server.
+					{:else}
+						Checking…
+					{/if}
+				</p>
+				<p class="type-meta mt-3 text-ink-mute">
+					<a href="/translate" class="text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink"
+						>Open translator</a
+					>
+				</p>
+			</div>
+		</div>
 	</section>
 
 	<section class="animate-plate-in stagger-3 type-meta leading-relaxed text-ink-mute">

@@ -1,5 +1,13 @@
-import type { BookMeta, ProgressRecord, SessionInfo } from './types';
-import { getBook, listBooks, putBook, putProgress, getProgress } from './idb';
+import type { BookMeta, GlossaryEntry, ProgressRecord, SessionInfo } from './types';
+import {
+	getBook,
+	listBooks,
+	listGlossary,
+	putBook,
+	putGlossaryEntries,
+	putProgress,
+	getProgress
+} from './idb';
 
 export async function fetchSession(): Promise<SessionInfo> {
 	try {
@@ -45,12 +53,22 @@ export async function pushBook(bookId: string): Promise<{ ok: boolean; error?: s
 		addedAt: book.addedAt,
 		updatedAt: book.updatedAt,
 		sizeBytes: book.sizeBytes,
-		lengthHint: book.lengthHint
+		lengthHint: book.lengthHint,
+		sourceLang: book.sourceLang,
+		activeLang: book.activeLang,
+		translation: book.translation
 	};
 
 	const form = new FormData();
 	form.set('meta', JSON.stringify(meta));
 	form.set('file', book.blob, book.fileName);
+	if (book.translatedBlob) {
+		form.set('fileEn', book.translatedBlob, book.fileName.replace(/\.epub$/i, '') + '.en.epub');
+	}
+	const glossary = await listGlossary(book.id);
+	if (glossary.length) {
+		form.set('glossary', JSON.stringify(glossary));
+	}
 
 	const res = await fetch('/api/books', { method: 'POST', body: form });
 	if (!res.ok) {
@@ -84,7 +102,17 @@ export async function pullLibrary(): Promise<{ ok: boolean; count: number; error
 		const fileRes = await fetch(`/api/books/${meta.id}/file`);
 		if (!fileRes.ok) continue;
 		const blob = await fileRes.blob();
-		await putBook({ ...meta, blob });
+		let translatedBlob: Blob | undefined;
+		const enRes = await fetch(`/api/books/${meta.id}/file-en`);
+		if (enRes.ok) translatedBlob = await enRes.blob();
+		await putBook({ ...meta, blob, translatedBlob });
+		const glossRes = await fetch(`/api/books/${meta.id}/glossary`);
+		if (glossRes.ok) {
+			const entries = (await glossRes.json()) as GlossaryEntry[];
+			if (Array.isArray(entries) && entries.length) {
+				await putGlossaryEntries(entries.map((e) => ({ ...e, bookId: meta.id })));
+			}
+		}
 		count++;
 		const progRes = await fetch(`/api/progress/${meta.id}`);
 		if (progRes.ok) {

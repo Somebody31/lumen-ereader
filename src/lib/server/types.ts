@@ -6,6 +6,7 @@ export type AppEnv = {
 		SESSION_SECRET?: string;
 		READER_PASSPHRASE?: string;
 		APP_NAME?: string;
+		DEEPSEEK_API_KEY?: string;
 	};
 };
 
@@ -21,6 +22,15 @@ export interface BookMetaDto {
 	updatedAt: number;
 	sizeBytes: number;
 	lengthHint?: number;
+	sourceLang?: 'zh' | 'en' | 'unknown';
+	activeLang?: 'zh' | 'en';
+	translation?: {
+		status: 'idle' | 'running' | 'paused' | 'done' | 'error';
+		chaptersSelected: number;
+		chaptersDone: number;
+		error?: string;
+		updatedAt: number;
+	};
 }
 
 export interface ProgressDto {

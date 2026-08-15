@@ -13,6 +13,7 @@
 	const isAuth = $derived(path === '/auth' || path.startsWith('/auth/'));
 	const isAbout = $derived(path === '/about' || path.startsWith('/about/'));
 	const isSettings = $derived(path.startsWith('/settings'));
+	const isTranslate = $derived(path.startsWith('/translate'));
 	/** Slim chrome: product door + sign-in — no Import pressure */
 	const isSlim = $derived(isWelcome || isAuth);
 	const showImport = $derived(!isSlim && !isAbout);
@@ -76,6 +77,11 @@
 							>Library</a
 						>
 						<a
+							href="/translate"
+							class={navClass(isTranslate)}
+							aria-current={isTranslate ? 'page' : undefined}>Translate</a
+						>
+						<a
 							href="/settings"
 							class={navClass(isSettings)}
 							aria-current={isSettings ? 'page' : undefined}>Settings</a
@@ -132,6 +138,9 @@
 							href="/"
 							class="type-meta text-ink-mute no-underline hover:text-ink-soft"
 							aria-current={isLibrary ? 'page' : undefined}>Library</a
+						>
+						<a href="/translate" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
+							>Translate</a
 						>
 						<a href="/settings" class="type-meta text-ink-mute no-underline hover:text-ink-soft"
 							>Settings</a

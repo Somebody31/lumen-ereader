@@ -14,6 +14,7 @@ declare global {
 				SESSION_SECRET?: string;
 				READER_PASSPHRASE?: string;
 				APP_NAME?: string;
+				DEEPSEEK_API_KEY?: string;
 			};
 			context: {
 				waitUntil(promise: Promise<unknown>): void;

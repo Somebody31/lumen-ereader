@@ -9,6 +9,7 @@ Local-first e-reader with an editorial nocturne UI (near-black ground, warm ivor
 - Library with continue-reading, search, delete, drag-drop import
 - Reader: Night / Paper / Sepia / High-contrast, type scale, measure, focus mode
 - EPUB (epubjs) + text/Markdown
+- Chinese webnovel translation (DeepSeek V4 Flash): pick chapters, one glossary for the model and the reader, ZH/EN toggle on the same book
 - Progress restore (local); optional cloud push/pull when configured
 - Sample story seeds on first empty library
 
@@ -20,6 +21,18 @@ bun run dev
 ```
 
 Open the printed local URL. Import a `.epub`, `.md`, or `.txt`, or open the seeded sample.
+
+To translate a Chinese EPUB, set a server-side key (never commit it):
+
+```bash
+# local
+echo 'DEEPSEEK_API_KEY=sk-...' >> .env
+
+# Cloudflare
+bunx wrangler secret put DEEPSEEK_API_KEY
+```
+
+Then open **Translate**, drop the EPUB, check the chapters you want, and start. The English copy lives on the same library card; press **L** or the ZH/EN control in the reader. **G** opens the glossary.
 
 ```bash
 bun run check   # types
@@ -52,14 +65,16 @@ Without secrets/bindings, the app still works **fully offline** (local-only). Se
 | `Esc` | Library / close panels |
 | `F` | Focus mode (hide chrome) |
 | `T` | Table of contents |
+| `G` | Glossary |
+| `L` | Switch Chinese / English |
 | `+` / `-` | Font size |
 | `←` `→` or `J` `K` | EPUB page |
 
 ## Project map
 
-- `src/routes` — library, reader, settings, API bridge
-- `src/lib/client` — IndexedDB, import, sync, text render
-- `src/lib/server` — Hono app (auth, books, progress)
+- `src/routes` — library, reader, settings, translate, API bridge
+- `src/lib/client` — IndexedDB, import, sync, text render, EPUB translate, glossary
+- `src/lib/server` — Hono app (auth, books, progress, DeepSeek proxy)
 - `PRODUCT.md` / `DESIGN.md` — product + visual system (Impeccable)
 
 ## License

@@ -116,25 +116,52 @@ describe('natural e-reader IA (shipped routes)', () => {
 		expect(src).not.toContain('href="/library"');
 	});
 
-	test('shell: Library at /, primary nav Library|Settings, slim auth/welcome', () => {
+	test('shell: Library at /, primary nav Library|Translate|Settings, slim auth/welcome', () => {
 		const shell = read('src/lib/components/shell/AppShell.svelte');
 		expect(shell).toContain('href="/"');
 		expect(shell).toContain('href="/settings"');
+		expect(shell).toContain('href="/translate"');
 		expect(shell).toContain('Library');
 		expect(shell).toContain('Settings');
+		expect(shell).toContain('Translate');
 		expect(shell).toContain('isAuth');
 		expect(shell).toContain('isWelcome');
 		expect(shell).toContain('isSlim');
 		expect(shell).toContain("path === '/'");
 		expect(shell).toContain("path.startsWith('/read/')");
-		// Primary chip nav is Library + Settings only (About is footer)
+		// Primary chip nav is Library + Translate + Settings (About is footer)
 		const primaryNav = shell.match(
 			/aria-label="Primary"[\s\S]*?<\/nav>/
 		)?.[0];
 		expect(primaryNav).toBeTruthy();
 		expect(primaryNav).toContain('Library');
+		expect(primaryNav).toContain('/translate');
 		expect(primaryNav).toContain('/settings');
 		expect(primaryNav).not.toContain('/about');
+	});
+
+	test('translate routes exist with chapter picker and glossary editor', () => {
+		expect(existsSync(join(root, 'src/routes/translate/+page.svelte'))).toBe(true);
+		expect(existsSync(join(root, 'src/routes/translate/[id]/+page.svelte'))).toBe(true);
+		const index = read('src/routes/translate/+page.svelte');
+		const detail = read('src/routes/translate/[id]/+page.svelte');
+		expect(index).toContain('Translate · Lumen');
+		expect(index).toContain('Chinese EPUB');
+		expect(detail).toContain('Select all');
+		expect(detail).toContain('Apply range');
+		expect(detail).toContain('GlossaryEditor');
+		expect(detail).toContain('Start translation');
+	});
+
+	test('reader has glossary drawer and ZH/EN toggle', () => {
+		const src = read('src/routes/read/[id]/+page.svelte');
+		expect(src).toContain('GlossaryDrawer');
+		expect(src).toContain('glossaryOpen');
+		expect(src).toContain("e.key === 'g'");
+		expect(src).toContain('switchLanguage');
+		expect(src).toContain('reader-lang-toggle');
+		expect(src).toContain('ZH');
+		expect(src).toContain('EN');
 	});
 
 	test('settings delegates passphrase to /auth', () => {

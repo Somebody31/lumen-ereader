@@ -5,12 +5,20 @@
 	let {
 		onfiles,
 		compact = false,
-		featured = false
+		featured = false,
+		accept = '.epub,.txt,.md,.markdown,application/epub+zip,text/plain,text/markdown',
+		multiple = true,
+		heading = '',
+		detail = ''
 	}: {
 		onfiles: (files: FileList | File[]) => void;
 		compact?: boolean;
 		/** Full empty-state hero treatment */
 		featured?: boolean;
+		accept?: string;
+		multiple?: boolean;
+		heading?: string;
+		detail?: string;
 	} = $props();
 
 	let dragging = $state(false);
@@ -62,8 +70,8 @@
 	<input
 		bind:this={inputEl}
 		type="file"
-		accept=".epub,.txt,.md,.markdown,application/epub+zip,text/plain,text/markdown"
-		multiple
+		{accept}
+		{multiple}
 		class="sr-only"
 		onchange={handleChange}
 	/>
@@ -76,18 +84,20 @@
 			<UploadSimple size={20} weight="light" class="text-ink" />
 		</span>
 		{#if featured}
-			<h2 class="type-section mb-3 text-[2rem] text-ink sm:text-[2.5rem]">Drop a manuscript</h2>
+			<h2 class="type-section mb-3 text-[2rem] text-ink sm:text-[2.5rem]">{heading || 'Drop a manuscript'}</h2>
 			<p class="type-body mb-8 max-w-md text-ink-soft">
-				EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.
+				{detail ||
+					'EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.'}
 			</p>
 		{:else if !compact}
-			<h2 class="type-section mb-2 text-[1.65rem] text-ink sm:text-3xl">Drop a manuscript</h2>
+			<h2 class="type-section mb-2 text-[1.65rem] text-ink sm:text-3xl">{heading || 'Drop a manuscript'}</h2>
 			<p class="type-body mb-7 max-w-sm text-[14px] text-ink-soft">
-				EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.
+				{detail ||
+					'EPUB, Markdown, or plain text. Files stay on this device until you choose cloud sync.'}
 			</p>
 		{:else}
 			<p class="type-body mb-5 text-sm text-ink-soft">
-				{dragging ? 'Release to import' : 'Drop EPUB, Markdown, or text — or browse'}
+				{dragging ? 'Release to import' : detail || 'Drop EPUB, Markdown, or text — or browse'}
 			</p>
 		{/if}
 		<span class="pointer-events-auto" role="presentation">

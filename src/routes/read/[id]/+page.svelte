@@ -7,6 +7,8 @@
 		getBook,
 		getPrefs,
 		listBookmarks,
+		listGlossary,
+		putBook,
 		putBookmark,
 		putPrefs,
 		putProgress,
@@ -15,19 +17,24 @@
 	import { pushProgress } from '$lib/client/sync';
 	import { formatDisplayTitle } from '$lib/client/formatTitle';
 	import { activeTocIndex } from '$lib/client/epubNav';
+	import { readerGlossary } from '$lib/client/glossary';
 	import {
 		fontStack,
 		READING_FONTS,
+		type BookLang,
 		type BookmarkRecord,
 		type BookRecord,
+		type ReaderGlossaryItem,
 		type ReaderPrefs,
 		type ReadingFont,
 		type ReadingTheme
 	} from '$lib/client/types';
 	import TextReader from '$lib/components/reader/TextReader.svelte';
 	import EpubReader from '$lib/components/reader/EpubReader.svelte';
+	import GlossaryDrawer from '$lib/components/reader/GlossaryDrawer.svelte';
 	import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft';
 	import BookmarkSimple from 'phosphor-svelte/lib/BookmarkSimple';
+	import BookOpenText from 'phosphor-svelte/lib/BookOpenText';
 	import CaretLeft from 'phosphor-svelte/lib/CaretLeft';
 	import CaretRight from 'phosphor-svelte/lib/CaretRight';
 	import List from 'phosphor-svelte/lib/List';
@@ -47,6 +54,9 @@
 	let focusMode = $state(false);
 	let tocOpen = $state(false);
 	let typeOpen = $state(false);
+	let glossaryOpen = $state(false);
+	let readLang = $state<BookLang>('zh');
+	let glossaryItems = $state<ReaderGlossaryItem[]>([]);
 	let tocTab = $state<'contents' | 'bookmarks'>('contents');
 	let toc = $state<{ label: string; href: string; depth?: number }[]>([]);
 	let bookmarks = $state<BookmarkRecord[]>([]);
@@ -73,6 +83,15 @@
 	const stageClass = $derived(`stage-${prefs?.theme ?? 'night'}`);
 	const pct = $derived(Math.round(fraction * 100));
 	const dimOpacity = $derived(Math.max(0, 1 - (prefs?.brightness ?? 1)));
+	const hasEnglish = $derived(Boolean(book?.translatedBlob));
+	const readerBlob = $derived.by(() => {
+		if (!book) return null;
+		if (readLang === 'en' && book.translatedBlob) return book.translatedBlob;
+		return book.blob;
+	});
+	const translating = $derived(
+		book?.translation?.status === 'running' || book?.translation?.status === 'paused'
+	);
 
 	const themes: {
 		id: ReadingTheme;
@@ -137,15 +156,24 @@
 			return;
 		}
 		book = b;
+		readLang = b.activeLang === 'en' && b.translatedBlob ? 'en' : 'zh';
 		prefs = await getPrefs();
 		const prog = await getProgress(id);
-		if (prog) {
+		const slice = prog?.byLang?.[readLang];
+		if (slice) {
+			initialFraction = slice.fraction;
+			initialLocation = slice.location;
+			fraction = slice.fraction;
+			lastLocation = slice.location;
+			progressLabel = slice.label || '';
+		} else if (prog) {
 			initialFraction = prog.fraction;
 			initialLocation = prog.location;
 			fraction = prog.fraction;
 			lastLocation = prog.location;
 			progressLabel = prog.label || '';
 		}
+		glossaryItems = readerGlossary(await listGlossary(id));
 		if (b.format === 'text' || b.format === 'markdown') {
 			textRaw = await b.blob.text();
 		}
@@ -163,13 +191,21 @@
 				applyWakeLock(true);
 			}
 		};
+		const onTranslate = async () => {
+			if (!id) return;
+			const b = await getBook(id);
+			if (b) book = b;
+			glossaryItems = readerGlossary(await listGlossary(id));
+		};
 		document.addEventListener('visibilitychange', onVis);
+		window.addEventListener('lumen:translate-progress', onTranslate);
 
 		return () => {
 			clearTimeout(hideTimer);
 			clearTimeout(saveTimer);
 			clearTimeout(prefsSaveTimer);
 			document.removeEventListener('visibilitychange', onVis);
+			window.removeEventListener('lumen:translate-progress', onTranslate);
 			applyWakeLock(false);
 		};
 	});
@@ -188,12 +224,19 @@
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(async () => {
 			if (!book) return;
+			const existing = await getProgress(book.id);
+			const slice = {
+				location,
+				fraction: frac,
+				label: label || progressLabel || undefined
+			};
 			await putProgress({
 				bookId: book.id,
 				fraction: frac,
 				location,
-				label: label || progressLabel || undefined,
-				updatedAt: Date.now()
+				label: slice.label,
+				updatedAt: Date.now(),
+				byLang: { ...existing?.byLang, [readLang]: slice }
 			});
 			pushProgress(book.id).catch(() => {});
 		}, 400);
@@ -231,8 +274,39 @@
 	function openContents() {
 		tocOpen = true;
 		typeOpen = false;
+		glossaryOpen = false;
 		tocTab = 'contents';
 		void scrollTocToCurrent();
+	}
+
+	async function switchLanguage(next: BookLang) {
+		if (!book || next === readLang) return;
+		if (next === 'en' && !book.translatedBlob) return;
+		const existing = await getProgress(book.id);
+		const slice = {
+			location: lastLocation,
+			fraction,
+			label: progressLabel || undefined
+		};
+		const byLang = { ...existing?.byLang, [readLang]: slice };
+		const dest = byLang[next];
+		const restoreLoc = dest?.location || currentHref || '';
+		readLang = next;
+		book = { ...book, activeLang: next };
+		await putBook(book);
+		await putProgress({
+			bookId: book.id,
+			fraction: dest?.fraction ?? fraction,
+			location: restoreLoc,
+			label: dest?.label ?? progressLabel,
+			updatedAt: Date.now(),
+			byLang
+		});
+		initialLocation = restoreLoc;
+		initialFraction = dest?.fraction ?? fraction;
+		lastLocation = restoreLoc;
+		fraction = dest?.fraction ?? fraction;
+		if (dest?.label) progressLabel = dest.label;
 	}
 
 	/** Apply UI immediately; debounce IDB so range sliders stay real-time. */
@@ -310,9 +384,10 @@
 		if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
 		if (e.key === 'Escape') {
-			if (tocOpen || typeOpen) {
+			if (tocOpen || typeOpen || glossaryOpen) {
 				tocOpen = false;
 				typeOpen = false;
+				glossaryOpen = false;
 				return;
 			}
 			goto('/');
@@ -323,7 +398,18 @@
 			chromeVisible = !focusMode;
 			tocOpen = false;
 			typeOpen = false;
+			glossaryOpen = false;
 			if (!focusMode) bumpChrome();
+			return;
+		}
+		if (e.key === 'g' || e.key === 'G') {
+			glossaryOpen = !glossaryOpen;
+			tocOpen = false;
+			typeOpen = false;
+			return;
+		}
+		if ((e.key === 'l' || e.key === 'L') && hasEnglish) {
+			void switchLanguage(readLang === 'zh' ? 'en' : 'zh');
 			return;
 		}
 		if (e.key === 't' || e.key === 'T') {
@@ -347,6 +433,7 @@
 		if (e.key === ',' || e.key === '<') {
 			typeOpen = !typeOpen;
 			tocOpen = false;
+			glossaryOpen = false;
 			return;
 		}
 		if (e.key === '+' || e.key === '=') {
@@ -473,10 +560,28 @@
 						e.stopPropagation();
 						typeOpen = !typeOpen;
 						tocOpen = false;
+						glossaryOpen = false;
 						bumpChrome();
 					}}
 				>
 					<TextAa size={18} weight="light" />
+				</button>
+				<button
+					type="button"
+					class="reader-rail-btn"
+					style="color: {glossaryOpen ? 'var(--stage-chrome-fg)' : 'var(--stage-chrome-mute)'}"
+					aria-label="Glossary"
+					aria-pressed={glossaryOpen}
+					title="Glossary (G)"
+					onclick={(e) => {
+						e.stopPropagation();
+						glossaryOpen = !glossaryOpen;
+						tocOpen = false;
+						typeOpen = false;
+						bumpChrome();
+					}}
+				>
+					<BookOpenText size={18} weight="light" />
 				</button>
 				<button
 					type="button"
@@ -500,15 +605,17 @@
 		</aside>
 
 		<div class="relative z-[1] h-full w-full min-h-0">
-			{#if book.format === 'epub'}
-				<EpubReader
-					bind:this={epubRef}
-					blob={book.blob}
-					{prefs}
-					{initialLocation}
-					onprogress={(f, loc, label, meta) => scheduleSave(f, loc, label, meta)}
-					ontoc={(items) => (toc = items)}
-				/>
+			{#if book.format === 'epub' && readerBlob}
+				{#key `${book.id}:${readLang}`}
+					<EpubReader
+						bind:this={epubRef}
+						blob={readerBlob}
+						{prefs}
+						{initialLocation}
+						onprogress={(f, loc, label, meta) => scheduleSave(f, loc, label, meta)}
+						ontoc={(items) => (toc = items)}
+					/>
+				{/key}
 				{#if !focusMode}
 					<button
 						type="button"
@@ -577,8 +684,45 @@
 			</div>
 		{/if}
 
+		{#if hasEnglish}
+			<div
+				class="reader-lang-toggle"
+				role="group"
+				aria-label="Language"
+			>
+				<button
+					type="button"
+					class="reader-lang-btn"
+					aria-pressed={readLang === 'zh'}
+					onclick={(e) => {
+						e.stopPropagation();
+						void switchLanguage('zh');
+					}}>ZH</button
+				>
+				<button
+					type="button"
+					class="reader-lang-btn"
+					aria-pressed={readLang === 'en'}
+					onclick={(e) => {
+						e.stopPropagation();
+						void switchLanguage('en');
+					}}>EN</button
+				>
+			</div>
+		{/if}
+
+		{#if translating && book.translation}
+			<div class="reader-translate-banner font-ui text-[11px]" role="status">
+				Translating {book.translation.chaptersDone}/{book.translation.chaptersSelected} selected —
+				English updates as chapters finish.
+				<a href="/translate/{book.id}" class="underline decoration-current underline-offset-2"
+					>Manage</a
+				>
+			</div>
+		{/if}
+
 		<!-- Scrim when a drawer is open -->
-		{#if typeOpen || tocOpen}
+		{#if typeOpen || tocOpen || glossaryOpen}
 			<button
 				type="button"
 				class="reader-drawer-scrim"
@@ -586,6 +730,7 @@
 				onclick={() => {
 					typeOpen = false;
 					tocOpen = false;
+					glossaryOpen = false;
 				}}
 			></button>
 		{/if}
@@ -862,7 +1007,7 @@
 						class="border-t pt-2 font-ui text-[10px] uppercase tracking-[0.08em]"
 						style="color: var(--stage-chrome-mute); border-color: var(--stage-rule)"
 					>
-						F focus · T contents · B bookmark · Shift+B marks · , type · +/− size · Esc library
+						F focus · T contents · G glossary · L ZH/EN · B bookmark · Shift+B marks · , type · +/− size · Esc library
 					</p>
 				</div>
 			</div>
@@ -1045,6 +1190,17 @@
 					{/if}
 				</div>
 			</div>
+		{/if}
+
+		{#if glossaryOpen}
+			<GlossaryDrawer
+				items={glossaryItems}
+				onclose={() => (glossaryOpen = false)}
+				onedit={() => {
+					const bid = book?.id;
+					if (bid) void goto(`/translate/${bid}`);
+				}}
+			/>
 		{/if}
 	{/if}
 </div>

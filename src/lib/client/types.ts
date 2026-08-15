@@ -7,6 +7,28 @@ export type ReadingFont = 'literata' | 'newsreader' | 'source-sans' | 'system';
 
 export type TextAlign = 'left' | 'justify';
 
+export type BookLang = 'zh' | 'en';
+export type SourceLang = 'zh' | 'en' | 'unknown';
+export type TranslationStatus = 'idle' | 'running' | 'paused' | 'done' | 'error';
+export type ChapterJobStatus = 'skipped' | 'pending' | 'done' | 'error';
+export type GlossaryCategory = 'name' | 'place' | 'title' | 'term' | 'other';
+
+export const GLOSSARY_CATEGORIES: GlossaryCategory[] = [
+	'name',
+	'place',
+	'title',
+	'term',
+	'other'
+];
+
+export interface TranslationMeta {
+	status: TranslationStatus;
+	chaptersSelected: number;
+	chaptersDone: number;
+	error?: string;
+	updatedAt: number;
+}
+
 export interface BookMeta {
 	id: string;
 	title: string;
@@ -20,15 +42,27 @@ export interface BookMeta {
 	sizeBytes: number;
 	/** Word-ish length for text books; spine item count for epub when known */
 	lengthHint?: number;
+	sourceLang?: SourceLang;
+	/** Last language opened in the reader */
+	activeLang?: BookLang;
+	translation?: TranslationMeta;
 }
 
 export interface BookRecord extends BookMeta {
-	/** Raw file bytes */
+	/** Raw source file bytes (Chinese, or the original import) */
 	blob: Blob;
+	/** English (or in-progress) EPUB rebuilt from the source */
+	translatedBlob?: Blob;
 }
 
 /** Library shelf item — blob stripped so listing stays cheap */
 export type BookListItem = BookMeta;
+
+export interface ProgressLangSlice {
+	location: string;
+	fraction: number;
+	label?: string;
+}
 
 export interface ProgressRecord {
 	bookId: string;
@@ -39,6 +73,74 @@ export interface ProgressRecord {
 	/** Human label e.g. chapter title */
 	label?: string;
 	updatedAt: number;
+	/** Per-language restore points — CFIs do not survive ZH↔EN */
+	byLang?: Partial<Record<BookLang, ProgressLangSlice>>;
+}
+
+export interface GlossaryEntry {
+	id: string;
+	bookId: string;
+	source: string;
+	preferred: string;
+	aliases?: string[];
+	category: GlossaryCategory;
+	locked: boolean;
+	notes?: string;
+	showInReader: boolean;
+	createdAt: number;
+	updatedAt: number;
+}
+
+export interface GlossaryUpdate {
+	source: string;
+	preferred: string;
+	category?: string;
+	notes?: string;
+	aliases?: string[];
+}
+
+export interface ReaderGlossaryItem {
+	source: string;
+	preferred: string;
+	category: GlossaryCategory;
+}
+
+export interface TranslationChapter {
+	href: string;
+	title: string;
+	charCount: number;
+	selected: boolean;
+	status: ChapterJobStatus;
+	error?: string;
+}
+
+export interface TranslationJob {
+	bookId: string;
+	chapters: TranslationChapter[];
+	startedAt?: number;
+	updatedAt: number;
+	lastError?: string;
+}
+
+export interface TranslateStatus {
+	configured: boolean;
+	model: string;
+}
+
+export function isGlossaryCategory(v: string | undefined): v is GlossaryCategory {
+	return !!v && (GLOSSARY_CATEGORIES as string[]).includes(v);
+}
+
+export function translationBadge(t?: TranslationMeta): string | null {
+	if (!t) return null;
+	if (t.chaptersSelected <= 0 && t.chaptersDone <= 0) return null;
+	if (t.status === 'done' || (t.chaptersSelected > 0 && t.chaptersDone >= t.chaptersSelected)) {
+		return 'EN';
+	}
+	if (t.chaptersDone > 0 || t.status === 'running' || t.status === 'paused' || t.status === 'error') {
+		return `EN ${t.chaptersDone}/${t.chaptersSelected}`;
+	}
+	return null;
 }
 
 export interface BookmarkRecord {

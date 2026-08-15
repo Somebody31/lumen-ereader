@@ -1,8 +1,9 @@
 <script lang="ts">
-	import type { BookListItem, ProgressRecord } from '$lib/client/types';
+	import { translationBadge, type BookListItem, type ProgressRecord } from '$lib/client/types';
 	import { formatDisplayTitle } from '$lib/client/formatTitle';
 	import CoverPlate from './CoverPlate.svelte';
 	import Trash from 'phosphor-svelte/lib/Trash';
+	import Translate from 'phosphor-svelte/lib/Translate';
 
 	let {
 		book,
@@ -21,6 +22,7 @@
 	/** Cap stagger so long shelves don’t wait forever */
 	const staggerI = $derived(Math.min(index, 8));
 	const title = $derived(formatDisplayTitle(book.title));
+	const badge = $derived(translationBadge(book.translation));
 	const opened = $derived.by(() => {
 		const ts = progress?.updatedAt ?? book.updatedAt;
 		if (!ts) return '';
@@ -64,6 +66,10 @@
 			</p>
 			<p class="type-meta mt-1.5 text-[11px] text-ink-mute">
 				<span class="uppercase tracking-[0.08em]">{book.format}</span>
+				{#if badge}
+					<span class="text-ink-mute"> · </span>
+					<span class="tabular-nums text-crimson">{badge}</span>
+				{/if}
 				{#if pct > 0}
 					<span class="text-ink-mute"> · </span>
 					<span class="tabular-nums text-ink-soft">{pct}%</span>
@@ -75,6 +81,16 @@
 			</p>
 		</div>
 	</a>
+	{#if book.format === 'epub'}
+		<a
+			href="/translate/{book.id}"
+			class="absolute right-11 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-paper text-ink-soft opacity-100 shadow-sm backdrop-blur-sm no-underline transition-all duration-200 hover:border-ink hover:text-ink active:scale-95 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+			aria-label="Translate {title}"
+			onclick={(e) => e.stopPropagation()}
+		>
+			<Translate size={15} weight="light" />
+		</a>
+	{/if}
 	<button
 		type="button"
 		class="absolute right-1.5 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-paper text-ink-soft opacity-100 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-danger hover:text-danger active:scale-95 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"

@@ -2836,3 +2836,101 @@ button:hover .cta-chevron {
 		transform: none;
 	}
 }
+
+.glossary-table {
+	border-collapse: collapse;
+	font-family: var(--font-ui);
+	font-size: 13px;
+}
+.glossary-table th {
+	padding: 0.55rem 0.65rem;
+	font-size: 10px;
+	font-weight: 500;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--color-ink-mute);
+}
+.glossary-table td {
+	padding: 0.35rem 0.5rem;
+	vertical-align: middle;
+}
+.glossary-input {
+	width: 100%;
+	border: 1px solid transparent;
+	background: transparent;
+	padding: 0.35rem 0.4rem;
+	color: var(--color-ink);
+	font-family: var(--font-ui);
+	font-size: 13px;
+	outline: none;
+}
+.glossary-input:focus {
+	border-color: var(--color-rule);
+	background: var(--color-newsprint);
+}
+
+.glossary-reader-list {
+	list-style: none;
+	margin: 0;
+	padding: 0 0.5rem;
+}
+.glossary-reader-row {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	padding: 0.55rem 0.75rem;
+	border-bottom: 1px solid color-mix(in srgb, var(--stage-rule) 80%, transparent);
+}
+.glossary-reader-en {
+	font-family: var(--font-display);
+	font-size: 0.95rem;
+	letter-spacing: -0.02em;
+}
+.glossary-reader-zh {
+	font-family: var(--font-ui);
+	font-size: 0.75rem;
+	opacity: 0.7;
+}
+
+.reader-lang-toggle {
+	position: absolute;
+	top: max(0.85rem, env(safe-area-inset-top));
+	right: 1rem;
+	z-index: 30;
+	display: flex;
+	border: 1px solid var(--stage-rule);
+	background: var(--stage-chrome);
+	backdrop-filter: blur(12px);
+}
+.reader-lang-btn {
+	padding: 0.35rem 0.7rem;
+	border: 0;
+	background: transparent;
+	color: var(--stage-chrome-mute);
+	font-family: var(--font-ui);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	cursor: pointer;
+}
+.reader-lang-btn[aria-pressed='true'] {
+	color: var(--stage-chrome-fg);
+	background: color-mix(in srgb, var(--stage-fg) 8%, transparent);
+}
+
+.reader-translate-banner {
+	position: absolute;
+	bottom: 1rem;
+	left: 50%;
+	z-index: 30;
+	transform: translateX(-50%);
+	max-width: min(28rem, calc(100% - 2rem));
+	border: 1px solid var(--stage-rule);
+	background: var(--stage-chrome);
+	padding: 0.45rem 0.75rem;
+	color: var(--stage-chrome-fg);
+	backdrop-filter: blur(12px);
+}
+.reader-translate-banner a {
+	color: inherit;
+}

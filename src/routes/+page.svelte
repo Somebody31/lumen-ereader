@@ -77,6 +77,7 @@
 			refresh();
 		};
 		window.addEventListener('lumen:books-changed', onChanged);
+		window.addEventListener('lumen:translate-progress', onChanged);
 		(async () => {
 			await ensureSampleBook();
 			await refresh();
@@ -88,7 +89,10 @@
 				showSyncBanner = Boolean(session?.syncAvailable && !session.authenticated);
 			}
 		})();
-		return () => window.removeEventListener('lumen:books-changed', onChanged);
+		return () => {
+			window.removeEventListener('lumen:books-changed', onChanged);
+			window.removeEventListener('lumen:translate-progress', onChanged);
+		};
 	});
 
 	function dismissSyncBanner() {

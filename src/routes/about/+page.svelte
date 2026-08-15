@@ -2,6 +2,8 @@
 	const keys = [
 		{ keys: 'F', action: 'Focus mode — hide chrome' },
 		{ keys: 'T', action: 'Table of contents' },
+		{ keys: 'G', action: 'Glossary' },
+		{ keys: 'L', action: 'Switch Chinese / English' },
 		{ keys: 'B', action: 'Bookmark this place' },
 		{ keys: 'Shift+B', action: 'Open bookmarks list' },
 		{ keys: ',', action: 'Type & theme panel' },
@@ -31,8 +33,8 @@
 			<h2 class="type-section text-xl text-ink sm:text-2xl">How it works</h2>
 			<ul class="space-y-3">
 				<li class="type-body text-ink-soft">
-					<span class="font-medium text-ink">Import</span> EPUB, Markdown, or plain text. Files are
-					stored in IndexedDB on this device.
+					<span class="font-medium text-ink">Import</span> EPUB, Markdown, or plain text. Translate
+					a Chinese EPUB from the Translate page. Files are stored in IndexedDB on this device.
 				</li>
 				<li class="type-body text-ink-soft">
 					<span class="font-medium text-ink">Read</span> with themes, typefaces, measure, spacing,
