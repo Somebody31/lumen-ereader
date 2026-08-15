@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
+	packChapterMessage,
+	packGlossaryMessage,
 	packTranslateUser,
 	TRANSLATE_SYSTEM,
 	unpackTitleResponse,
@@ -36,6 +38,21 @@ describe('translate prompt contract', () => {
 		expect(obj.title).toBe('Chapter 1');
 		expect(obj.html).toBe('<p>林动</p>');
 		expect(obj.glossary).toHaveLength(1);
+		expect(packed.indexOf('"glossary"')).toBeLessThan(packed.indexOf('"title"'));
+		expect(packed.indexOf('"title"')).toBeLessThan(packed.indexOf('"html"'));
+	});
+
+	test('glossary and chapter are separate cache-friendly messages', () => {
+		const glossary = [
+			{ source: '林动', preferred: 'Lin Dong', category: 'name', locked: true }
+		];
+		const a = packGlossaryMessage(glossary);
+		const b = packGlossaryMessage(glossary);
+		expect(a).toBe(b);
+		const ch1 = packChapterMessage({ title: 'Chapter 1', html: '<p>一</p>' });
+		const ch2 = packChapterMessage({ title: 'Chapter 2', html: '<p>二</p>' });
+		expect(ch1).not.toBe(ch2);
+		expect(a.startsWith('[')).toBe(true);
 	});
 
 	test('unpacks JSON and strips markdown fences', () => {

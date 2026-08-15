@@ -81,6 +81,7 @@ export function applyReaderEdit(
 	});
 }
 
+/** Oldest first so new terms append and earlier JSON stays a cacheable prefix. */
 export function glossaryForPrompt(entries: GlossaryEntry[]): Array<{
 	source: string;
 	preferred: string;
@@ -89,14 +90,16 @@ export function glossaryForPrompt(entries: GlossaryEntry[]): Array<{
 	locked: boolean;
 	notes?: string;
 }> {
-	return entries.map((e) => ({
-		source: e.source,
-		preferred: e.preferred,
-		aliases: e.aliases?.length ? e.aliases : undefined,
-		category: e.category,
-		locked: e.locked,
-		notes: e.notes
-	}));
+	return [...entries]
+		.sort((a, b) => a.createdAt - b.createdAt || a.source.localeCompare(b.source) || a.id.localeCompare(b.id))
+		.map((e) => ({
+			source: e.source,
+			preferred: e.preferred,
+			aliases: e.aliases?.length ? [...e.aliases].sort((x, y) => x.localeCompare(y)) : undefined,
+			category: e.category,
+			locked: e.locked,
+			notes: e.notes
+		}));
 }
 
 export function parseGlossaryImport(raw: string, bookId: string, now = Date.now()): GlossaryEntry[] {

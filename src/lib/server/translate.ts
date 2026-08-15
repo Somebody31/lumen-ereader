@@ -7,7 +7,9 @@ export const MAX_CHAPTER_HTML = 400_000;
 export const TRANSLATE_SYSTEM = `You translate Chinese web novels into English for a serial EPUB reader.
 
 INPUT
-The user message is JSON with three keys: "title" (chapter title, for context only), "glossary" (an array of previously locked terms), and "html" (ONE complete chapter as HTML).
+Two user messages follow this system message.
+The first is a JSON array of previously known glossary terms (source, preferred, aliases, category, locked, notes).
+The second is JSON with "title" (chapter title, for context only) and "html" (ONE complete chapter as HTML).
 
 OUTPUT
 Return a single JSON object and nothing else — no markdown code fences, no preamble, no trailing commentary, no extra keys. The object has exactly two keys: "html" and "glossaryUpdates".
@@ -41,21 +43,36 @@ GLOSSARY UPDATES
 - If two different-looking source strings in this chapter clearly refer to the same entity, list them as one item with the second string under "aliases" rather than as two separate entries.
 - Return an empty array if nothing new qualifies.`;
 
+export type PromptGlossaryItem = {
+	source: string;
+	preferred: string;
+	aliases?: string[];
+	category: string;
+	locked: boolean;
+	notes?: string;
+};
+
+/** Glossary only — first user message, kept byte-stable so DeepSeek can prefix-cache it. */
+export function packGlossaryMessage(glossary: PromptGlossaryItem[]): string {
+	return JSON.stringify(glossary);
+}
+
+/** Chapter only — last user message, the part that changes every call. */
+export function packChapterMessage(input: { title?: string; html: string }): string {
+	return JSON.stringify({
+		title: input.title || '',
+		html: input.html
+	});
+}
+
 export function packTranslateUser(input: {
 	title?: string;
 	html: string;
-	glossary: Array<{
-		source: string;
-		preferred: string;
-		aliases?: string[];
-		category: string;
-		locked: boolean;
-		notes?: string;
-	}>;
+	glossary: PromptGlossaryItem[];
 }): string {
 	return JSON.stringify({
-		title: input.title || '',
 		glossary: input.glossary,
+		title: input.title || '',
 		html: input.html
 	});
 }
@@ -176,7 +193,8 @@ export async function translateChapterWithDeepSeek(
 ): Promise<{ html: string; glossaryUpdates: GlossaryUpdate[] }> {
 	const content = await chatJson(apiKey, [
 		{ role: 'system', content: TRANSLATE_SYSTEM },
-		{ role: 'user', content: packTranslateUser(input) }
+		{ role: 'user', content: packGlossaryMessage(input.glossary) },
+		{ role: 'user', content: packChapterMessage({ title: input.title, html: input.html }) }
 	]);
 	return unpackTranslateResponse(content);
 }

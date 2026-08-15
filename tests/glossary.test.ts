@@ -3,6 +3,7 @@ import {
 	applyReaderEdit,
 	exportGlossaryJson,
 	findGlossaryMatch,
+	glossaryForPrompt,
 	mergeGlossaryUpdates,
 	parseGlossaryImport,
 	readerGlossary
@@ -104,5 +105,13 @@ describe('glossary merge', () => {
 		expect(back[0].preferred).toBe('Qingluan');
 		expect(back[0].locked).toBe(true);
 		expect(back[0].bookId).toBe('b2');
+	});
+
+	test('prompt glossary is oldest-first so new terms append', () => {
+		const rows = glossaryForPrompt([
+			entry({ id: 'b', source: '乙', preferred: 'Yi', createdAt: 20 }),
+			entry({ id: 'a', source: '甲', preferred: 'Jia', createdAt: 10 })
+		]);
+		expect(rows.map((r) => r.source)).toEqual(['甲', '乙']);
 	});
 });
