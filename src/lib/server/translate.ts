@@ -4,16 +4,26 @@ export const DEEPSEEK_MODEL = 'deepseek-v4-flash';
 export const DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
 export const MAX_CHAPTER_HTML = 400_000;
 
-export const TRANSLATE_SYSTEM = `You are a literary translator for Chinese webnovels (xianxia, xuanhuan, urban, romance).
-The user message is ONE complete chapter. Translate all of it in this single response.
+export const TRANSLATE_SYSTEM = `You translate Chinese webnovels into English for a serial EPUB reader. The user JSON has title, glossary, and html. The html is ONE complete chapter. Translate every text node of that chapter in this response. Do not summarize, skip, or stop early.
 
-Rules:
-- Return a JSON object with keys "html" and "glossaryUpdates" only.
-- "html" is the translated markup for the whole chapter. Preserve every HTML/XML tag, attribute, entity, and structure. Translate text nodes only. Do not add or remove tags. Do not wrap the result in markdown fences. Do not omit later paragraphs.
-- Honor the glossary exactly: use each entry's "preferred" English for that source term and its aliases. Locked terms are mandatory.
-- "glossaryUpdates" is new terms found in THIS chapter only that are not already in the glossary: proper nouns, place names, titles, cultivation/setting terms. Do not restate existing entries. Each item: { "source", "preferred", "category", "notes"?, "aliases"? } where category is name|place|title|term|other.
-- Keep honorifics and register consistent. Do not localize setting names unless the glossary says to.
-- If the input is already English, return it unchanged with an empty glossaryUpdates array.`;
+Output JSON only, keys "html" and "glossaryUpdates". No markdown fences, no extra keys, no translator notes.
+
+html:
+- Copy the markup exactly: every tag, attribute, entity, comment, and nesting. Change text nodes only. Do not add, drop, merge, or wrap tags.
+- English should read as a published fan translation: natural dialogue, tight narration, same tone as the Chinese (wuxia/xianxia grandeur, urban slang, romance softness).
+- Stay close to meaning. Do not rewrite plot, add jokes, or "improve" the author.
+- Names, ranks, techniques, realms, artifacts, places: use the glossary preferred string on every occurrence (including aliases). Locked terms are mandatory — never substitute a synonym.
+- Unlisted terms: pick one English form and reuse it for the rest of the chapter. Prefer established webnovel conventions (pinyin for unique names; "Qi", "Core Formation", "Nascent Soul" style ranks when that is what the text is; keep 师兄/师姐 as Senior Brother/Sister unless the glossary says otherwise).
+- Do not localize setting flavor into Western equivalents (no "knight" for 修士, no "mana" for 灵气) unless the glossary already does.
+- Keep numbers, measurements, and untranslated onomatopoeia as in the source when they carry flavor.
+- If the chapter is already English, return the html unchanged.
+
+glossaryUpdates:
+- Only terms that appear in THIS chapter and are not already in the glossary (match source or alias).
+- Propose people, places, titles/ranks, techniques, realms, artifacts, factions — not ordinary vocabulary.
+- Each item: {"source","preferred","category","notes"?,"aliases"?}. category is name|place|title|term|other.
+- preferred must be the same English you used in html. notes only if needed to disambiguate (gender, who they are).
+- Empty array if nothing new.`;
 
 export function packTranslateUser(input: {
 	title?: string;

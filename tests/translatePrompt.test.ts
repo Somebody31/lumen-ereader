@@ -11,9 +11,10 @@ describe('translate prompt contract', () => {
 		expect(TRANSLATE_SYSTEM).toContain('html');
 		expect(TRANSLATE_SYSTEM).toContain('glossaryUpdates');
 		expect(TRANSLATE_SYSTEM).toContain('ONE complete chapter');
-		expect(TRANSLATE_SYSTEM).toContain('THIS chapter only');
-		expect(TRANSLATE_SYSTEM).toContain('Preserve every HTML');
-		expect(TRANSLATE_SYSTEM).toContain('Locked terms');
+		expect(TRANSLATE_SYSTEM).toContain('THIS chapter');
+		expect(TRANSLATE_SYSTEM).toContain('Change text nodes only');
+		expect(TRANSLATE_SYSTEM).toContain('Locked terms are mandatory');
+		expect(TRANSLATE_SYSTEM).toContain('Do not localize setting flavor');
 	});
 
 	test('packs title, glossary, and html', () => {
