@@ -91,7 +91,7 @@
 	{#if book.format === 'epub'}
 		<a
 			href="/translate/{book.id}"
-			class="absolute right-11 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-paper text-ink-soft opacity-100 shadow-sm backdrop-blur-sm no-underline transition-all duration-200 hover:border-ink hover:text-ink active:scale-95 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+			class="absolute right-12 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-paper text-ink-soft opacity-100 no-underline shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md transition-[opacity,transform,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-ink active:scale-95 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
 			aria-label="Translate {title}"
 			onclick={(e) => e.stopPropagation()}
 		>
@@ -100,7 +100,7 @@
 	{/if}
 	<button
 		type="button"
-		class="absolute right-1.5 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-paper text-ink-soft opacity-100 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-danger hover:text-danger active:scale-95 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+		class="absolute right-1.5 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-paper text-ink-soft opacity-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md transition-[opacity,transform,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-danger active:scale-95 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
 		aria-label="Delete {title}"
 		onclick={(e) => {
 			e.preventDefault();

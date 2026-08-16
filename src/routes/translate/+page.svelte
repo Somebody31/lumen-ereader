@@ -76,7 +76,7 @@
 	</header>
 
 	{#if configured === false}
-		<p class="animate-plate-in rounded-md border border-rule bg-paper px-4 py-3 font-ui text-sm text-ink-soft">
+		<p class="animate-plate-in rounded-[1.25rem] border border-white/10 bg-paper px-5 py-3.5 font-ui text-sm text-ink-soft">
 			Translation is not configured. Set
 			<code class="text-ink">DEEPSEEK_API_KEY</code>
 			on the server, then check
@@ -108,7 +108,7 @@
 					<li>
 						<button
 							type="button"
-							class="flex w-full items-center gap-4 rounded-lg border border-rule bg-paper p-3 text-left transition-colors hover:border-ink-mute"
+							class="flex w-full items-center gap-4 rounded-[1.25rem] border border-white/10 bg-paper p-3 text-left transition-[border-color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-white/20 active:scale-[0.99]"
 							onclick={() => openExisting(book.id)}
 						>
 							<div class="h-20 w-14 shrink-0 overflow-hidden rounded-sm">

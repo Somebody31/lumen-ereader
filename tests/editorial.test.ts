@@ -132,16 +132,16 @@ describe('editorial design system', () => {
 		expect(shell).toContain('Lumen');
 		expect(shell).toContain('Import');
 		expect(shell).toContain('importFiles');
-		// Segmented nav chips, not thin underlined text links
 		expect(shell).toContain('aria-current');
 		expect(shell).toContain('type-nav');
 		expect(shell).toContain('bg-paper');
 		expect(shell).toContain('/settings');
 		expect(shell).toContain('href="/"');
-		// Library is home; About lives in footer (not primary peer nav)
 		expect(shell).toContain('Library');
 		expect(shell).toContain('/welcome');
 		expect(shell).toContain('/auth');
+		expect(shell).toContain('island-nav');
+		expect(shell).toContain('rounded-full');
 	});
 
 	test('library page uses editorial masthead composition', () => {
@@ -198,12 +198,12 @@ describe('editorial design system', () => {
 		expect(card).toContain('view-transition-name');
 	});
 
-	test('buttons use soft radius ink/crimson, not pill seals', () => {
-		expect(button).toContain('rounded-md');
+	test('buttons use island pills with ink/crimson', () => {
+		expect(button).toContain('rounded-full');
 		expect(button).toContain('bg-ink');
 		expect(button).toContain('bg-crimson');
 		expect(button).toContain('bg-surface');
-		expect(button).not.toContain('rounded-full');
+		expect(button).toContain('cubic-bezier(0.32,0.72,0,1)');
 	});
 
 	test('contrast ladder is lifted for dark shell', () => {

@@ -42,13 +42,9 @@
 <div
 	role="button"
 	tabindex="0"
-	class="import-frame relative border-2 border-dashed border-rule bg-paper outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink {dragging
+	class="import-frame relative rounded-[2rem] border border-dashed border-white/15 bg-white/5 p-1.5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink {dragging
 		? 'is-dragging border-crimson'
-		: 'hover:border-ink-mute'} {featured
-		? 'p-12 sm:p-16'
-		: compact
-			? 'p-6 sm:p-8'
-			: 'p-10 sm:p-14'}"
+		: 'hover:border-white/25'}"
 	ondragenter={(e) => {
 		e.preventDefault();
 		dragging = true;
@@ -75,9 +71,15 @@
 		class="sr-only"
 		onchange={handleChange}
 	/>
-	<div class="pointer-events-none flex flex-col items-center text-center">
+	<div
+		class="pointer-events-none flex flex-col items-center rounded-[calc(2rem-0.375rem)] bg-paper text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] {featured
+			? 'p-12 sm:p-16'
+			: compact
+				? 'p-6 sm:p-8'
+				: 'p-10 sm:p-14'}"
+	>
 		<span
-			class="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-rule bg-newsprint transition-transform duration-200 {dragging
+			class="mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-newsprint transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] {dragging
 				? 'scale-105 border-ink'
 				: ''}"
 		>

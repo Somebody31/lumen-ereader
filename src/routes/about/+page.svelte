@@ -68,18 +68,17 @@
 		</div>
 	</section>
 
-	<section
-		class="animate-plate-in stagger-2 overflow-hidden rounded-lg border border-rule bg-paper"
-	>
-		<div class="border-b border-rule px-5 py-4 sm:px-6">
+	<section class="bezel-shell animate-plate-in stagger-2">
+		<div class="bezel-shell-core overflow-hidden">
+		<div class="border-b border-white/8 px-5 py-4 sm:px-6">
 			<h2 class="type-section text-xl text-ink">Keyboard</h2>
 			<p class="type-meta mt-1 text-ink-soft">While a book is open</p>
 		</div>
-		<ul class="divide-y divide-rule">
+		<ul>
 			{#each keys as row (row.keys)}
-				<li class="flex items-baseline justify-between gap-4 px-5 py-3 sm:px-6">
+				<li class="flex items-baseline justify-between gap-4 px-5 py-3.5 sm:px-6">
 					<span
-						class="shrink-0 rounded border border-rule bg-newsprint px-2 py-0.5 font-ui text-[12px] font-medium tabular-nums text-ink"
+						class="shrink-0 rounded-full border border-white/10 bg-newsprint px-2.5 py-0.5 font-ui text-[12px] font-medium tabular-nums text-ink"
 						>{row.keys}</span
 					>
 					<span class="type-body min-w-0 flex-1 text-right text-ink-soft sm:text-left"
@@ -88,24 +87,25 @@
 				</li>
 			{/each}
 		</ul>
+		</div>
 	</section>
 
 	<section class="animate-plate-in stagger-3 flex flex-wrap gap-3">
 		<a href="/" class="no-underline">
 			<span
-				class="inline-flex items-center justify-center rounded-md bg-crimson px-5 py-2.5 font-ui text-[13px] font-medium text-ink transition-colors hover:bg-crimson-soft"
+				class="inline-flex items-center justify-center rounded-full bg-crimson px-6 py-3 font-ui text-[13px] font-medium text-ink transition-[background-color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-crimson-soft active:scale-[0.98]"
 				>Library</span
 			>
 		</a>
 		<a href="/settings" class="no-underline">
 			<span
-				class="inline-flex items-center justify-center rounded-md border border-rule bg-surface px-5 py-2.5 font-ui text-[13px] font-medium text-ink transition-colors hover:border-ink-mute"
+				class="inline-flex items-center justify-center rounded-full border border-white/10 bg-surface px-6 py-3 font-ui text-[13px] font-medium text-ink transition-[background-color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/5 active:scale-[0.98]"
 				>Settings</span
 			>
 		</a>
 		<a href="/auth" class="no-underline">
 			<span
-				class="inline-flex items-center justify-center rounded-md border border-rule bg-surface px-5 py-2.5 font-ui text-[13px] font-medium text-ink transition-colors hover:border-ink-mute"
+				class="inline-flex items-center justify-center rounded-full border border-white/10 bg-surface px-6 py-3 font-ui text-[13px] font-medium text-ink transition-[background-color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/5 active:scale-[0.98]"
 				>Sign in</span
 			>
 		</a>

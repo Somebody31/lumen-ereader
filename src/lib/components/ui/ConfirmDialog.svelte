@@ -45,10 +45,10 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-[100] flex items-center justify-center p-4" role="presentation">
+	<div class="fixed inset-0 z-40 flex items-center justify-center p-4" role="presentation">
 		<button
 			type="button"
-			class="absolute inset-0 bg-black/65 backdrop-blur-[2px]"
+			class="absolute inset-0 bg-black/70 backdrop-blur-3xl"
 			aria-label="Dismiss"
 			onclick={oncancel}
 		></button>
@@ -58,8 +58,9 @@
 			aria-modal="true"
 			aria-labelledby="confirm-title"
 			aria-describedby="confirm-desc"
-			class="relative z-10 w-full max-w-sm rounded-lg border border-rule bg-paper p-6 shadow-[var(--shadow-plate-hover)]"
+			class="bezel-shell relative z-10 w-full max-w-sm"
 		>
+			<div class="bezel-shell-core p-7">
 			<h2 id="confirm-title" class="type-section text-xl text-ink">
 				{title}
 			</h2>
@@ -73,6 +74,7 @@
 				<Button variant={danger ? 'danger' : 'primary'} type="button" onclick={onconfirm}>
 					{confirmLabel}
 				</Button>
+			</div>
 			</div>
 		</div>
 	</div>

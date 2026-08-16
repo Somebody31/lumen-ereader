@@ -181,13 +181,13 @@
 					<MagnifyingGlass
 						size={15}
 						weight="light"
-						class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-mute"
+						class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-mute"
 					/>
 					<input
 						type="search"
 						bind:value={query}
 						placeholder="Search titles or authors"
-						class="w-full rounded-md border border-rule bg-paper py-2.5 pl-9 pr-9 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink-mute focus:outline-none"
+						class="w-full rounded-full border border-white/10 bg-paper py-3 pl-10 pr-10 font-ui text-sm text-ink placeholder:text-ink-mute shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] focus:border-white/20 focus:outline-none"
 					/>
 					{#if query}
 						<button
@@ -206,7 +206,7 @@
 
 	{#if error}
 		<div
-			class="lib-notice rounded-md border border-danger/50 bg-danger/10 px-4 py-3 font-ui text-sm text-danger"
+			class="lib-notice rounded-[1.25rem] border border-danger/40 bg-danger/10 px-5 py-3.5 font-ui text-sm text-danger"
 			role="alert"
 		>
 			{error}
@@ -214,7 +214,7 @@
 	{/if}
 	{#if notice}
 		<div
-			class="lib-notice flex items-start justify-between gap-3 rounded-md border border-rule bg-surface px-4 py-3 font-ui text-sm text-ink-soft"
+			class="lib-notice flex items-start justify-between gap-3 rounded-[1.25rem] border border-white/10 bg-surface px-5 py-3.5 font-ui text-sm text-ink-soft"
 			role="status"
 		>
 			<p>{notice}</p>
@@ -231,7 +231,7 @@
 
 	{#if showSyncBanner}
 		<div
-			class="lib-notice flex flex-wrap items-center justify-between gap-3 rounded-md border border-rule bg-paper px-4 py-3"
+			class="lib-notice flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-white/10 bg-paper px-5 py-3.5"
 			role="status"
 		>
 			<p class="font-ui text-sm text-ink-soft">
@@ -273,8 +273,8 @@
 				<p class="type-kicker text-crimson">Empty shelf</p>
 				<h2 class="lib-empty-title type-masthead text-ink">Drop a book. Start reading.</h2>
 				<p class="type-body mt-3 max-w-md text-ink-soft">
-					Import an EPUB, Markdown, or plain text file from your device. It stays in this browser —
-					no account required.
+					Import an EPUB, Markdown, or plain text file from your device. It stays in this browser.
+					No account required.
 				</p>
 			</div>
 			<ImportDropzone onfiles={handleFiles} featured />
@@ -321,7 +321,7 @@
 					</a>
 					<button
 						type="button"
-						class="absolute right-1.5 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-rule bg-paper text-ink-soft shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-danger hover:text-danger active:scale-95"
+						class="absolute right-1.5 top-1.5 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-paper text-ink-soft shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md transition-[transform,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-danger active:scale-95"
 						aria-label="Delete {displayTitle}"
 						onclick={() => requestDelete(continueId)}
 					>

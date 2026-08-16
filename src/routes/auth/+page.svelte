@@ -99,7 +99,7 @@
 		<p class="font-ui text-sm text-ink-soft">Checking sync…</p>
 	{:else if !session?.syncAvailable}
 		<section
-			class="animate-plate-in space-y-5 rounded-lg border border-rule bg-paper p-6 sm:p-8"
+			class="bezel-shell-core animate-plate-in space-y-5 rounded-[1.75rem] border border-white/10 p-6 sm:p-8"
 			role="status"
 		>
 			<p class="type-body text-ink-soft">
@@ -111,7 +111,7 @@
 			</a>
 		</section>
 	{:else if session.authenticated}
-		<section class="animate-plate-in space-y-5 rounded-lg border border-rule bg-paper p-6 sm:p-8">
+		<section class="bezel-shell-core animate-plate-in space-y-5 rounded-[1.75rem] border border-white/10 p-6 sm:p-8">
 			<p class="type-body text-ink" role="status">{message || 'You are signed in.'}</p>
 			<div class="flex flex-wrap gap-2">
 				<a href={safeNext()} class="no-underline">
@@ -124,7 +124,7 @@
 		</section>
 	{:else}
 		<form
-			class="animate-plate-in space-y-5 rounded-lg border border-rule bg-paper p-6 sm:p-8"
+			class="bezel-shell-core animate-plate-in space-y-5 rounded-[1.75rem] border border-white/10 p-6 sm:p-8"
 			onsubmit={handleSubmit}
 		>
 			<label class="block font-ui text-xs font-medium uppercase tracking-[0.1em] text-ink-mute">
@@ -133,7 +133,7 @@
 					type="password"
 					bind:value={passphrase}
 					autocomplete="current-password"
-					class="mt-2 w-full rounded-md border border-rule bg-newsprint px-3 py-2.5 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-ink-mute focus:outline-none"
+					class="mt-2 w-full rounded-full border border-white/10 bg-newsprint px-4 py-2.5 font-ui text-sm text-ink placeholder:text-ink-mute focus:border-white/20 focus:outline-none"
 					placeholder="Deployment passphrase"
 				/>
 			</label>
